@@ -1,0 +1,26 @@
+{
+  "name": "pr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "rollup.config.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@atomico/rollup-plugin-import-css": "^1.0.3",
+    "@atomico/rollup-plugin-sizes": "^1.0.3",
+    "@babel/core": "^7.5.5",
+    "fast-glob": "^3.0.4",
+    "parse5": "^5.1.0",
+    "picomatch": "^2.0.7",
+    "rollup": "^1.19.4",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^5.1.1",
+    "sade": "^1.6.1",
+    "simple-string-table": "^1.0.0"
+  }
+}
