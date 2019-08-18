@@ -1,26 +1,45 @@
 {
-  "name": "pr",
-  "version": "1.0.0",
-  "description": "",
-  "main": "rollup.config.js",
+  "name": "bundle-cli",
+  "version": "0.0.0",
+  "description": "simple bundle generator",
+  "module": "src/index.js",
+  "main": "bundle.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w"
   },
-  "author": "",
+  "author": "UpperCod",
   "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atomico/bundle"
+  },
   "dependencies": {
     "@atomico/rollup-plugin-import-css": "^1.0.3",
     "@atomico/rollup-plugin-sizes": "^1.0.3",
     "@babel/core": "^7.5.5",
+    "@babel/plugin-transform-react-jsx": "^7.3.0",
+    "@babel/preset-env": "^7.5.5",
+    "atomico": "^0.9.3",
+    "cssnano": "^4.1.10",
     "fast-glob": "^3.0.4",
     "parse5": "^5.1.0",
     "picomatch": "^2.0.7",
+    "postcss": "^7.0.17",
+    "postcss-easy-import": "^3.0.0",
+    "postcss-preset-env": "^6.7.0",
     "rollup": "^1.19.4",
     "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-imagemin": "^0.4.1",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^5.1.1",
     "sade": "^1.6.1",
     "simple-string-table": "^1.0.0"
+  },
+  "bin": {
+    "bundle": "./bundle.js"
   }
 }

@@ -10,12 +10,12 @@ import babel from "rollup-plugin-babel";
 import resolve from "rollup-plugin-node-resolve";
 import sizes from "@atomico/rollup-plugin-sizes";
 import { terser } from "rollup-plugin-terser";
-import importCss from "@atomico/rollup-plugin-import-css";
-
-import inputHTML from "./input-html";
 
 import { readFile } from "fs";
 import { promisify } from "util";
+
+import plugin from "./plugin/index";
+import { relative, mergeKeysArray } from "./utils";
 
 let asyncReadFile = promisify(readFile);
 
@@ -32,9 +32,10 @@ let defaultOutput = {
 let pkgDefault = {
 	dependencies: {},
 	devDependencies: {},
-	devDependencies: {},
+	peerDependencies: {},
 	babel: {},
-	postcss: []
+	postcss: [],
+	bundle: {}
 };
 
 let checkFromPackage = Object.keys(pkgDefault);
@@ -50,14 +51,23 @@ async function openPackage(src) {
 	}
 }
 
+function streamLog(message) {
+	process.stdout.clearLine();
+	process.stdout.cursorTo(0);
+	process.stdout.write(message);
+}
+
 export default async function createBundle(
-	{ entry, watch },
+	{ entry, watch, ...pkgCli },
 	{ output = defaultOutput } = {}
 ) {
 	output = {
 		...defaultOutput,
 		...output
 	};
+	let pkg = await openPackage(srcPackage);
+
+	pkg.bundle = { watch, ...pkgCli, ...pkg.bundle };
 
 	/**
 	 * get  entries for rollup
@@ -68,20 +78,40 @@ export default async function createBundle(
 	 * This will be used to regenerate the bundle only
 	 * if the created file is part of the observed root
 	 */
-	let isInput = match(entry);
-
+	let isInput = (test => url => test(relative(url)))(match(entry));
 	/**
+	 *
 	 * open package.json
 	 */
-	let pkg = await openPackage(srcPackage);
+
 	let plugins = [
-		inputHTML(),
+		plugin(pkg.bundle, isInput),
 		resolve(),
-		importCss({
-			plugins: pkg.postcss
-		}),
 		babel({
-			...pkg.babel,
+			...mergeKeysArray(
+				["presets", "plugins"],
+				{
+					presets: [
+						[
+							"@babel/preset-env",
+							{
+								targets: {
+									browsers: pkg.bundle.browsers
+								}
+							}
+						]
+					],
+					plugins: [
+						[
+							"@babel/plugin-transform-react-jsx",
+							{
+								pragma: "h"
+							}
+						]
+					]
+				},
+				pkg.babel
+			),
 			...{
 				exclude: "node_modules/**"
 			}
@@ -91,7 +121,9 @@ export default async function createBundle(
 
 	let input = {
 		plugins,
-		input: entries
+		input: entries,
+		onwarn() {},
+		external: pkg.bundle.external ? Object.keys(pkg.dependencies) : []
 	};
 
 	let bundle = await rollup(input);
@@ -112,10 +144,13 @@ export default async function createBundle(
 				watch: { exclude: "node_modules/**" }
 			})
 		);
-
+		let lastTime;
 		watchers[0].on("event", event => {
+			if (event.code == "START") {
+				lastTime = new Date();
+			}
 			if (event.code == "END") {
-				console.log(`update`);
+				streamLog(`bundle: ${new Date() - lastTime}ms`);
 			}
 		});
 
@@ -124,7 +159,7 @@ export default async function createBundle(
 		 * get the root path from the pattern to generate the watcher.
 		 * avoid duplicating the watchers, eliminating the depth of the directory.
 		 */
-		[].concat(entry).map(entry => {
+		[].concat(entry).forEach(entry => {
 			let root = entry.match(/^([^\/]+)/);
 			if (root && !dirs.includes(root[0])) dirs.push(root[0]);
 		});
@@ -139,11 +174,7 @@ export default async function createBundle(
 					(type, fileName) => {
 						if (type != "rename") return;
 
-						let relative = path
-							.join(dir, fileName)
-							.replace(/(\\){1,2}/g, "/");
-
-						if (!isInput(relative)) return;
+						if (!isInput(path.join(cwd, dir, fileName))) return;
 
 						if (!entries.includes(relative)) {
 							write(true);

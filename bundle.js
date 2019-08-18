@@ -15,15 +15,21 @@ var babel = _interopDefault(require('rollup-plugin-babel'));
 var resolve = _interopDefault(require('rollup-plugin-node-resolve'));
 var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
 var rollupPluginTerser = require('rollup-plugin-terser');
-var importCss = _interopDefault(require('@atomico/rollup-plugin-import-css'));
-var html = _interopDefault(require('parse5'));
 var util = require('util');
+var html = _interopDefault(require('parse5'));
+var postcss = _interopDefault(require('postcss'));
+var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
+var cssnano = _interopDefault(require('cssnano'));
+var easyImport = _interopDefault(require('postcss-easy-import'));
 
 let isHTML = match("**/*.html");
+let isCSS = match("**/*.css");
 
 let ignore = ["#text", "#comment"];
 
 let inject = `[[${Math.random()}]]`;
+
+let cwd = process.cwd();
 
 function patch(fragment, scripts) {
 	let length = fragment.length;
@@ -46,9 +52,7 @@ function patch(fragment, scripts) {
 				}
 			}
 			if (isModule && src) {
-				let code = `import * from ${JSON.stringify(src)};`;
-
-				let isInject = scripts.push(code) == 1;
+				let isInject = scripts.push(src) == 1;
 
 				fragment[i] = {
 					nodeName: isInject ? "#comment" : "#text",
@@ -63,78 +67,135 @@ function patch(fragment, scripts) {
 	return fragment;
 }
 
-function inputHTML(options = {}) {
+function plugin(options = {}, isInput) {
 	let bundleHTML = {};
+	let bundleCSS = {};
 	return {
-		name: "input-html",
-		transform(code, id) {
-			if (!isHTML(id)) return;
+		name: "bundle",
+		async transform(code, id) {
+			let input = isInput(id);
+			if (isCSS(id)) {
+				let { css } = code.trim()
+					? await postcss([
+							easyImport(),
+							postcssPresetEnv({
+								browsers: options.browsers
+							}),
+							...(options.watch ? [] : [cssnano()])
+					  ]).process(code)
+					: "";
 
-			bundleHTML[id] = bundleHTML[id] || {};
-			if (bundleHTML[id].input !== code) {
-				bundleHTML[id].input = code;
+				if (input) {
+					bundleCSS[id] = { css };
+				}
+				return {
+					code: input ? "" : "export default  `" + css + "`;",
+					map: { mappings: "" }
+				};
+			}
 
+			if (isHTML(id) && input) {
 				let scripts = [];
+
 				let document = patch([].concat(html.parse(code)), scripts)
 					.map(node => html.serialize(node))
 					.join("");
-				bundleHTML[id].code = scripts.join("");
 
-				bundleHTML[id].output = document;
+				bundleHTML[id] = {
+					document,
+					code:
+						scripts
+							.map(src => `import ${JSON.stringify(src)}`)
+							.join(";") || ""
+				};
+
+				return {
+					code: bundleHTML[id].code,
+					map: { mappings: "" }
+				};
 			}
-			return {
-				code: bundleHTML[id].code || ""
-			};
 		},
 		generateBundle(opts, bundle) {
-			for (let key in bundleHTML) {
-				let document = bundleHTML[key];
-				if (document.output) {
-					let { base: fileName } = path.parse(key);
-					bundle[fileName] = {
-						fileName,
-						isAsset: true,
-						source: document.output.replace(
-							`<!--${inject}-->`,
-							() => {
-								if (!document.code) return "";
-								let src = `./${fileName.replace(
-									/\.html$/,
-									".js"
-								)}`;
-								return options.native
-									? `<script type="module" src="${src}"></script>`
-									: `
-								<script>
-								function shimport(src) {
-									try {
-									new Function('import("' + src + '")')();
-									} catch (e) {
-									var s = document.createElement('script');
-									s.src = 'https://unpkg.com/shimport';
-									s.dataset.main = src;
-									document.head.appendChild(s);
-									}
-								}
-								shimport('${src}');
-								</script>
-								`;
-							}
-						)
-					};
-
-					document.output = "";
+			for (let key in bundle) {
+				let { isEntry, facadeModuleId } = bundle[key];
+				if (isEntry && isCSS(facadeModuleId)) {
+					delete bundle[key];
 				}
+			}
+			for (let key in bundleCSS) {
+				let { css } = bundleCSS[key];
+				let { base: fileName } = path.parse(key);
+				bundle[fileName] = {
+					fileName,
+					isAsset: true,
+					source: css
+				};
+				delete bundleCSS[key];
+			}
+			for (let key in bundleHTML) {
+				let { document, code } = bundleHTML[key];
+				let { base: fileName } = path.parse(key);
+				bundle[fileName] = {
+					fileName,
+					isAsset: true,
+					source: document.replace(`<!--${inject}-->`, () => {
+						if (!code) return "";
+						let src = `./${fileName.replace(/\.html$/, ".js")}`;
+						return options.shimport
+							? `
+									<script>
+									function shimport(src) {
+										try {
+										new Function('import("' + src + '")')();
+										} catch (e) {
+										var s = document.createElement('script');
+										s.src = 'https://unpkg.com/shimport';
+										s.dataset.main = src;
+										document.head.appendChild(s);
+										}
+									}
+									shimport('${src}');
+									</script>
+									`
+							: `<script type="module" src="${src}"></script>`;
+					})
+				};
+				delete bundleHTML[key];
 			}
 		}
 	};
 }
 
+let cwd$1 = process.cwd();
+
+function relative(url) {
+	return path.relative(cwd$1, url).replace(/(\\){1,2}/g, "/");
+}
+
+function mergeKeysArray(keys, ...config) {
+	keys.forEach(index => {
+		config[0][index] = Array.from(
+			new Map(
+				config.reduce(
+					(nextConfig, config) =>
+						nextConfig.concat(
+							(config[index] || []).map(value =>
+								Array.isArray(value) ? value : [value]
+							)
+						),
+					[]
+				)
+			)
+		);
+	});
+	return config[0];
+}
+
 let asyncReadFile = util.promisify(fs.readFile);
 
-let cwd = process.cwd();
+let cwd$2 = process.cwd();
 
-let srcPackage = path.join(cwd, "package.json");
+let srcPackage = path.join(cwd$2, "package.json");
 
 let defaultOutput = {
 	dir: "dist",
@@ -145,9 +206,10 @@ let defaultOutput = {
 let pkgDefault = {
 	dependencies: {},
 	devDependencies: {},
-	devDependencies: {},
+	peerDependencies: {},
 	babel: {},
-	postcss: []
+	postcss: [],
+	bundle: {}
 };
 
 let checkFromPackage = Object.keys(pkgDefault);
@@ -163,14 +225,23 @@ async function openPackage(src) {
 	}
 }
 
+function streamLog(message) {
+	process.stdout.clearLine();
+	process.stdout.cursorTo(0);
+	process.stdout.write(message);
+}
+
 async function createBundle(
-	{ entry, watch },
+	{ entry, watch, ...pkgCli },
 	{ output = defaultOutput } = {}
 ) {
 	output = {
 		...defaultOutput,
 		...output
 	};
+	let pkg = await openPackage(srcPackage);
+
+	pkg.bundle = { watch, ...pkgCli, ...pkg.bundle };
 
 	/**
 	 * get  entries for rollup
@@ -181,20 +252,40 @@ async function createBundle(
 	 * This will be used to regenerate the bundle only
 	 * if the created file is part of the observed root
 	 */
-	let isInput = match(entry);
-
+	let isInput = (test => url => test(relative(url)))(match(entry));
 	/**
+	 *
 	 * open package.json
 	 */
-	let pkg = await openPackage(srcPackage);
+
 	let plugins = [
-		inputHTML(),
+		plugin(pkg.bundle, isInput),
 		resolve(),
-		importCss({
-			plugins: pkg.postcss
-		}),
 		babel({
-			...pkg.babel,
+			...mergeKeysArray(
+				["presets", "plugins"],
+				{
+					presets: [
+						[
+							"@babel/preset-env",
+							{
+								targets: {
+									browsers: pkg.bundle.browsers
+								}
+							}
+						]
+					],
+					plugins: [
+						[
+							"@babel/plugin-transform-react-jsx",
+							{
+								pragma: "h"
+							}
+						]
+					]
+				},
+				pkg.babel
+			),
 			...{
 				exclude: "node_modules/**"
 			}
@@ -204,7 +295,9 @@ async function createBundle(
 
 	let input = {
 		plugins,
-		input: entries
+		input: entries,
+		onwarn() {},
+		external: pkg.bundle.external ? Object.keys(pkg.dependencies) : []
 	};
 
 	let bundle = await rollup.rollup(input);
@@ -225,10 +318,13 @@ async function createBundle(
 				watch: { exclude: "node_modules/**" }
 			})
 		);
-
+		let lastTime;
 		watchers[0].on("event", event => {
+			if (event.code == "START") {
+				lastTime = new Date();
+			}
 			if (event.code == "END") {
-				console.log(`update`);
+				streamLog(`bundle: ${new Date() - lastTime}ms`);
 			}
 		});
 
@@ -237,7 +333,7 @@ async function createBundle(
 		 * get the root path from the pattern to generate the watcher.
 		 * avoid duplicating the watchers, eliminating the depth of the directory.
 		 */
-		[].concat(entry).map(entry => {
+		[].concat(entry).forEach(entry => {
 			let root = entry.match(/^([^\/]+)/);
 			if (root && !dirs.includes(root[0])) dirs.push(root[0]);
 		});
@@ -247,16 +343,12 @@ async function createBundle(
 		watchers.push(
 			...dirs.map(dir =>
 				fs__default.watch(
-					path.join(cwd, dir),
+					path.join(cwd$2, dir),
 					{ recursive: true },
 					(type, fileName) => {
 						if (type != "rename") return;
 
-						let relative = path
-							.join(dir, fileName)
-							.replace(/(\\){1,2}/g, "/");
-
-						if (!isInput(relative)) return;
+						if (!isInput(path.join(cwd$2, dir, fileName))) return;
 
 						if (!entries.includes(relative)) {
 							write(true);
@@ -266,7 +358,7 @@ async function createBundle(
 			)
 		);
 		watchers.push(
-			fs__default.watch(path.join(cwd, "package.json"), async () => {
+			fs__default.watch(path.join(cwd$2, "package.json"), async () => {
 				let nextPkg = await openPackage(srcPackage);
 				if (
 					checkFromPackage.some(index => {
@@ -297,18 +389,29 @@ async function createBundle(
 	await write();
 }
 
-sade("pack <src> [dest]")
+sade("bundle [src] [dest]")
 	.version("0.0.0")
-	.option("-c, --config", "Provide path to custom config", "package.json")
-	.option("-w, --watch", "Provide path to custom config")
+	.option(
+		"-w, --watch",
+		"Watch files in bundle and rebuild on changes",
+		false
+	)
+	.option(
+		"-e, --external",
+		"Does not include dependencies in the bundle",
+		false
+	)
+	.option("--shimport", "enable the use of shimport in the html", false)
+	.option("--browsers", "define the target of the bundle", "last 2 versions")
 	.example("src/index.js dist --watch")
-	.example("src/*.js dist --watch")
-	.example("src/*.html dist --watch")
+	.example("src/*.js dist")
+	.example("src/*.html")
+	.example("")
 	.action((src, dir = "dist", opts) => {
 		createBundle(
 			{
-				entry: src.split(/ *, */g),
-				watch: opts.watch
+				...opts,
+				entry: src ? src.split(/ *, */g) : []
 			},
 			{ dir }
 		);
