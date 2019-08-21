@@ -7,6 +7,7 @@ import postcss from "postcss";
 import postcssPresetEnv from "postcss-preset-env";
 import cssnano from "cssnano";
 import easyImport from "postcss-easy-import";
+import { normalizePath } from "../utils";
 
 let isHTML = match("**/*.html");
 let isCSS = match("**/*.css");
@@ -16,8 +17,6 @@ let ignore = ["#text", "#comment"];
 let inject = `[[${Math.random()}]]`;
 
 let cwd = process.cwd();
-
-let empty = `__${Math.random()}__`;
 
 function patch(fragment, scripts) {
 	let length = fragment.length;
@@ -55,13 +54,18 @@ function patch(fragment, scripts) {
 	return fragment;
 }
 
-export default function(options = {}, isInput) {
+export default function(options = {}) {
 	let bundleHTML = {};
 	let bundleCSS = {};
+	let entries;
 	return {
 		name: "bundle",
+		options(opts) {
+			entries = [].concat(opts.input);
+		},
 		async transform(code, id) {
-			let input = isInput(id);
+			let file = normalizePath(path.relative(cwd, id));
+			let input = entries.includes(file);
 			if (isCSS(id)) {
 				let { css } = code.trim()
 					? await postcss([

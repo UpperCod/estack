@@ -4,6 +4,7 @@ import path from "path";
 import match from "picomatch";
 import fastGlob from "fast-glob";
 import table from "simple-string-table";
+import chokidar from "chokidar";
 
 import { rollup, watch as watchBundle } from "rollup";
 import babel from "rollup-plugin-babel";
@@ -15,7 +16,7 @@ import { readFile } from "fs";
 import { promisify } from "util";
 
 import plugin from "./plugin/index";
-import { relative, mergeKeysArray } from "./utils";
+import { relative, mergeKeysArray, normalizePath } from "./utils";
 
 let asyncReadFile = promisify(readFile);
 
@@ -57,6 +58,10 @@ function streamLog(message) {
 	process.stdout.write(message);
 }
 
+function onwarn(warning) {
+	streamLog(warning + "");
+}
+
 export default async function createBundle(
 	{ entry, watch, ...pkgCli },
 	output,
@@ -79,14 +84,14 @@ export default async function createBundle(
 	 * This will be used to regenerate the bundle only
 	 * if the created file is part of the observed root
 	 */
-	let isInput = (test => url => test(relative(url)))(match(entry));
+	let isInput = match(entry);
 	/**
 	 *
 	 * open package.json
 	 */
 
 	let plugins = [
-		plugin(pkg.bundle, isInput),
+		plugin(pkg.bundle),
 		resolve(),
 		babel({
 			...mergeKeysArray(
@@ -124,11 +129,23 @@ export default async function createBundle(
 		plugins,
 		input: entries,
 		cache,
-		onwarn() {},
-		external: pkg.bundle.external ? Object.keys(pkg.dependencies) : []
+		onwarn,
+		external: pkg.bundle.external
+			? [
+					...Object.keys(pkg.dependencies),
+					...Object.keys(pkg.peerDependencies)
+			  ]
+			: []
 	};
 
-	let bundle = await rollup(input);
+	let bundle;
+	try {
+		bundle = await rollup(input);
+	} catch (err) {
+		onwarn(err);
+		return;
+	}
+
 	let watchers = [];
 
 	console.log(
@@ -148,43 +165,37 @@ export default async function createBundle(
 		);
 		let lastTime;
 		watchers[0].on("event", event => {
-			if (event.code == "START") {
-				lastTime = new Date();
-			}
-			if (event.code == "END") {
-				streamLog(`bundle: ${new Date() - lastTime}ms`);
+			switch (event.code) {
+				case "START":
+					lastTime = new Date();
+					break;
+				case "END":
+					streamLog(`bundle: ${new Date() - lastTime}ms`);
+					break;
+				case "ERROR":
+					onwarn(event.error);
+					break;
 			}
 		});
 
-		let dirs = [];
-		/**
-		 * get the root path from the pattern to generate the watcher.
-		 * avoid duplicating the watchers, eliminating the depth of the directory.
-		 */
-		[].concat(entry).forEach(entry => {
-			let root = entry.match(/^([^\/]+)/);
-			if (root && !dirs.includes(root[0])) dirs.push(root[0]);
-		});
 		/**
 		 * observe the route(s), to unify with rollup.
 		 */
-		watchers.push(
-			...dirs.map(dir =>
-				fs.watch(
-					path.join(cwd, dir),
-					{ recursive: true },
-					(type, fileName) => {
-						if (type != "rename") return;
 
-						if (!isInput(path.join(cwd, dir, fileName))) return;
+		let watcher = chokidar.watch("file");
 
-						if (!entries.includes(relative)) {
-							write(true);
-						}
-					}
-				)
-			)
-		);
+		watcher.on("add", path => {
+			path = normalizePath(path);
+			if (entries.includes(path)) return;
+			if (isInput(path)) {
+				write(true);
+			}
+		});
+
+		watcher.add(entry);
+
+		watchers.push(watcher);
+
 		watchers.push(
 			fs.watch(path.join(cwd, "package.json"), async () => {
 				let nextPkg = await openPackage(srcPackage);

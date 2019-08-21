@@ -10,6 +10,7 @@ var path = _interopDefault(require('path'));
 var match = _interopDefault(require('picomatch'));
 var fastGlob = _interopDefault(require('fast-glob'));
 var table = _interopDefault(require('simple-string-table'));
+var chokidar = _interopDefault(require('chokidar'));
 var rollup = require('rollup');
 var babel = _interopDefault(require('rollup-plugin-babel'));
 var resolve = _interopDefault(require('rollup-plugin-node-resolve'));
@@ -22,6 +23,31 @@ var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
 var cssnano = _interopDefault(require('cssnano'));
 var easyImport = _interopDefault(require('postcss-easy-import'));
 
+let cwd = process.cwd();
+
+function normalizePath(path) {
+	return path.replace(/(\\+)/g, "/");
+}
+
+function mergeKeysArray(keys, ...config) {
+	keys.forEach(index => {
+		config[0][index] = Array.from(
+			new Map(
+				config.reduce(
+					(nextConfig, config) =>
+						nextConfig.concat(
+							(config[index] || []).map(value =>
+								Array.isArray(value) ? value : [value]
+							)
+						),
+					[]
+				)
+			)
+		);
+	});
+	return config[0];
+}
+
 let isHTML = match("**/*.html");
 let isCSS = match("**/*.css");
 
@@ -29,7 +55,7 @@ let ignore = ["#text", "#comment"];
 
 let inject = `[[${Math.random()}]]`;
 
-let cwd = process.cwd();
+let cwd$1 = process.cwd();
 
 function patch(fragment, scripts) {
 	let length = fragment.length;
@@ -67,13 +93,18 @@ function patch(fragment, scripts) {
 	return fragment;
 }
 
-function plugin(options = {}, isInput) {
+function plugin(options = {}) {
 	let bundleHTML = {};
 	let bundleCSS = {};
+	let entries;
 	return {
 		name: "bundle",
+		options(opts) {
+			entries = [].concat(opts.input);
+		},
 		async transform(code, id) {
-			let input = isInput(id);
+			let file = normalizePath(path.relative(cwd$1, id));
+			let input = entries.includes(file);
 			if (isCSS(id)) {
 				let { css } = code.trim()
 					? await postcss([
@@ -166,31 +197,6 @@ function plugin(options = {}, isInput) {
 	};
 }
 
-let cwd$1 = process.cwd();
-
-function relative(url) {
-	return path.relative(cwd$1, url).replace(/(\\){1,2}/g, "/");
-}
-
-function mergeKeysArray(keys, ...config) {
-	keys.forEach(index => {
-		config[0][index] = Array.from(
-			new Map(
-				config.reduce(
-					(nextConfig, config) =>
-						nextConfig.concat(
-							(config[index] || []).map(value =>
-								Array.isArray(value) ? value : [value]
-							)
-						),
-					[]
-				)
-			)
-		);
-	});
-	return config[0];
-}
-
 let asyncReadFile = util.promisify(fs.readFile);
 
 let cwd$2 = process.cwd();
@@ -231,9 +237,14 @@ function streamLog(message) {
 	process.stdout.write(message);
 }
 
+function onwarn(warning) {
+	streamLog(warning + "");
+}
+
 async function createBundle(
 	{ entry, watch, ...pkgCli },
-	{ output = defaultOutput } = {}
+	output,
+	cache
 ) {
 	output = {
 		...defaultOutput,
@@ -252,14 +263,14 @@ async function createBundle(
 	 * This will be used to regenerate the bundle only
 	 * if the created file is part of the observed root
 	 */
-	let isInput = (test => url => test(relative(url)))(match(entry));
+	let isInput = match(entry);
 	/**
 	 *
 	 * open package.json
 	 */
 
 	let plugins = [
-		plugin(pkg.bundle, isInput),
+		plugin(pkg.bundle),
 		resolve(),
 		babel({
 			...mergeKeysArray(
@@ -296,11 +307,24 @@ async function createBundle(
 	let input = {
 		plugins,
 		input: entries,
-		onwarn() {},
-		external: pkg.bundle.external ? Object.keys(pkg.dependencies) : []
+		cache,
+		onwarn,
+		external: pkg.bundle.external
+			? [
+					...Object.keys(pkg.dependencies),
+					...Object.keys(pkg.peerDependencies)
+			  ]
+			: []
 	};
 
-	let bundle = await rollup.rollup(input);
+	let bundle;
+	try {
+		bundle = await rollup.rollup(input);
+	} catch (err) {
+		onwarn(err);
+		return;
+	}
+
 	let watchers = [];
 
 	console.log(
@@ -320,43 +344,37 @@ async function createBundle(
 		);
 		let lastTime;
 		watchers[0].on("event", event => {
-			if (event.code == "START") {
-				lastTime = new Date();
-			}
-			if (event.code == "END") {
-				streamLog(`bundle: ${new Date() - lastTime}ms`);
+			switch (event.code) {
+				case "START":
+					lastTime = new Date();
+					break;
+				case "END":
+					streamLog(`bundle: ${new Date() - lastTime}ms`);
+					break;
+				case "ERROR":
+					onwarn(event.error);
+					break;
 			}
 		});
 
-		let dirs = [];
-		/**
-		 * get the root path from the pattern to generate the watcher.
-		 * avoid duplicating the watchers, eliminating the depth of the directory.
-		 */
-		[].concat(entry).forEach(entry => {
-			let root = entry.match(/^([^\/]+)/);
-			if (root && !dirs.includes(root[0])) dirs.push(root[0]);
-		});
 		/**
 		 * observe the route(s), to unify with rollup.
 		 */
-		watchers.push(
-			...dirs.map(dir =>
-				fs__default.watch(
-					path.join(cwd$2, dir),
-					{ recursive: true },
-					(type, fileName) => {
-						if (type != "rename") return;
 
-						if (!isInput(path.join(cwd$2, dir, fileName))) return;
+		let watcher = chokidar.watch("file");
 
-						if (!entries.includes(relative)) {
-							write(true);
-						}
-					}
-				)
-			)
-		);
+		watcher.on("add", path => {
+			path = normalizePath(path);
+			if (entries.includes(path)) return;
+			if (isInput(path)) {
+				write(true);
+			}
+		});
+
+		watcher.add(entry);
+
+		watchers.push(watcher);
+
 		watchers.push(
 			fs__default.watch(path.join(cwd$2, "package.json"), async () => {
 				let nextPkg = await openPackage(srcPackage);
@@ -380,7 +398,7 @@ async function createBundle(
 			if (watch) {
 				watchers.forEach(watcher => watcher.close());
 			}
-			return createBundle({ entry, watch }, { output });
+			return createBundle({ entry, watch }, output, bundle.cache);
 		} else {
 			return bundle.write(output);
 		}
