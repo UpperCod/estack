@@ -34,7 +34,6 @@
     "postcss-preset-env": "^6.7.0",
     "rollup": "^1.19.4",
     "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-imagemin": "^0.4.1",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^5.1.1",
     "sade": "^1.6.1",

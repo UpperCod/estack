@@ -32,3 +32,11 @@ cli a base de rollup, que añade una capa de configuración simple y ágil para 
     $ bundle
 
 ```
+
+## ejemplos de configuracion
+
+```bash
+bundle src/*.html,src/*.css
+```
+
+generará exportaciones compartidas entre los ficheros html gracias a rollup y a su vez como el css se define como entrada, se generará ficheros independientes de css para ser usados.

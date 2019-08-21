@@ -1,52 +1,29 @@
 #!/usr/bin/env node
-'use strict';
+"use strict";
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+function _interopDefault(ex) {
+	return ex && typeof ex === "object" && "default" in ex ? ex["default"] : ex;
+}
 
-var sade = _interopDefault(require('sade'));
-var fs = require('fs');
+var sade = _interopDefault(require("sade"));
+var fs = require("fs");
 var fs__default = _interopDefault(fs);
-var path = _interopDefault(require('path'));
-var match = _interopDefault(require('picomatch'));
-var fastGlob = _interopDefault(require('fast-glob'));
-var table = _interopDefault(require('simple-string-table'));
-var chokidar = _interopDefault(require('chokidar'));
-var rollup = require('rollup');
-var babel = _interopDefault(require('rollup-plugin-babel'));
-var resolve = _interopDefault(require('rollup-plugin-node-resolve'));
-var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
-var rollupPluginTerser = require('rollup-plugin-terser');
-var util = require('util');
-var html = _interopDefault(require('parse5'));
-var postcss = _interopDefault(require('postcss'));
-var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
-var cssnano = _interopDefault(require('cssnano'));
-var easyImport = _interopDefault(require('postcss-easy-import'));
-
-let cwd = process.cwd();
-
-function normalizePath(path) {
-	return path.replace(/(\\+)/g, "/");
-}
-
-function mergeKeysArray(keys, ...config) {
-	keys.forEach(index => {
-		config[0][index] = Array.from(
-			new Map(
-				config.reduce(
-					(nextConfig, config) =>
-						nextConfig.concat(
-							(config[index] || []).map(value =>
-								Array.isArray(value) ? value : [value]
-							)
-						),
-					[]
-				)
-			)
-		);
-	});
-	return config[0];
-}
+var path = _interopDefault(require("path"));
+var match = _interopDefault(require("picomatch"));
+var fastGlob = _interopDefault(require("fast-glob"));
+var table = _interopDefault(require("simple-string-table"));
+var chokidar = _interopDefault(require("chokidar"));
+var rollup = require("rollup");
+var babel = _interopDefault(require("rollup-plugin-babel"));
+var resolve = _interopDefault(require("rollup-plugin-node-resolve"));
+var sizes = _interopDefault(require("@atomico/rollup-plugin-sizes"));
+var rollupPluginTerser = require("rollup-plugin-terser");
+var util = require("util");
+var html = _interopDefault(require("parse5"));
+var postcss = _interopDefault(require("postcss"));
+var postcssPresetEnv = _interopDefault(require("postcss-preset-env"));
+var cssnano = _interopDefault(require("cssnano"));
+var easyImport = _interopDefault(require("postcss-easy-import"));
 
 let isHTML = match("**/*.html");
 let isCSS = match("**/*.css");
@@ -54,8 +31,6 @@ let isCSS = match("**/*.css");
 let ignore = ["#text", "#comment"];
 
 let inject = `[[${Math.random()}]]`;
-
-let cwd$1 = process.cwd();
 
 function patch(fragment, scripts) {
 	let length = fragment.length;
@@ -95,83 +70,61 @@ function patch(fragment, scripts) {
 
 function plugin(options = {}) {
 	let bundleHTML = {};
-	let bundleCSS = {};
-	let entries;
 	return {
 		name: "bundle",
-		options(opts) {
-			entries = [].concat(opts.input);
-		},
 		async transform(code, id) {
-			let file = normalizePath(path.relative(cwd$1, id));
-			let input = entries.includes(file);
+			let { isEntry } = this.getModuleInfo(id);
 			if (isCSS(id)) {
 				let { css } = code.trim()
 					? await postcss([
 							easyImport(),
 							postcssPresetEnv({
+								stage: 0,
 								browsers: options.browsers
 							}),
 							...(options.watch ? [] : [cssnano()])
 					  ]).process(code)
 					: "";
 
-				if (input) {
-					bundleCSS[id] = { css };
+				if (isEntry) {
+					let { name } = path.parse(id);
+					let fileName = name + ".css";
+					this.emitFile({
+						type: "asset",
+						name: fileName,
+						fileName,
+						source: css
+					});
 				}
 				return {
-					code: input ? "" : "export default  `" + css + "`;",
+					code: isEntry ? "" : "export default  `" + css + "`;",
 					map: { mappings: "" }
 				};
 			}
 
-			if (isHTML(id) && input) {
+			if (isHTML(id) && isEntry) {
+				let { name } = path.parse(id);
+				let fileName = name + ".html";
 				let scripts = [];
 
 				let document = patch([].concat(html.parse(code)), scripts)
 					.map(node => html.serialize(node))
 					.join("");
 
-				bundleHTML[id] = {
-					document,
-					code:
-						scripts
-							.map(src => `import ${JSON.stringify(src)}`)
-							.join(";") || ""
-				};
+				let script =
+					scripts
+						.map(src => `import ${JSON.stringify(src)}`)
+						.join(";") || "";
 
-				return {
-					code: bundleHTML[id].code,
-					map: { mappings: "" }
-				};
-			}
-		},
-		generateBundle(opts, bundle) {
-			for (let key in bundle) {
-				let { isEntry, facadeModuleId } = bundle[key];
-				if (isEntry && isCSS(facadeModuleId)) {
-					delete bundle[key];
-				}
-			}
-			for (let key in bundleCSS) {
-				let { css } = bundleCSS[key];
-				let { base: fileName } = path.parse(key);
-				bundle[fileName] = {
+				let src = `${fileName.replace(/\.html$/, ".js")}`;
+
+				this.emitFile({
+					type: "asset",
+					name: fileName,
 					fileName,
-					isAsset: true,
-					source: css
-				};
-				delete bundleCSS[key];
-			}
-			for (let key in bundleHTML) {
-				let { document, code } = bundleHTML[key];
-				let { base: fileName } = path.parse(key);
-				bundle[fileName] = {
-					fileName,
-					isAsset: true,
 					source: document.replace(`<!--${inject}-->`, () => {
-						if (!code) return "";
-						let src = `./${fileName.replace(/\.html$/, ".js")}`;
+						if (!script) return "";
+
 						return options.shimport
 							? `
 									<script>
@@ -185,23 +138,68 @@ function plugin(options = {}) {
 										document.head.appendChild(s);
 										}
 									}
-									shimport('${src}');
+									shimport('./${src}');
 									</script>
 									`
-							: `<script type="module" src="${src}"></script>`;
+							: `<script type="module" src="./${src}"></script>`;
 					})
+				});
+
+				bundleHTML[src] = script;
+
+				return {
+					code: script,
+					map: { mappings: "" }
 				};
-				delete bundleHTML[key];
+			}
+		},
+		generateBundle(opts, bundle) {
+			for (let key in bundle) {
+				let { isEntry, facadeModuleId, fileName } = bundle[key];
+				if (
+					isEntry &&
+					(isCSS(facadeModuleId) ||
+						(fileName in bundleHTML && !bundleHTML[fileName]))
+				) {
+					delete bundle[key];
+				}
 			}
 		}
 	};
 }
 
+let cwd = process.cwd();
+
+function normalizePath(path) {
+	return path.replace(/(\\+)/g, "/");
+}
+
+function mergeKeysArray(keys, ...config) {
+	keys.forEach(index => {
+		config[0][index] = Array.from(
+			new Map(
+				config.reduce(
+					(nextConfig, config) =>
+						nextConfig.concat(
+							(config[index] || []).map(value =>
+								Array.isArray(value) ? value : [value]
+							)
+						),
+					[]
+				)
+			)
+		);
+	});
+	return config[0];
+}
+
 let asyncReadFile = util.promisify(fs.readFile);
 
-let cwd$2 = process.cwd();
+let cwd$1 = process.cwd();
 
-let srcPackage = path.join(cwd$2, "package.json");
+let namePkg = "package.json";
+
+let srcPackage = path.join(cwd$1, namePkg);
 
 let defaultOutput = {
 	dir: "dist",
@@ -241,11 +239,7 @@ function onwarn(warning) {
 	streamLog(warning + "");
 }
 
-async function createBundle(
-	{ entry, watch, ...pkgCli },
-	output,
-	cache
-) {
+async function createBundle({ entry, watch, ...pkgCli }, output, cache) {
 	output = {
 		...defaultOutput,
 		...output
@@ -280,9 +274,7 @@ async function createBundle(
 						[
 							"@babel/preset-env",
 							{
-								targets: {
-									browsers: pkg.bundle.browsers
-								}
+								targets: pkg.bundle.browsers
 							}
 						]
 					],
@@ -363,30 +355,31 @@ async function createBundle(
 
 		let watcher = chokidar.watch("file");
 
-		watcher.on("add", path => {
-			path = normalizePath(path);
-			if (entries.includes(path)) return;
-			if (isInput(path)) {
-				write(true);
+		watcher.on("all", async (event, path) => {
+			if (event == "add") {
+				path = normalizePath(path);
+				if (entries.includes(path)) return;
+				if (isInput(path)) {
+					write(true);
+				}
+			}
+			if (event == "change" && path == namePkg) {
+				let nextPkg = await openPackage(srcPackage);
+				if (
+					checkFromPackage.some(
+						index =>
+							JSON.stringify(pkg[index]) !==
+							JSON.stringify(nextPkg[index])
+					)
+				) {
+					write(true);
+				}
 			}
 		});
 
-		watcher.add(entry);
+		watcher.add([...entry, namePkg]);
 
 		watchers.push(watcher);
-
-		watchers.push(
-			fs__default.watch(path.join(cwd$2, "package.json"), async () => {
-				let nextPkg = await openPackage(srcPackage);
-				if (
-					checkFromPackage.some(index => {
-						JSON.stringify(pkg[index]) !==
-							JSON.stringify(nextPkg[index]);
-					})
-				)
-					write(true);
-			})
-		);
 	}
 	/**
 	 * force writing or bundle generation
