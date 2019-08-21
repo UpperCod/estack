@@ -40,3 +40,9 @@ bundle src/*.html,src/*.css
 ```
 
 generará exportaciones compartidas entre los ficheros html gracias a rollup y a su vez como el css se define como entrada, se generará ficheros independientes de css para ser usados.
+
+## Todo
+
+1. [] : lograr que pueda leer los ficheros css desde el html para una mejor exportacion.
+2. [] : permitir que escanee los fragmentos de javascript fuera de script[type=module], para ser paseados por babel
+3. [] : añadir los test de generación de ficheros, tomar como base **microbundle** o **module-css/rollup**.

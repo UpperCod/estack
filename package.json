@@ -6,7 +6,8 @@
   "main": "bundle.js",
   "scripts": {
     "build": "rollup -c",
-    "dev": "rollup -c -w"
+    "dev": "rollup -c -w",
+    "build:example" : "node bundle.js example/src/*.html,example/src/*.css example/dist"
   },
   "author": "UpperCod",
   "license": "ISC",
