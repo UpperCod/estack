@@ -7,6 +7,7 @@ import table from "simple-string-table";
 import chokidar from "chokidar";
 
 import { rollup, watch as watchBundle } from "rollup";
+
 import babel from "rollup-plugin-babel";
 import resolve from "rollup-plugin-node-resolve";
 import sizes from "@atomico/rollup-plugin-sizes";
@@ -16,13 +17,15 @@ import { readFile } from "fs";
 import { promisify } from "util";
 
 import plugin from "./plugin/index";
-import { relative, mergeKeysArray, normalizePath } from "./utils";
+import { mergeKeysArray, normalizePath } from "./utils";
 
 let asyncReadFile = promisify(readFile);
 
 let cwd = process.cwd();
 
-let srcPackage = path.join(cwd, "package.json");
+let namePkg = "package.json";
+
+let srcPackage = path.join(cwd, namePkg);
 
 let defaultOutput = {
 	dir: "dist",
@@ -101,9 +104,7 @@ export default async function createBundle(
 						[
 							"@babel/preset-env",
 							{
-								targets: {
-									browsers: pkg.bundle.browsers
-								}
+								targets: pkg.bundle.browsers
 							}
 						]
 					],
@@ -184,30 +185,31 @@ export default async function createBundle(
 
 		let watcher = chokidar.watch("file");
 
-		watcher.on("add", path => {
-			path = normalizePath(path);
-			if (entries.includes(path)) return;
-			if (isInput(path)) {
-				write(true);
+		watcher.on("all", async (event, path) => {
+			if (event == "add") {
+				path = normalizePath(path);
+				if (entries.includes(path)) return;
+				if (isInput(path)) {
+					write(true);
+				}
+			}
+			if (event == "change" && path == namePkg) {
+				let nextPkg = await openPackage(srcPackage);
+				if (
+					checkFromPackage.some(
+						index =>
+							JSON.stringify(pkg[index]) !==
+							JSON.stringify(nextPkg[index])
+					)
+				) {
+					write(true);
+				}
 			}
 		});
 
-		watcher.add(entry);
+		watcher.add([...entry, namePkg]);
 
 		watchers.push(watcher);
-
-		watchers.push(
-			fs.watch(path.join(cwd, "package.json"), async () => {
-				let nextPkg = await openPackage(srcPackage);
-				if (
-					checkFromPackage.some(index => {
-						JSON.stringify(pkg[index]) !==
-							JSON.stringify(nextPkg[index]);
-					})
-				)
-					write(true);
-			})
-		);
 	}
 	/**
 	 * force writing or bundle generation

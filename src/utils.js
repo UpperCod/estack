@@ -2,10 +2,6 @@ import path from "path";
 
 let cwd = process.cwd();
 
-export function relative(url) {
-	return path.relative(cwd, url).replace(/(\\){1,2}/g, "/");
-}
-
 export function normalizePath(path) {
 	return path.replace(/(\\+)/g, "/");
 }
