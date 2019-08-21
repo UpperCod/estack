@@ -59,7 +59,8 @@ function streamLog(message) {
 
 export default async function createBundle(
 	{ entry, watch, ...pkgCli },
-	{ output = defaultOutput } = {}
+	output,
+	cache
 ) {
 	output = {
 		...defaultOutput,
@@ -122,6 +123,7 @@ export default async function createBundle(
 	let input = {
 		plugins,
 		input: entries,
+		cache,
 		onwarn() {},
 		external: pkg.bundle.external ? Object.keys(pkg.dependencies) : []
 	};
@@ -206,7 +208,7 @@ export default async function createBundle(
 			if (watch) {
 				watchers.forEach(watcher => watcher.close());
 			}
-			return createBundle({ entry, watch }, { output });
+			return createBundle({ entry, watch }, output, bundle.cache);
 		} else {
 			return bundle.write(output);
 		}
