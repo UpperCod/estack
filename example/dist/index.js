@@ -1,2 +1,2 @@
-var e=document.createElement("div");document.appendChild(e),e.innerHTML="<h1>App 1</h1>";var n=document.createElement("div");document.appendChild(n),n.innerHTML="<h1>App 1</h1>";
+var e=document.createElement("div");document.appendChild(e),e.innerHTML="<h1>App 1</h1>",e.addEventListener("click",function(){console.log({style:".box{width:100px;height:100px;color:#000}",data:data})});var n=document.createElement("div");document.appendChild(n),n.innerHTML="<h1>App 1</h1>",n.addEventListener("click",function(){console.log(".box{width:100px;height:100px;color:#000}")});
 //# sourceMappingURL=index.js.map

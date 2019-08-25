@@ -1,29 +1,27 @@
 #!/usr/bin/env node
-"use strict";
+'use strict';
 
-function _interopDefault(ex) {
-	return ex && typeof ex === "object" && "default" in ex ? ex["default"] : ex;
-}
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var sade = _interopDefault(require("sade"));
-var fs = require("fs");
+var sade = _interopDefault(require('sade'));
+var fs = require('fs');
 var fs__default = _interopDefault(fs);
-var path = _interopDefault(require("path"));
-var match = _interopDefault(require("picomatch"));
-var fastGlob = _interopDefault(require("fast-glob"));
-var table = _interopDefault(require("simple-string-table"));
-var chokidar = _interopDefault(require("chokidar"));
-var rollup = require("rollup");
-var babel = _interopDefault(require("rollup-plugin-babel"));
-var resolve = _interopDefault(require("rollup-plugin-node-resolve"));
-var sizes = _interopDefault(require("@atomico/rollup-plugin-sizes"));
-var rollupPluginTerser = require("rollup-plugin-terser");
-var util = require("util");
-var html = _interopDefault(require("parse5"));
-var postcss = _interopDefault(require("postcss"));
-var postcssPresetEnv = _interopDefault(require("postcss-preset-env"));
-var cssnano = _interopDefault(require("cssnano"));
-var easyImport = _interopDefault(require("postcss-easy-import"));
+var path = _interopDefault(require('path'));
+var match = _interopDefault(require('picomatch'));
+var fastGlob = _interopDefault(require('fast-glob'));
+var table = _interopDefault(require('simple-string-table'));
+var chokidar = _interopDefault(require('chokidar'));
+var rollup = require('rollup');
+var babel = _interopDefault(require('rollup-plugin-babel'));
+var resolve = _interopDefault(require('rollup-plugin-node-resolve'));
+var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
+var rollupPluginTerser = require('rollup-plugin-terser');
+var util = require('util');
+var html = _interopDefault(require('parse5'));
+var postcss = _interopDefault(require('postcss'));
+var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
+var cssnano = _interopDefault(require('cssnano'));
+var easyImport = _interopDefault(require('postcss-easy-import'));
 
 let isHTML = match("**/*.html");
 let isCSS = match("**/*.css");
@@ -97,7 +95,7 @@ function plugin(options = {}) {
 					});
 				}
 				return {
-					code: isEntry ? "" : "export default  `" + css + "`;",
+					code: isEntry ? "" : "export let css = `" + css + "`;",
 					map: { mappings: "" }
 				};
 			}
@@ -239,7 +237,11 @@ function onwarn(warning) {
 	streamLog(warning + "");
 }
 
-async function createBundle({ entry, watch, ...pkgCli }, output, cache) {
+async function createBundle(
+	{ entry, watch, ...pkgCli },
+	output,
+	cache
+) {
 	output = {
 		...defaultOutput,
 		...output
