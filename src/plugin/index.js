@@ -6,7 +6,7 @@ import html from "parse5";
 import postcss from "postcss";
 import postcssPresetEnv from "postcss-preset-env";
 import cssnano from "cssnano";
-import easyImport from "postcss-easy-import";
+import atImport from "postcss-import";
 
 let isHTML = match("**/*.html");
 let isCSS = match("**/*.css");
@@ -14,6 +14,8 @@ let isCSS = match("**/*.css");
 let ignore = ["#text", "#comment"];
 
 let inject = `[[${Math.random()}]]`;
+
+let cwd = process.cwd();
 
 function patch(fragment, scripts) {
 	let length = fragment.length;
@@ -58,9 +60,22 @@ export default function(options = {}) {
 		async transform(code, id) {
 			let { isEntry } = this.getModuleInfo(id);
 			if (isCSS(id)) {
+				let { name, dir } = path.parse(id);
 				let { css } = code.trim()
 					? await postcss([
-							easyImport(),
+							atImport({
+								resolve: file => {
+									let id = path.join(
+										/^\./.test(file)
+											? dir
+											: path.join(cwd, "node_modules"),
+										file
+									);
+									// Add an id to bundle.watchFile
+									this.addWatchFile(id);
+									return id;
+								}
+							}),
 							postcssPresetEnv({
 								stage: 0,
 								browsers: options.browsers
@@ -70,7 +85,6 @@ export default function(options = {}) {
 					: "";
 
 				if (isEntry) {
-					let { name } = path.parse(id);
 					let fileName = name + ".css";
 					this.emitFile({
 						type: "asset",

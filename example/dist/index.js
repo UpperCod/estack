@@ -1,2 +1,24 @@
-var e=document.createElement("div");document.appendChild(e),e.innerHTML="<h1>App 1</h1>",e.addEventListener("click",function(){console.log({style:".box{width:100px;height:100px;color:#000}",data:data})});var n=document.createElement("div");document.appendChild(n),n.innerHTML="<h1>App 1</h1>",n.addEventListener("click",function(){console.log(".box{width:100px;height:100px;color:#000}")});
+var style = `:root {
+	--color: black;
+}
+button {
+	color: orange;
+	size: 20px;
+}
+megalodonte {
+	color: orange;
+}
+.box {
+	width: 100px;
+	height: 100px;
+	color: black;
+}
+`;
+
+var div = document.createElement("div");
+document.appendChild(div);
+div.innerHTML = "<h1>App 1</h1>";
+div.addEventListener("click", function () {
+  console.log(style);
+});
 //# sourceMappingURL=index.js.map

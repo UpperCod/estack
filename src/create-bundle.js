@@ -38,7 +38,6 @@ let pkgDefault = {
 	devDependencies: {},
 	peerDependencies: {},
 	babel: {},
-	postcss: [],
 	bundle: {}
 };
 

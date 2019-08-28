@@ -1,0 +1,5 @@
+@import "./template.css";
+button {
+	color: orange;
+	size: 20px;
+}

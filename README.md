@@ -1,19 +1,54 @@
-# bundle-cli
+## bundle-cli
 
-cli a base de rollup, que añade una capa de configuración simple y ágil para la generación de bundle, con los siguientes beneficios:
+This CLI simplify the development of packages or applications, thanks to the use of rollup, adding to this:
 
-1. **multi entradas independientes**, rollup es asombroso, la configuración `{input:["file-a.js","file-b.js"]}`, es algo recurrente en mi configuración, pero esta quita agilidad ante la necesidad de múltiples entradas, obligando a rescribir la configuración.
-   para mejorar esto bundle-cli admite expresiones `src/*.js` y observa de estas expresiones la creacion de ficheros , logrando así reiniciar el bundle sin reconfigurarlo manualmente.
+Observers of files (html, js and css) based on expressions, for the generation of inputs to work by rollup, eg:
 
-2. **input html**, en algunos espacios de trabajo se requiere el uso de un fichero html que importe el bundle, bundle-cli, permite leer y generar un nuevo fichero que apunte al bundle ya generado por rollup, este input también puede ser definido como expresión `src/*.html`.
+```
+bundle src/*.html,src/*.js,src/css/*.css
+```
 
-3. **input css**, permite la importación del código css local o agrupación en bundles de estilo, todo esto preprocesado mediante postcss, configurado con postcss-preset-env y cssnano.
+construction of html files, which share chunk type dependencies of the js imported by the tag `script[type=module]` locally, eg:
 
-4. **configuracion mediante package.json**, permite importar del package.json la configuración de babel y fusionarla con la actual, adicionalmente ud puede definir `pkg.bundle.browsers` y afectar tanto babel como postcss. el cli observa el estado del package para asi rehacer el bundle, eg ante la instalación de una nueva dependencia.
+**input:index.html**
+
+```html
+<script src="./a.js" type="module"></script>
+<script src="./a.js" type="module"></script>
+```
+
+**output:index.html**
+
+```html
+<script src="./index.js" type="module"></script>
+```
+
+construction of css files when declared as input, if not declared as input, it will return the css as text processed by postcss, eg:
+
+```
+import style "./style.css";
+console.log(style) //content of style.css, ideal for web-components
+```
+
+> the alRule import are grouped in the export file
+
+## default settings
+
+bundle-cli, makes use of the following plugin:
+
+[**rollup-plugin-resolve **](https://github.com/rollup/rollup-plugin-node-resolve): allows to maintain a node.js style import
+
+[**rollup-plugin-babel**](https://github.com/rollup/rollup-plugin-babel): supports its configuration from the package.json by reading from this `babel.presets` and`babel.plugins`, by default it attaches, `@babel/preset-env` and `@babel/plugin-transform-react-jsx` with pagma `h`.
+
+[**postcss**](https://postcss.org/): bundle-cli, only supports css, but to enhance its use, add `postcss-preset-env` and`cssnano` by default.
+
+[**rollup-plugin-terser**](https://www.npmjs.com/package/rollup-plugin-terser) and [**@atomico/rollup-plugin-sizes**](https://www.npmjs.com/package/@atomico/rollup-plugin-sizes)
+
+> los plugins de mitificación solo operan en modo build.
 
 ## cli
 
-```
+```cmd
   Usage
     $ bundle [src] [dest] [options]
 
@@ -30,19 +65,43 @@ cli a base de rollup, que añade una capa de configuración simple y ágil para 
     $ bundle src/*.js dist
     $ bundle src/*.html
     $ bundle
-
 ```
 
-## ejemplos de configuracion
+## Use example
 
-```bash
-bundle src/*.html,src/*.css
+Simple export of web-components and preview of this.
+
+**project directory**
+
+```
+/src
+	/web-components
+		/ui-a
+			ui-a.js
+		/ui-b
+			ui-b.js
+		/ui-c
+			ui-c.js
+	/input.html
 ```
 
-generará exportaciones compartidas entre los ficheros html gracias a rollup y a su vez como el css se define como entrada, se generará ficheros independientes de css para ser usados.
+**bundle-cli for preview**
 
-## Todo
+```
+bundle src/index.html public -w
+```
 
-1. [] : lograr que pueda leer los ficheros css desde el html para una mejor exportacion.
-2. [] : permitir que escanee los fragmentos de javascript fuera de script[type=module], para ser paseados por babel
-3. [] : añadir los test de generación de ficheros, tomar como base **microbundle** o **module-css/rollup**.
+**web-components export bundle**
+
+```
+bundle src/web-components/**/*.js --external
+```
+
+`--external` allows rollup to ignore dependencies and peerDependencies.
+
+## todo
+
+-   [ ] read from the html the styles used locally and generate a bundle that groups them to be then grafted into the html
+-   [ ] add tests on the cli, to verify bundle integration.
+-   [ ] minificar el html generado
+-   [ ] add support to a server that supports the issuance of updates, can be activated under the prefix `--server`

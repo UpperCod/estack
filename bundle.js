@@ -21,7 +21,7 @@ var html = _interopDefault(require('parse5'));
 var postcss = _interopDefault(require('postcss'));
 var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
 var cssnano = _interopDefault(require('cssnano'));
-var easyImport = _interopDefault(require('postcss-easy-import'));
+var atImport = _interopDefault(require('postcss-import'));
 
 let isHTML = match("**/*.html");
 let isCSS = match("**/*.css");
@@ -29,6 +29,8 @@ let isCSS = match("**/*.css");
 let ignore = ["#text", "#comment"];
 
 let inject = `[[${Math.random()}]]`;
+
+let cwd = process.cwd();
 
 function patch(fragment, scripts) {
 	let length = fragment.length;
@@ -73,9 +75,22 @@ function plugin(options = {}) {
 		async transform(code, id) {
 			let { isEntry } = this.getModuleInfo(id);
 			if (isCSS(id)) {
+				let { name, dir } = path.parse(id);
 				let { css } = code.trim()
 					? await postcss([
-							easyImport(),
+							atImport({
+								resolve: file => {
+									let id = path.join(
+										/^\./.test(file)
+											? dir
+											: path.join(cwd, "node_modules"),
+										file
+									);
+									// Add an id to bundle.watchFile
+									this.addWatchFile(id);
+									return id;
+								}
+							}),
 							postcssPresetEnv({
 								stage: 0,
 								browsers: options.browsers
@@ -85,7 +100,6 @@ function plugin(options = {}) {
 					: "";
 
 				if (isEntry) {
-					let { name } = path.parse(id);
 					let fileName = name + ".css";
 					this.emitFile({
 						type: "asset",
@@ -95,7 +109,7 @@ function plugin(options = {}) {
 					});
 				}
 				return {
-					code: isEntry ? "" : "export let css = `" + css + "`;",
+					code: isEntry ? "" : "export default  `" + css + "`;",
 					map: { mappings: "" }
 				};
 			}
@@ -166,7 +180,7 @@ function plugin(options = {}) {
 	};
 }
 
-let cwd = process.cwd();
+let cwd$1 = process.cwd();
 
 function normalizePath(path) {
 	return path.replace(/(\\+)/g, "/");
@@ -193,11 +207,11 @@ function mergeKeysArray(keys, ...config) {
 
 let asyncReadFile = util.promisify(fs.readFile);
 
-let cwd$1 = process.cwd();
+let cwd$2 = process.cwd();
 
 let namePkg = "package.json";
 
-let srcPackage = path.join(cwd$1, namePkg);
+let srcPackage = path.join(cwd$2, namePkg);
 
 let defaultOutput = {
 	dir: "dist",
@@ -210,7 +224,6 @@ let pkgDefault = {
 	devDependencies: {},
 	peerDependencies: {},
 	babel: {},
-	postcss: [],
 	bundle: {}
 };
 

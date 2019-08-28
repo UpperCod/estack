@@ -1,4 +1,4 @@
-import { css as style } from "./style/app-2.css";
+import style from "./style/app-1.css";
 
 let div = document.createElement("div");
 document.appendChild(div);
