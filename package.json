@@ -8,7 +8,7 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "build:example": "node bundle.js example/src/*.html,example/src/*.css example/dist",
-    "build:example:watch": "node bundle.js example/src/*.html,example/src/*.css example/dist -w",
+    "build:example:watch": "node bundle.js example/src/index.html,example/src/*.css example/dist -w",
     "prepare": "npm run build"
   },
   "author": "UpperCod",

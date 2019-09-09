@@ -105,3 +105,4 @@ bundle src/web-components/**/*.js --external
 -   [ ] add tests on the cli, to verify bundle integration.
 -   [ ] minificar el html generado
 -   [ ] add support to a server that supports the issuance of updates, can be activated under the prefix `--server`
+-   [ ] add shortcut to unpkg shortcut to simplify import, eg `import anyModule from "unpkg.com/any-module"`, this must change the amount if defined as external, eg `import anyModule from "https://unpkg.com/any-module/any-module.es.js"`

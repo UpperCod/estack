@@ -14,7 +14,7 @@ sade("bundle [src] [dest]")
 		false
 	)
 	.option("--shimport", "enable the use of shimport in the html", false)
-	.option("--browsers", "define the target of the bundle", "last 2 versions")
+	.option("--browsers", "define the target of the bundle", "> 3%")
 	.example("src/index.js dist --watch")
 	.example("src/*.js dist")
 	.example("src/*.html")

@@ -185,24 +185,29 @@ export default async function createBundle(
 		let watcher = chokidar.watch("file");
 
 		watcher.on("all", async (event, path) => {
-			if (event == "add") {
-				path = normalizePath(path);
-				if (entries.includes(path)) return;
-				if (isInput(path)) {
-					write(true);
-				}
-			}
-			if (event == "change" && path == namePkg) {
-				let nextPkg = await openPackage(srcPackage);
-				if (
-					checkFromPackage.some(
-						index =>
-							JSON.stringify(pkg[index]) !==
-							JSON.stringify(nextPkg[index])
-					)
-				) {
-					write(true);
-				}
+			switch (event) {
+				case "add":
+				case "unlink":
+					path = normalizePath(path);
+					if (entries.includes(path) && event == "add") return;
+					if (isInput(path)) {
+						write(true);
+					}
+					break;
+				case "change":
+					if (path == namePkg) {
+						let nextPkg = await openPackage(srcPackage);
+						if (
+							checkFromPackage.some(
+								index =>
+									JSON.stringify(pkg[index]) !==
+									JSON.stringify(nextPkg[index])
+							)
+						) {
+							write(true);
+						}
+					}
+					break;
 			}
 		});
 

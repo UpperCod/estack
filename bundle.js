@@ -105,7 +105,7 @@ function plugin(options = {}) {
 						type: "asset",
 						name: fileName,
 						fileName,
-						source: css
+						source: css || ""
 					});
 				}
 				return {
@@ -371,24 +371,29 @@ async function createBundle(
 		let watcher = chokidar.watch("file");
 
 		watcher.on("all", async (event, path) => {
-			if (event == "add") {
-				path = normalizePath(path);
-				if (entries.includes(path)) return;
-				if (isInput(path)) {
-					write(true);
-				}
-			}
-			if (event == "change" && path == namePkg) {
-				let nextPkg = await openPackage(srcPackage);
-				if (
-					checkFromPackage.some(
-						index =>
-							JSON.stringify(pkg[index]) !==
-							JSON.stringify(nextPkg[index])
-					)
-				) {
-					write(true);
-				}
+			switch (event) {
+				case "add":
+				case "unlink":
+					path = normalizePath(path);
+					if (entries.includes(path) && event == "add") return;
+					if (isInput(path)) {
+						write(true);
+					}
+					break;
+				case "change":
+					if (path == namePkg) {
+						let nextPkg = await openPackage(srcPackage);
+						if (
+							checkFromPackage.some(
+								index =>
+									JSON.stringify(pkg[index]) !==
+									JSON.stringify(nextPkg[index])
+							)
+						) {
+							write(true);
+						}
+					}
+					break;
 			}
 		});
 
@@ -428,7 +433,7 @@ sade("bundle [src] [dest]")
 		false
 	)
 	.option("--shimport", "enable the use of shimport in the html", false)
-	.option("--browsers", "define the target of the bundle", "last 2 versions")
+	.option("--browsers", "define the target of the bundle", "> 3%")
 	.example("src/index.js dist --watch")
 	.example("src/*.js dist")
 	.example("src/*.html")

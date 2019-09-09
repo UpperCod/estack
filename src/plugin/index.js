@@ -90,7 +90,7 @@ export default function(options = {}) {
 						type: "asset",
 						name: fileName,
 						fileName,
-						source: css
+						source: css || ""
 					});
 				}
 				return {
