@@ -1,4 +1,3 @@
-import fs from "fs";
 import path from "path";
 
 import match from "picomatch";
@@ -103,7 +102,11 @@ export default async function createBundle(
 						[
 							"@babel/preset-env",
 							{
-								targets: pkg.bundle.browsers
+								targets: pkg.bundle.browsers,
+								exclude: [
+									"transform-typeof-symbol",
+									"transform-regenerator"
+								]
 							}
 						]
 					],

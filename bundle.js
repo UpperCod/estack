@@ -4,8 +4,6 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var sade = _interopDefault(require('sade'));
-var fs = require('fs');
-var fs__default = _interopDefault(fs);
 var path = _interopDefault(require('path'));
 var match = _interopDefault(require('picomatch'));
 var fastGlob = _interopDefault(require('fast-glob'));
@@ -16,6 +14,7 @@ var babel = _interopDefault(require('rollup-plugin-babel'));
 var resolve = _interopDefault(require('rollup-plugin-node-resolve'));
 var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
 var rollupPluginTerser = require('rollup-plugin-terser');
+var fs = require('fs');
 var util = require('util');
 var html = _interopDefault(require('parse5'));
 var postcss = _interopDefault(require('postcss'));
@@ -289,7 +288,11 @@ async function createBundle(
 						[
 							"@babel/preset-env",
 							{
-								targets: pkg.bundle.browsers
+								targets: pkg.bundle.browsers,
+								exclude: [
+									"transform-typeof-symbol",
+									"transform-regenerator"
+								]
 							}
 						]
 					],
