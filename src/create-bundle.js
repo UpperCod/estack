@@ -9,6 +9,7 @@ import { rollup, watch as watchBundle } from "rollup";
 
 import babel from "rollup-plugin-babel";
 import resolve from "rollup-plugin-node-resolve";
+import common from "rollup-plugin-commonjs";
 import sizes from "@atomico/rollup-plugin-sizes";
 import { terser } from "rollup-plugin-terser";
 
@@ -94,6 +95,7 @@ export default async function createBundle(
 	let plugins = [
 		plugin(pkg.bundle),
 		resolve(),
+		common(),
 		babel({
 			...mergeKeysArray(
 				["presets", "plugins"],

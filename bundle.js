@@ -12,6 +12,7 @@ var chokidar = _interopDefault(require('chokidar'));
 var rollup = require('rollup');
 var babel = _interopDefault(require('rollup-plugin-babel'));
 var resolve = _interopDefault(require('rollup-plugin-node-resolve'));
+var common = _interopDefault(require('rollup-plugin-commonjs'));
 var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
 var rollupPluginTerser = require('rollup-plugin-terser');
 var fs = require('fs');
@@ -280,6 +281,7 @@ async function createBundle(
 	let plugins = [
 		plugin(pkg.bundle),
 		resolve(),
+		common(),
 		babel({
 			...mergeKeysArray(
 				["presets", "plugins"],
