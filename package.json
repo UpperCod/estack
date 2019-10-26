@@ -1,6 +1,6 @@
 {
   "name": "bundle-cli",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "simple bundle generator",
   "module": "src/index.js",
   "main": "bundle.js",

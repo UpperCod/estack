@@ -95,7 +95,6 @@ export default async function createBundle(
 	let plugins = [
 		plugin(pkg.bundle),
 		resolve(),
-		common(),
 		babel({
 			...mergeKeysArray(
 				["presets", "plugins"],
@@ -127,6 +126,7 @@ export default async function createBundle(
 				exclude: "node_modules/**"
 			}
 		}),
+		common(),
 		...(watch ? [] : [terser(), sizes()])
 	];
 
