@@ -1,108 +1,34 @@
 ## bundle-cli
 
-This CLI simplify the development of packages or applications, thanks to the use of rollup, adding to this:
+CLI for the generation of applications based on es6 modules, bundle-cli allows **multiple types of input based on expressions**, eg `src/**.html`, the inputs can based on the following extensions accept`.css`, `.html`,`.js`, `.ts`,`jsx` and `tsx`. `bundle-cli` extracts the scripts declared in the `.html` based on the expression `script[type=module][src=*]`, if you use the flag `--server` and `--watch` it will enable **livereload**, `bundle-cli` will dispatch the reload event to the html served each time a modification occurs.
 
-Observers of files (html, js and css) based on expressions, for the generation of inputs to work by rollup, eg:
+`bundle-cli [src] [dist]`
 
-```
-bundle src/*.html,src/*.js,src/css/*.css
-```
+where :
 
-construction of html files, which share chunk type dependencies of the js imported by the tag `script[type=module]` locally, eg:
+- `src` : expression that allows you to define one or more entries for rollup, eg `src/**.html`,`src/**.css` or `src/**.html,src/**.js`.
+- `dist` : bundle destination
 
-**input:index.html**
+`--server`
 
-```html
-<script src="./a.js" type="module"></script>
-<script src="./a.js" type="module"></script>
-```
+Create a server, by default localhost: 8080, when used together with the flat --watch, enable livereload to the html files served
 
-**output:index.html**
+`-w | --watch`
 
-```html
-<script src="./index.js" type="module"></script>
-```
+observe the changes to generate a new bundle
 
-construction of css files when declared as input, if not declared as input, it will return the css as text processed by postcss, eg:
+`-e | --external`
 
-```
-import style "./style.css";
-console.log(style) //content of style.css, ideal for web-components
-```
+It allows to define if the `package.dependencies` should be added to the bundle,
 
-> the alRule import are grouped in the export file
+`--browsers`
 
-## default settings
+Modify the output of the css and js code, based on browser coverage
 
-bundle-cli, makes use of the following plugin:
+`--minify`
 
-[**rollup-plugin-resolve **](https://github.com/rollup/rollup-plugin-node-resolve): allows to maintain a node.js style import
+minify the code only if the flag --watch is not used
 
-[**rollup-plugin-babel**](https://github.com/rollup/rollup-plugin-babel): supports its configuration from the package.json by reading from this `babel.presets` and`babel.plugins`, by default it attaches, `@babel/preset-env` and `@babel/plugin-transform-react-jsx` with pagma `h`.
+### extend babel settings
 
-[**postcss**](https://postcss.org/): bundle-cli, only supports css, but to enhance its use, add `postcss-preset-env` and`cssnano` by default.
-
-[**rollup-plugin-terser**](https://www.npmjs.com/package/rollup-plugin-terser) and [**@atomico/rollup-plugin-sizes**](https://www.npmjs.com/package/@atomico/rollup-plugin-sizes)
-
-> los plugins de mitificación solo operan en modo build.
-
-## cli
-
-```cmd
-  Usage
-    $ bundle [src] [dest] [options]
-
-  Options
-    -w, --watch       Watch files in bundle and rebuild on changes  (default false)
-    -e, --external    Does not include dependencies in the bundle  (default false)
-    --shimport        enable the use of shimport in the html  (default false)
-    --browsers        define the target of the bundle  (default last 2 versions)
-    -v, --version     Displays current version
-    -h, --help        Displays this message
-
-  Examples
-    $ bundle src/index.js dist --watch
-    $ bundle src/*.js dist
-    $ bundle src/*.html
-    $ bundle
-```
-
-## Use example
-
-Simple export of web-components and preview of this.
-
-**project directory**
-
-```
-/src
-	/web-components
-		/ui-a
-			ui-a.js
-		/ui-b
-			ui-b.js
-		/ui-c
-			ui-c.js
-	/input.html
-```
-
-**bundle-cli for preview**
-
-```
-bundle src/index.html public -w
-```
-
-**web-components export bundle**
-
-```
-bundle src/web-components/**/*.js --external
-```
-
-`--external` allows rollup to ignore dependencies and peerDependencies.
-
-## todo
-
--   [ ] read from the html the styles used locally and generate a bundle that groups them to be then grafted into the html
--   [ ] add tests on the cli, to verify bundle integration.
--   [ ] minificar el html generado
--   [ ] add support to a server that supports the issuance of updates, can be activated under the prefix `--server`
--   [ ] add shortcut to unpkg shortcut to simplify import, eg `import anyModule from "unpkg.com/any-module"`, this must change the amount if defined as external, eg `import anyModule from "https://unpkg.com/any-module/any-module.es.js"`
+define the bable property within your package, The bundle will take the plugins and presets of the configuration and make a merge of it, you can rewrite them by default.

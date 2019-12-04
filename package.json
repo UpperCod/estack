@@ -1,14 +1,14 @@
 {
   "name": "bundle-cli",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "simple bundle generator",
-  "module": "src/index.js",
-  "main": "bundle.js",
+  "module": "src/cli.js",
+  "main": "cli.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "build:example": "node bundle.js example/src/*.html,example/src/*.css example/dist",
-    "build:example:watch": "node bundle.js example/src/index.html,example/src/*.css example/dist -w",
+    "build:example": "node cli.js example/src/*.html,example/src/*.css example/dist",
+    "build:example:watch": "node cli.js example/src/**.html,example/src/*.css example/dist -w --server --minify",
     "prepare": "npm run build"
   },
   "author": "UpperCod",
@@ -22,26 +22,26 @@
   },
   "dependencies": {
     "@atomico/rollup-plugin-sizes": "^1.0.3",
-    "@babel/core": "^7.5.5",
-    "@babel/plugin-transform-react-jsx": "^7.3.0",
-    "@babel/preset-env": "^7.5.5",
-    "chokidar": "^3.0.2",
+    "@babel/core": "^7.7.4",
+    "@babel/plugin-transform-react-jsx": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "@babel/preset-typescript": "^7.7.4",
+    "chokidar": "^3.3.0",
     "cssnano": "^4.1.10",
-    "fast-glob": "^3.0.4",
-    "parse5": "^5.1.0",
-    "picomatch": "^2.0.7",
-    "postcss": "^7.0.17",
+    "fast-glob": "^3.1.0",
+    "parse5": "^5.1.1",
+    "picomatch": "^2.1.1",
+    "postcss": "^7.0.23",
     "postcss-import": "^12.0.1",
     "postcss-preset-env": "^6.7.0",
-    "rollup": "^1.20.1",
+    "rollup": "^1.27.5",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^5.1.1",
-    "sade": "^1.6.1",
-    "simple-string-table": "^1.0.0"
+    "rollup-plugin-terser": "^5.1.2",
+    "sade": "^1.6.1"
   },
   "bin": {
-    "bundle": "./bundle.js"
+    "bundle": "./cli.js"
   }
 }
