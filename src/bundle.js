@@ -54,7 +54,8 @@ export default async function createBundle(opts, cache) {
   let rollupOutput = {
     dir: opts.dir,
     format: "es",
-    sourcemap: true
+    sourcemap: true,
+    chunkFileNames: "chunks/[hash].js"
   };
   // look at the html files given by the expression, to get the input scripts
   await Promise.all(
