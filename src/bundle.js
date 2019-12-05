@@ -217,18 +217,20 @@ export default async function createBundle(opts, cache) {
     }
   }
 
-  return build().then(() => {
-    // create a server that is capable of subscribing to bundle changes, for a livereload
-    if (opts.server && !currentServer) {
-      currentServer = createServer(
-        opts.dir,
-        opts.watch,
-        opts.server == true ? 8080 : opts.server
-      );
-    } else if (currentServer) {
-      currentServer();
-    }
-  });
+  return build()
+    .then(() => {
+      // create a server that is capable of subscribing to bundle changes, for a livereload
+      if (opts.server && !currentServer) {
+        currentServer = createServer(
+          opts.dir,
+          opts.watch,
+          opts.server == true ? 8080 : opts.server
+        );
+      } else if (currentServer) {
+        currentServer();
+      }
+    })
+    .catch(e => console.log(e));
 }
 
 function streamLog(message) {

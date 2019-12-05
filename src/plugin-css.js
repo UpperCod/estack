@@ -32,7 +32,7 @@ export default function(options = {}) {
                 browsers: options.browsers
               }),
               ...(options.watch ? [] : [cssnano()])
-            ]).process(code)
+            ]).process(code, { from: undefined })
           : "";
 
         if (isEntry) {

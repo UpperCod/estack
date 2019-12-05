@@ -85,7 +85,7 @@ async function getPackage() {
   try {
     return {
       ...pkgDefault,
-      ...JSON.parse(await read(path.join(cwd, "package.json")))
+      ...JSON.parse(await read("package.json"))
     };
   } catch (e) {
     return { ...pkgDefault };
@@ -167,7 +167,7 @@ function pluginCss(options = {}) {
                 browsers: options.browsers
               }),
               ...(options.watch ? [] : [cssnano()])
-            ]).process(code)
+            ]).process(code, { from: undefined })
           : "";
 
         if (isEntry) {
@@ -1245,7 +1245,8 @@ async function createBundle(opts, cache) {
   let rollupOutput = {
     dir: opts.dir,
     format: "es",
-    sourcemap: true
+    sourcemap: true,
+    chunkFileNames: "chunks/[hash].js"
   };
   // look at the html files given by the expression, to get the input scripts
   await Promise.all(

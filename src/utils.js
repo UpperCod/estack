@@ -64,7 +64,7 @@ export async function getPackage() {
   try {
     return {
       ...pkgDefault,
-      ...JSON.parse(await read(path.join(cwd, "package.json")))
+      ...JSON.parse(await read("package.json"))
     };
   } catch (e) {
     return { ...pkgDefault };
