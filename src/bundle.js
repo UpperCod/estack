@@ -169,6 +169,7 @@ export default async function createBundle(opts, cache) {
           break;
         case "END":
           streamLog(`bundle: ${new Date() - lastTime}ms`);
+          if (currentServer) currentServer();
           break;
         case "ERROR":
           onwarn(event.error);

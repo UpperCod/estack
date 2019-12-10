@@ -1360,6 +1360,7 @@ async function createBundle(opts, cache) {
           break;
         case "END":
           streamLog(`bundle: ${new Date() - lastTime}ms`);
+          if (currentServer) currentServer();
           break;
         case "ERROR":
           onwarn(event.error);
@@ -1408,18 +1409,20 @@ async function createBundle(opts, cache) {
     }
   }
 
-  return build().then(() => {
-    // create a server that is capable of subscribing to bundle changes, for a livereload
-    if (opts.server && !currentServer) {
-      currentServer = createServer(
-        opts.dir,
-        opts.watch,
-        opts.server == true ? 8080 : opts.server
-      );
-    } else if (currentServer) {
-      currentServer();
-    }
-  });
+  return build()
+    .then(() => {
+      // create a server that is capable of subscribing to bundle changes, for a livereload
+      if (opts.server && !currentServer) {
+        currentServer = createServer(
+          opts.dir,
+          opts.watch,
+          opts.server == true ? 8080 : opts.server
+        );
+      } else if (currentServer) {
+        currentServer();
+      }
+    })
+    .catch(e => console.log(e));
 }
 
 function streamLog(message) {
@@ -1458,8 +1461,6 @@ sade("bundle [src] [dest]")
       ...opts,
       dir,
       src: src ? src.split(/ *, */g) : []
-    }).catch(e => {
-      console.log(e);
-    });
+    }).catch(e => console.log("" + e));
   })
   .parse(process.argv);

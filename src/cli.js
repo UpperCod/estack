@@ -27,8 +27,6 @@ sade("bundle [src] [dest]")
       ...opts,
       dir,
       src: src ? src.split(/ *, */g) : []
-    }).catch(e => {
-      console.log(e);
-    });
+    }).catch(e => console.log("" + e));
   })
   .parse(process.argv);
