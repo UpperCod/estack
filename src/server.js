@@ -1,15 +1,15 @@
+import net from "net";
 import path from "path";
 import http from "http";
 import url from "url";
 import { asyncStat, asyncReadFile, cwd } from "./utils";
 import types from "./server-types";
 
-export default function createServer(
-  dir,
-  watch,
-  port = 8080,
-  reloadPort = 5000
-) {
+export default async function createServer(dir, watch) {
+  let port = await findPort(8000, 8080);
+
+  let reloadPort = await findPort(5000, 5080);
+
   http
     .createServer(async (req, res) => {
       let { pathname } = url.parse(req.url);
@@ -80,6 +80,7 @@ export default function createServer(
       })
       .listen(parseInt(reloadPort, 10));
   }
+
   console.log(`\nserver running on http://localhost:${port}\n`);
 
   return function reload() {
@@ -109,4 +110,26 @@ function sendMessage(res, channel, data) {
 function sendError(res, status) {
   res.writeHead(status);
   res.end();
+}
+
+async function findPort(port, limit, pending) {
+  if (!pending) {
+    pending = {};
+    pending.promise = new Promise((resolve, reject) => {
+      pending.resolve = resolve;
+      pending.reject = reject;
+    });
+  }
+  let client = net.createConnection({ port });
+  client.on("connect", () => {
+    client.end();
+    if (port > limit) {
+      pending.reject();
+    } else {
+      findPort(port + 1, limit, pending);
+    }
+  });
+  client.on("error", () => pending.resolve(port));
+
+  return pending.promise;
 }

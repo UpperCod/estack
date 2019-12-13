@@ -7,7 +7,7 @@ function h(nodeName, props, children) {
 }
 
 function App() {
-  return h("h1", null, "hola mundo");
+  return h("h1", null, "hola mundosssssss");
 }
 
 console.log(App());

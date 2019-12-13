@@ -15,6 +15,7 @@ var postcss = _interopDefault(require('postcss'));
 var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
 var cssnano = _interopDefault(require('cssnano'));
 var atImport = _interopDefault(require('postcss-import'));
+var net = _interopDefault(require('net'));
 var http = _interopDefault(require('http'));
 var url = _interopDefault(require('url'));
 var babel = _interopDefault(require('rollup-plugin-babel'));
@@ -1097,12 +1098,11 @@ var types = {
   "x-conference/x-cooltalk": ["ice"]
 };
 
-function createServer(
-  dir,
-  watch,
-  port = 8080,
-  reloadPort = 5000
-) {
+async function createServer(dir, watch) {
+  let port = await findPort(8000, 8080);
+
+  let reloadPort = await findPort(5000, 5080);
+
   http
     .createServer(async (req, res) => {
       let { pathname } = url.parse(req.url);
@@ -1173,6 +1173,7 @@ function createServer(
       })
       .listen(parseInt(reloadPort, 10));
   }
+
   console.log(`\nserver running on http://localhost:${port}\n`);
 
   return function reload() {
@@ -1202,6 +1203,28 @@ function sendMessage(res, channel, data) {
 function sendError(res, status) {
   res.writeHead(status);
   res.end();
+}
+
+async function findPort(port, limit, pending) {
+  if (!pending) {
+    pending = {};
+    pending.promise = new Promise((resolve, reject) => {
+      pending.resolve = resolve;
+      pending.reject = reject;
+    });
+  }
+  let client = net.createConnection({ port });
+  client.on("connect", () => {
+    client.end();
+    if (port > limit) {
+      pending.reject();
+    } else {
+      findPort(port + 1, limit, pending);
+    }
+  });
+  client.on("error", () => pending.resolve(port));
+
+  return pending.promise;
 }
 
 let namePkg = "package.json";
@@ -1273,6 +1296,7 @@ async function createBundle(opts, cache) {
   rollupInputs = rollupInputs.concat(htmlInputs);
 
   if (!rollupInputs.length) return;
+
   let rollupInput = {
     input: rollupInputs,
     // when using the flat --external, you avoid adding the dependencies to the bundle
@@ -1293,7 +1317,7 @@ async function createBundle(opts, cache) {
               [
                 "@babel/preset-typescript",
                 {
-                  jsxPragma: "h"
+                  jsxPragma: opts.jsx
                 }
               ],
               [
@@ -1316,7 +1340,7 @@ async function createBundle(opts, cache) {
               [
                 "@babel/plugin-transform-react-jsx",
                 {
-                  pragma: "h"
+                  pragma: opts.jsx
                 }
               ]
             ]
@@ -1353,14 +1377,14 @@ async function createBundle(opts, cache) {
 
     let lastTime;
 
-    rollupWatch.on("event", event => {
+    rollupWatch.on("event", async event => {
       switch (event.code) {
         case "START":
           lastTime = new Date();
           break;
         case "END":
           streamLog(`bundle: ${new Date() - lastTime}ms`);
-          if (currentServer) currentServer();
+          if (currentServer) (await currentServer)();
           break;
         case "ERROR":
           onwarn(event.error);
@@ -1410,7 +1434,7 @@ async function createBundle(opts, cache) {
   }
 
   return build()
-    .then(() => {
+    .then(async () => {
       // create a server that is capable of subscribing to bundle changes, for a livereload
       if (opts.server && !currentServer) {
         currentServer = createServer(
@@ -1419,7 +1443,7 @@ async function createBundle(opts, cache) {
           opts.server == true ? 8080 : opts.server
         );
       } else if (currentServer) {
-        currentServer();
+        (await currentServer)();
       }
     })
     .catch(e => console.log(e));
@@ -1443,14 +1467,15 @@ sade("bundle [src] [dest]")
     "Does not include dependencies in the bundle",
     false
   )
-  .option("--server", "Create a server, by default localhost:8080", 0)
+  .option("--server", "Create a server, by default localhost:8000", false)
   .option("--browsers", "define the target of the bundle", "> 3%")
+  .option("--jsx", "declare the program for jsx", "h")
   .option(
     "--minify",
     "minify the code only if the flag --watch is not used",
     false
   )
-  .example("src/index.html dist --watch --server 80")
+  .example("src/index.html dist --watch --server")
   .example("src/index.html dist --watch --server")
   .example("src/index.js dist --watch")
   .example("src/*.js dist")

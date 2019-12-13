@@ -82,6 +82,7 @@ export default async function createBundle(opts, cache) {
   rollupInputs = rollupInputs.concat(htmlInputs);
 
   if (!rollupInputs.length) return;
+
   let rollupInput = {
     input: rollupInputs,
     // when using the flat --external, you avoid adding the dependencies to the bundle
@@ -102,7 +103,7 @@ export default async function createBundle(opts, cache) {
               [
                 "@babel/preset-typescript",
                 {
-                  jsxPragma: "h"
+                  jsxPragma: opts.jsx
                 }
               ],
               [
@@ -125,7 +126,7 @@ export default async function createBundle(opts, cache) {
               [
                 "@babel/plugin-transform-react-jsx",
                 {
-                  pragma: "h"
+                  pragma: opts.jsx
                 }
               ]
             ]
@@ -162,14 +163,14 @@ export default async function createBundle(opts, cache) {
 
     let lastTime;
 
-    rollupWatch.on("event", event => {
+    rollupWatch.on("event", async event => {
       switch (event.code) {
         case "START":
           lastTime = new Date();
           break;
         case "END":
           streamLog(`bundle: ${new Date() - lastTime}ms`);
-          if (currentServer) currentServer();
+          if (currentServer) (await currentServer)();
           break;
         case "ERROR":
           onwarn(event.error);
@@ -219,7 +220,7 @@ export default async function createBundle(opts, cache) {
   }
 
   return build()
-    .then(() => {
+    .then(async () => {
       // create a server that is capable of subscribing to bundle changes, for a livereload
       if (opts.server && !currentServer) {
         currentServer = createServer(
@@ -228,7 +229,7 @@ export default async function createBundle(opts, cache) {
           opts.server == true ? 8080 : opts.server
         );
       } else if (currentServer) {
-        currentServer();
+        (await currentServer)();
       }
     })
     .catch(e => console.log(e));
