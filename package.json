@@ -1,13 +1,13 @@
 {
   "name": "bundle-cli",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "simple bundle generator",
   "module": "src/cli.js",
   "main": "cli.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "build:example": "node cli.js example/src/*.html,example/src/*.css example/dist",
+    "build:example": "node cli.js example/src/*.html,example/src/*.css example/dist --jsx react",
     "build:example:watch": "node cli.js example/src/**.html,example/src/*.css example/dist  -e unpkg -w --server --minify",
     "prepare": "npm run build"
   },

@@ -2,7 +2,7 @@ import sade from "sade";
 import createBundle from "./bundle";
 
 sade("bundle [src] [dest]")
-  .version("0.6.0")
+  .version("PKG.VERSION")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option(
     "-e, --external",
@@ -15,8 +15,10 @@ sade("bundle [src] [dest]")
     false
   )
   .option("--server", "Create a server, by default localhost:8000", false)
+  .option("--port", "define the server port", 8000)
   .option("--browsers", "define the target of the bundle", "> 3%")
-  .option("--jsx", "declare the program for jsx", "h")
+  .option("--jsx", "pragma jsx", "h")
+  .option("--jsxFragment", "pragma fragment jsx", "Fragment")
   .option(
     "--minify",
     "minify the code only if the flag --watch is not used",

@@ -1187,8 +1187,8 @@ var types = {
   "x-conference/x-cooltalk": ["ice"]
 };
 
-async function createServer(dir, watch) {
-  let port = await findPort(8000, 8080);
+async function createServer(dir, watch, portStart) {
+  let port = await findPort(portStart, portStart + 100);
 
   let reloadPort = await findPort(5000, 5080);
 
@@ -1348,7 +1348,7 @@ async function createBundle(opts, cache) {
 
   // transform src into valid path to include in babel
   for (let src of opts.src) {
-    let { ext, dir } = path__default.parse(src);
+    let { dir } = path__default.parse(src);
 
     dir = path__default.join(dir, "**");
     if (!babelIncludes.includes(dir)) {
@@ -1417,9 +1417,11 @@ async function createBundle(opts, cache) {
             presets: [
               [
                 "@babel/preset-typescript",
-                {
-                  jsxPragma: opts.jsx
-                }
+                opts.jsx == "react"
+                  ? {}
+                  : {
+                      jsxPragma: opts.jsx
+                    }
               ],
               [
                 "@babel/preset-env",
@@ -1441,7 +1443,12 @@ async function createBundle(opts, cache) {
               [
                 "@babel/plugin-transform-react-jsx",
                 {
-                  pragma: opts.jsx
+                  pragma:
+                    opts.jsx == "react" ? "React.createElement" : opts.jsx,
+                  pragmaFrag:
+                    opts.jsxFragment == "react" || opts.jsx == "react"
+                      ? "React.Fragment"
+                      : opts.jsxFragment
                 }
               ]
             ]
@@ -1538,11 +1545,7 @@ async function createBundle(opts, cache) {
     .then(async () => {
       // create a server that is capable of subscribing to bundle changes, for a livereload
       if (opts.server && !currentServer) {
-        currentServer = createServer(
-          opts.dir,
-          opts.watch,
-          opts.server == true ? 8080 : opts.server
-        );
+        currentServer = createServer(opts.dir, opts.watch, opts.port);
       } else if (currentServer) {
         (await currentServer)();
       }
@@ -1561,7 +1564,7 @@ function onwarn(warning) {
 }
 
 sade("bundle [src] [dest]")
-  .version("0.6.0")
+  .version("0.8.1")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option(
     "-e, --external",
@@ -1574,8 +1577,10 @@ sade("bundle [src] [dest]")
     false
   )
   .option("--server", "Create a server, by default localhost:8000", false)
+  .option("--port", "define the server port", 8000)
   .option("--browsers", "define the target of the bundle", "> 3%")
-  .option("--jsx", "declare the program for jsx", "h")
+  .option("--jsx", "pragma jsx", "h")
+  .option("--jsxFragment", "pragma fragment jsx", "Fragment")
   .option(
     "--minify",
     "minify the code only if the flag --watch is not used",

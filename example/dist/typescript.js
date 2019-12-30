@@ -1,5 +1,5 @@
 function typescript (props) {
-  return h("div", null, "hola ", props.age);
+  return React.createElement("div", null, "hola ", props.age);
 }
 
 export default typescript;
