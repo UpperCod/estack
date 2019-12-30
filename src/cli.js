@@ -7,6 +7,11 @@ sade("bundle [src] [dest]")
   .option(
     "-e, --external",
     "Does not include dependencies in the bundle",
+    "false"
+  )
+  .option(
+    "--importmap",
+    "create an importmap based on dependencies using unpkg",
     false
   )
   .option("--server", "Create a server, by default localhost:8000", false)

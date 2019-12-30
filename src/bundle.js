@@ -4,12 +4,15 @@ import chokidar from "chokidar";
 import { bundleHtml } from "./bundle-html";
 import { normalizePath, getPackage, mergeKeysArray } from "./utils";
 import pluginCss from "./plugin-css";
+import pluginUnpkg from "./plugin-unpkg";
 import createServer from "./server";
 
 import babel from "rollup-plugin-babel";
-import resolve from "rollup-plugin-node-resolve";
-import common from "rollup-plugin-commonjs";
+import resolve from "@rollup/plugin-node-resolve";
+import common from "@rollup/plugin-commonjs";
 import sizes from "@atomico/rollup-plugin-sizes";
+import auto from "@rollup/plugin-auto-install";
+import replace from "@rollup/plugin-replace";
 import { terser } from "rollup-plugin-terser";
 import path from "path";
 
@@ -36,11 +39,13 @@ let currentServer;
  */
 export default async function createBundle(opts, cache) {
   opts = { ...optsDefault, ...opts };
+  opts.external = opts.external == "false" ? false : opts.external;
   /**@type {string[]}*/
   let inputs = await fastGlob(opts.src);
   let pkg = await getPackage();
 
   let babelIncludes = ["node_modules/**"];
+
   // transform src into valid path to include in babel
   for (let src of opts.src) {
     let { ext, dir } = path.parse(src);
@@ -83,15 +88,25 @@ export default async function createBundle(opts, cache) {
 
   if (!rollupInputs.length) return;
 
+  let external = opts.external
+    ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
+    : [...Object.keys(pkg.peerDependencies)];
+
   let rollupInput = {
     input: rollupInputs,
     // when using the flat --external, you avoid adding the dependencies to the bundle
-    external: opts.external
-      ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
-      : [...Object.keys(pkg.peerDependencies)],
+    external: opts.external == "unpkg" || opts.importmap ? [] : external,
     plugins: [
+      auto(),
+      pluginUnpkg(opts, external),
       pluginCss(opts), //use the properties {watch,browsers}
-      resolve({ extensions }),
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("production")
+      }),
+      resolve({
+        extensions,
+        dedupe: ["react", "react-dom"]
+      }),
       babel({
         include: babelIncludes,
         extensions,
