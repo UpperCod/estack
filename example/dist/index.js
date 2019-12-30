@@ -1,14 +1,2 @@
-function h(nodeName, props, children) {
-  return {
-    nodeName,
-    children,
-    ...props
-  };
-}
-
-function App() {
-  return h("h1", null, "hola mundosssssss");
-}
-
-console.log(App());
+console.log(document.querySelector("*"));
 //# sourceMappingURL=index.js.map

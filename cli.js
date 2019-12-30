@@ -10,18 +10,22 @@ var chokidar = _interopDefault(require('chokidar'));
 var html = _interopDefault(require('parse5'));
 var fs = require('fs');
 var util = require('util');
-var path = _interopDefault(require('path'));
+var path = require('path');
+var path__default = _interopDefault(path);
 var postcss = _interopDefault(require('postcss'));
 var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
 var cssnano = _interopDefault(require('cssnano'));
 var atImport = _interopDefault(require('postcss-import'));
+var resolve = _interopDefault(require('resolve'));
 var net = _interopDefault(require('net'));
 var http = _interopDefault(require('http'));
 var url = _interopDefault(require('url'));
 var babel = _interopDefault(require('rollup-plugin-babel'));
-var resolve = _interopDefault(require('rollup-plugin-node-resolve'));
-var common = _interopDefault(require('rollup-plugin-commonjs'));
+var resolve$1 = _interopDefault(require('@rollup/plugin-node-resolve'));
+var common = _interopDefault(require('@rollup/plugin-commonjs'));
 var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
+var auto = _interopDefault(require('@rollup/plugin-auto-install'));
+var replace = _interopDefault(require('@rollup/plugin-replace'));
 var rollupPluginTerser = require('rollup-plugin-terser');
 
 let cwd = process.cwd();
@@ -42,11 +46,11 @@ let pkgDefault = {
 };
 
 function read(file) {
-  return asyncReadFile(path.join(cwd, file), "utf8");
+  return asyncReadFile(path__default.join(cwd, file), "utf8");
 }
 
 async function write(file, data) {
-  let dir = path.join(cwd, path.parse(file).dir);
+  let dir = path__default.join(cwd, path__default.parse(file).dir);
   try {
     await asyncStat(dir);
   } catch (e) {
@@ -55,7 +59,7 @@ async function write(file, data) {
     });
   }
 
-  return asyncWriteFile(path.join(cwd, file), data, "utf8");
+  return asyncWriteFile(path__default.join(cwd, file), data, "utf8");
 }
 
 function normalizePath(path) {
@@ -96,19 +100,19 @@ async function getPackage() {
 let ignore = ["#text", "#comment"];
 
 async function bundleHtml(file, dir) {
-  let { base, dir: dirOrg } = path.parse(file);
+  let { base, dir: dirOrg } = path__default.parse(file);
   let content = await read(file);
 
   let fragment = [].concat(html.parse(content));
   let scripts = [];
 
   let document = patch(fragment, src => {
-    scripts.push(path.join(dirOrg, src));
+    scripts.push(path__default.join(dirOrg, src));
   })
     .map(fragment => html.serialize(fragment))
     .join("");
 
-  await write(path.join(dir, base), document);
+  await write(path__default.join(dir, base), document);
   return scripts;
 }
 
@@ -128,7 +132,7 @@ function patch(fragment, addScript) {
         node.attrs = node.attrs.map(({ name, value }) => {
           if (name == "src" && !/^(http(s){0,1}:){0,1}\/\//.test(value)) {
             addScript(value);
-            value = path.parse(value).name + ".js";
+            value = path__default.parse(value).name + ".js";
           }
           return { name, value };
         });
@@ -149,13 +153,13 @@ function pluginCss(options = {}) {
     async transform(code, id) {
       let { isEntry } = this.getModuleInfo(id);
       if (isCss.test(id)) {
-        let { name, dir } = path.parse(id);
+        let { name, dir } = path__default.parse(id);
         let { css } = code.trim()
           ? await postcss([
               atImport({
                 resolve: file => {
-                  let id = path.join(
-                    /^\./.test(file) ? dir : path.join(cwd$1, "node_modules"),
+                  let id = path__default.join(
+                    /^\./.test(file) ? dir : path__default.join(cwd$1, "node_modules"),
                     file
                   );
                   // Add an id to bundle.watchFile
@@ -192,6 +196,91 @@ function pluginCss(options = {}) {
         if (isEntry && isCss.test(facadeModuleId)) {
           delete bundle[key];
         }
+      }
+    }
+  };
+}
+
+function getParts(id) {
+  let [input, ...next] =
+    id.replace(/^\//, "").match(/((?:@[^\/]+(?:\/)){0,1}[^\/]+)(.*)/) || [];
+  return next;
+}
+
+function pluginUnpkg({ external, importmap }, indexExternals) {
+  let fileName = "import-map.importmap";
+  let imports = {};
+  let pkgs = {};
+
+  let isExternal = id => {
+    if (/^(@|\w)/.test(id)) {
+      let [root] = getParts(id);
+      return indexExternals.some(index => index.indexOf(root) == 0);
+    }
+  };
+
+  let resolveUnpkg = async id =>
+    new Promise(scopeResolve => {
+      let [root, child] = getParts(id);
+      let [subRoot] = child ? getParts(child) : [];
+      let file;
+      let getFile = pkg => pkg.module || pkg.main || pkg.browser;
+      resolve(
+        id,
+        {
+          basedir: cwd,
+          packageFilter(pkg, dir) {
+            if (subRoot) {
+              if (pkg.name == subRoot) {
+                file = getFile(pkg);
+                return pkg;
+              }
+            } else {
+              if (pkg.name == root && !pkgs[root]) {
+                pkgs[root] = pkg;
+              }
+              return pkg;
+            }
+          }
+        },
+        async err => {
+          let md = file || getFile(pkgs[root]);
+          let version = pkgs[root].version;
+
+          let concat = subRoot ? (file ? "/" + subRoot + "/" + md : child) : md;
+
+          if (!/\.js$/.test(concat)) {
+            concat += ".js";
+          }
+
+          scopeResolve(
+            `https://unpkg.com/${path.join(`${root}@${version}`, concat).replace(
+              /\\/g,
+              "/"
+            )}?module`
+          );
+        }
+      );
+    });
+  return {
+    async resolveId(id, importer) {
+      if (importer && isExternal(id) && (external == "unpkg" || importmap)) {
+        if (!imports[id]) {
+          imports[id] = await resolveUnpkg(id);
+        }
+        return {
+          id: external == "unpkg" ? imports[id] : id,
+          external: true
+        };
+      }
+    },
+    generateBundle(opts, bundle) {
+      if (importmap) {
+        bundle[fileName] = {
+          fileName,
+          isAsset: true,
+          source: JSON.stringify({ imports })
+        };
       }
     }
   };
@@ -1112,9 +1201,9 @@ async function createServer(dir, watch) {
 
       resource = resource == "/" || pathname == "/" ? "index" : resource;
 
-      let fileUrl = path.join(cwd, dir, resource + (reqFile ? "" : ".html"));
+      let fileUrl = path__default.join(cwd, dir, resource + (reqFile ? "" : ".html"));
 
-      let fallbackUrl = path.join(cwd, dir, "index.html");
+      let fallbackUrl = path__default.join(cwd, dir, "index.html");
 
       let ext = reqFile ? reqFile[1] : "html";
 
@@ -1250,16 +1339,18 @@ let currentServer;
  */
 async function createBundle(opts, cache) {
   opts = { ...optsDefault, ...opts };
+  opts.external = opts.external == "false" ? false : opts.external;
   /**@type {string[]}*/
   let inputs = await fastGlob(opts.src);
   let pkg = await getPackage();
 
   let babelIncludes = ["node_modules/**"];
+
   // transform src into valid path to include in babel
   for (let src of opts.src) {
-    let { ext, dir } = path.parse(src);
+    let { ext, dir } = path__default.parse(src);
 
-    dir = path.join(dir, "**");
+    dir = path__default.join(dir, "**");
     if (!babelIncludes.includes(dir)) {
       babelIncludes.push(dir);
     }
@@ -1297,15 +1388,25 @@ async function createBundle(opts, cache) {
 
   if (!rollupInputs.length) return;
 
+  let external = opts.external
+    ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
+    : [...Object.keys(pkg.peerDependencies)];
+
   let rollupInput = {
     input: rollupInputs,
     // when using the flat --external, you avoid adding the dependencies to the bundle
-    external: opts.external
-      ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
-      : [...Object.keys(pkg.peerDependencies)],
+    external: opts.external == "unpkg" || opts.importmap ? [] : external,
     plugins: [
+      auto(),
+      pluginUnpkg(opts, external),
       pluginCss(opts), //use the properties {watch,browsers}
-      resolve({ extensions }),
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("production")
+      }),
+      resolve$1({
+        extensions,
+        dedupe: ["react", "react-dom"]
+      }),
       babel({
         include: babelIncludes,
         extensions,
@@ -1465,6 +1566,11 @@ sade("bundle [src] [dest]")
   .option(
     "-e, --external",
     "Does not include dependencies in the bundle",
+    "false"
+  )
+  .option(
+    "--importmap",
+    "create an importmap based on dependencies using unpkg",
     false
   )
   .option("--server", "Create a server, by default localhost:8000", false)
