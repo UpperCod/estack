@@ -5,8 +5,8 @@ import url from "url";
 import { asyncStat, asyncReadFile, cwd } from "./utils";
 import types from "./server-types";
 
-export default async function createServer(dir, watch) {
-  let port = await findPort(8000, 8080);
+export default async function createServer(dir, watch, portStart) {
+  let port = await findPort(portStart, portStart + 100);
 
   let reloadPort = await findPort(5000, 5080);
 
