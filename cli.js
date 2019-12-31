@@ -1568,9 +1568,13 @@ async function createBundle(opts, cache) {
 }
 
 function streamLog(message) {
-  process.stdout.clearLine();
-  process.stdout.cursorTo(0);
-  process.stdout.write(message);
+  try {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+    process.stdout.write(message);
+  } catch (e) {
+    console.log(message);
+  }
 }
 
 function onwarn(warning) {
@@ -1578,7 +1582,7 @@ function onwarn(warning) {
 }
 
 sade("bundle [src] [dest]")
-  .version("0.8.2")
+  .version("0.8.3")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option(
     "-e, --external",

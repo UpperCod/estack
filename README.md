@@ -1,34 +1,16 @@
 ## bundle-cli
 
-CLI for the generation of applications based on es6 modules, bundle-cli allows **multiple types of input based on expressions**, eg `src/**.html`, the inputs can based on the following extensions accept`.css`, `.html`,`.js`, `.ts`,`jsx` and `tsx`. `bundle-cli` extracts the scripts declared in the `.html` based on the expression `script[type=module][src=*]`, if you use the flag `--server` and `--watch` it will enable **livereload**, `bundle-cli` will dispatch the reload event to the html served each time a modification occurs.
+![bundle-cli](https://res.cloudinary.com/dz0i8dmpt/image/upload/v1577805935/github/bundle-cli/carbon_14_1.png)
 
-`bundle-cli [src] [dist]`
+This CLI was created with the intention of simplifying the creation of projects based on webcomponents, bundle-cli tries to solve the following objectives:
 
-where :
+1.  Export from html files,this is achieved by [parse5](https://www.npmjs.com/package/parse5) to search within the html the selector `script[type="module"][src="*"]`
+2.  Individual or multiple export by means of expressions, eg `bundle src/components/*-*.js my-dist --external`, this is solved by using [fast-glob](https://www.npmjs.com/package/fast-glob).
+3.  exportacion usando el CDN unpkg, This is solved by applying a resolution algorithm based on [resolve](https://www.npmjs.com/package/resolve), to search for the file associated with the module, avoiding the redirection of unpkg by resolution.
+4.  Agile webcomponents development experience through the use of a server and liveload, this is solved by a bundle-cli server, which dispatches updates only by observing the directories and files selected by the expiration.
+5.  Support Typescript, support is based on [@babel/preset-typescript](https://babeljs.io/docs/en/babel-preset-typescript).
+6.  read the css as plain text to insert the webcomponent, this is achieved by [postcss+preset-env](https://postcss.org/), additionally bundle-cli observes the internal imports of the css to correctly dispatch updates when using the flat `--server --watch`.
+7.  Automatically generate import maps, this is achieved through the same unpkg resolution process, so the dependencies are linked to that CDN.
+8.  Extending the babel configuration, internally bundle-cli uses babel, this configuration can be extended by declaring in package.json[babel] presets or plugins, bundle-cli for an intelligent merge of the configurations to avoid conflicts.
 
-- `src` : expression that allows you to define one or more entries for rollup, eg `src/**.html`,`src/**.css` or `src/**.html,src/**.js`.
-- `dist` : bundle destination
-
-`--server`
-
-Create a server, by default localhost: 8080, when used together with the flat --watch, enable livereload to the html files served
-
-`-w | --watch`
-
-observe the changes to generate a new bundle
-
-`-e | --external`
-
-It allows to define if the `package.dependencies` should be added to the bundle,
-
-`--browsers`
-
-Modify the output of the css and js code, based on browser coverage
-
-`--minify`
-
-minify the code only if the flag --watch is not used
-
-### extend babel settings
-
-define the bable property within your package, The bundle will take the plugins and presets of the configuration and make a merge of it, you can rewrite them by default.
+Bundle cli works thanks to the power of [Rollup](https://rollupjs.org/guide/en/)
