@@ -5,13 +5,13 @@ import { bundleHtml } from "./bundle-html";
 import { normalizePath, getPackage, mergeKeysArray } from "./utils";
 import pluginCss from "./plugin-css";
 import pluginUnpkg from "./plugin-unpkg";
+import { pluginForceExternal, DOUBLE_SLASH } from "./plugin-force-external";
 import createServer from "./server";
 
 import babel from "rollup-plugin-babel";
 import resolve from "@rollup/plugin-node-resolve";
 import common from "@rollup/plugin-commonjs";
 import sizes from "@atomico/rollup-plugin-sizes";
-import auto from "@rollup/plugin-auto-install";
 import replace from "@rollup/plugin-replace";
 import { terser } from "rollup-plugin-terser";
 import path from "path";
@@ -97,10 +97,11 @@ export default async function createBundle(opts, cache) {
     // when using the flat --external, you avoid adding the dependencies to the bundle
     external: opts.external == "unpkg" || opts.importmap ? [] : external,
     plugins: [
-      auto(),
+      pluginForceExternal(),
       pluginUnpkg(opts, external),
       pluginCss(opts), //use the properties {watch,browsers}
       replace({
+        [DOUBLE_SLASH]: "",
         "process.env.NODE_ENV": JSON.stringify("production")
       }),
       resolve({

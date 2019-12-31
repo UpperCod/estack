@@ -24,7 +24,6 @@ var babel = _interopDefault(require('rollup-plugin-babel'));
 var resolve$1 = _interopDefault(require('@rollup/plugin-node-resolve'));
 var common = _interopDefault(require('@rollup/plugin-commonjs'));
 var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
-var auto = _interopDefault(require('@rollup/plugin-auto-install'));
 var replace = _interopDefault(require('@rollup/plugin-replace'));
 var rollupPluginTerser = require('rollup-plugin-terser');
 
@@ -249,7 +248,7 @@ function pluginUnpkg({ external, importmap }, indexExternals) {
 
           let concat = subRoot ? (file ? "/" + subRoot + "/" + md : child) : md;
 
-          if (!/\.js$/.test(concat)) {
+          if (!/\.[\w]+$/.test(concat)) {
             concat += ".js";
           }
 
@@ -281,6 +280,20 @@ function pluginUnpkg({ external, importmap }, indexExternals) {
           isAsset: true,
           source: JSON.stringify({ imports })
         };
+      }
+    }
+  };
+}
+
+const DOUBLE_SLASH = `DOUBLE_${Math.random()}_SLASH`;
+
+function pluginForceExternal() {
+  return {
+    name: "force-external",
+    resolveId(id) {
+      if (/^(http(s){0,1}\:){0,1}\/\/.*/.test(id)) {
+        id = id.replace(/^(\/\/)/, `${DOUBLE_SLASH}$1`);
+        return { id, external: true };
       }
     }
   };
@@ -1397,10 +1410,11 @@ async function createBundle(opts, cache) {
     // when using the flat --external, you avoid adding the dependencies to the bundle
     external: opts.external == "unpkg" || opts.importmap ? [] : external,
     plugins: [
-      auto(),
+      pluginForceExternal(),
       pluginUnpkg(opts, external),
       pluginCss(opts), //use the properties {watch,browsers}
       replace({
+        [DOUBLE_SLASH]: "",
         "process.env.NODE_ENV": JSON.stringify("production")
       }),
       resolve$1({

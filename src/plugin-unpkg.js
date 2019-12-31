@@ -50,7 +50,7 @@ export default function({ external, importmap }, indexExternals) {
 
           let concat = subRoot ? (file ? "/" + subRoot + "/" + md : child) : md;
 
-          if (!/\.js$/.test(concat)) {
+          if (!/\.[\w]+$/.test(concat)) {
             concat += ".js";
           }
 

@@ -1,5 +1,7 @@
+import { h } from "atomico";
+
 console.log({
   node: document.querySelector("*"),
-  jsx: <h1>hola</h1>,
-  fr: <>every!</>
+  d: h,
+  data: import("//localhost:8080/header.js")
 });
