@@ -11,6 +11,30 @@ This CLI was created with the intention of simplifying the creation of projects 
 5.  Support Typescript, support is based on [@babel/preset-typescript](https://babeljs.io/docs/en/babel-preset-typescript).
 6.  read the css as plain text to insert the webcomponent, this is achieved by [postcss+preset-env](https://postcss.org/), additionally bundle-cli observes the internal imports of the css to correctly dispatch updates when using the flat `--server --watch`.
 7.  Automatically generate import maps, this is achieved through the same unpkg resolution process, so the dependencies are linked to that CDN.
-8.  Extending the babel configuration, internally bundle-cli uses babel, this configuration can be extended by declaring in package.json[babel] presets or plugins, bundle-cli for an intelligent merge of the configurations to avoid conflicts.
+8.  Extending the babel configuration, internally bundle-cli uses babel, this configuration can be extended by declaring in `package.json[babel]` presets or plugins, bundle-cli for an intelligent merge of the configurations to avoid conflicts.
+
+## Example
+
+It is recommended to use it locally in your project as a `package.json[script]`, eg:
+
+```json
+{
+  "name": "atomico-base",
+  "description": "a repo to start with atomico",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "bundle *.html dist --minify",
+    "build:components": "bundle src/components/**/*-*.js components --external",
+    "dev": "bundle *.html dist --watch --server",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "atomico": "^0.17.0"
+  },
+  "devDependencies": {
+    "bundle-cli": "^0.8.4"
+  }
+}
+```
 
 Bundle cli works thanks to the power of [Rollup](https://rollupjs.org/guide/en/)
