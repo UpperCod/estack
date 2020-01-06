@@ -1,13 +1,13 @@
 {
   "name": "bundle-cli",
-  "version": "0.8.4",
+  "version": "0.9.0",
   "description": "simple bundle generator",
   "module": "src/cli.js",
   "main": "cli.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "build:example": "node cli.js example/src/*.html,example/src/*.css example/dist  -e unpkg",
+    "build:example": "node cli.js  -c bundle-dev",
     "build:example:watch": "node cli.js example/src/**.html,example/src/*.css example/dist  -e unpkg -w --server --minify",
     "prepare": "npm run build"
   },
@@ -19,6 +19,22 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/atomicojs/bundle-cli"
+  },
+  "bundle-dev" : {
+    "watch" : true,
+    "server" : true,
+    "dir" : "example/dist",
+    "src" : [
+      "example/src/*.html",
+      "example/src/*.css"
+    ],
+    "external" : "unpkg", 
+    "htmlExports" : [
+      "a-markdown[:src]","a-test[:src]"
+    ],
+    "htmlInject" : [
+      "script[type=module][src=https://unpkg.com/atomico@0.18.0/core.js]"
+    ]
   },
   "dependencies": {
     "@atomico/rollup-plugin-sizes": "^1.0.3",

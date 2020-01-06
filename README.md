@@ -37,4 +37,39 @@ It is recommended to use it locally in your project as a `package.json[script]`,
 }
 ```
 
+## additional configuration
+
+#### --config
+
+```
+bundle --config myConfig
+```
+
+where :
+
+- `myConfig`: property that will take from package.json to complete the configuration.
+
+**Example package.json**
+
+```json
+{
+  "myConfig": {
+    "watch": true,
+    "server": true,
+    "dir": "example/dist",
+    "src": ["example/src/*.html", "example/src/*.css"],
+    "external": "unpkg",
+    "htmlExports": ["a-markdown[:src]", "a-test[:src]"],
+    "htmlInject": [
+      "script[type=module][src=https://unpkg.com/atomico@0.18.0/core.js]"
+    ]
+  }
+}
+```
+
+htmlExports and htmlInject, can only be used through the --config flag, this allows to bundle the bundle process, in the HTML generation.
+
+- **htmlExports** : type `string[]`, by means of an emmet-style expression, it allows to extract content from the html to be processed, eg `img[:src]` copy all images inside the source to the destination
+- **htmlInject**: type `string[]`, allows to inject html content in the head to fill polyfill or external resources, eg `script[src=https://polyfill.io/v3/polyfill.min.js?features=fetch]`
+
 Bundle cli works thanks to the power of [Rollup](https://rollupjs.org/guide/en/)
