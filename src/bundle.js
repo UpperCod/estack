@@ -24,8 +24,7 @@ let inputsHtml = {};
 
 let optsDefault = {
   dir: "dist",
-  browsers: "> 3%",
-  watch: false
+  browsers: "> 3%"
 };
 
 let extensions = [".js", ".jsx", ".ts", ".tsx"];
@@ -34,15 +33,34 @@ let extensions = [".js", ".jsx", ".ts", ".tsx"];
  */
 let currentServer;
 /**
- *
- * @param {{src:string,dir:string,browsers?:string,watch?:boolean,minify?:boolean,server?:(boolean|number)} } opts
+ * @param {Object} opts
+ * @param {string[]} opts.src
+ * @param {string} [opts.dir]
+ * @param {string} [opts.browsers]
+ * @param {boolean} [opts.watch]
+ * @param {boolean} [opts.server]
+ * @param {number} [opts.port]
+ * @param {boolean|"unpkg"} opts.external
+ * @param {string} [opts.config]
+ * @param {string} [opts.jsx]
+ * @param {jsxFragment} [opts.jsxFragment]
+ * @param {string} [opts.importmap]
+ * @param {boolean} [opts.minify] - minifies the js and css, this option is ignored if the flag watch is used
+ * @param {string[]} [opts.htmlInject] - allows to inject the html generated nodes in the head, based on emmet type expressions, eg `script[src=url]`
+ * @param {string[]} [opts.htmlExports] - allows you to add more export exprations from the html, eg `my-element[:src]`
  */
 export default async function createBundle(opts, cache) {
-  opts = { ...optsDefault, ...opts };
+  /**@type {Package} */
+  let pkg = await getPackage();
+
+  // merge config
+  opts = { ...optsDefault, ...opts, ...pkg[opts.config] };
+
+  //normalizes the value
   opts.external = opts.external == "false" ? false : opts.external;
+
   /**@type {string[]}*/
   let inputs = await fastGlob(opts.src);
-  let pkg = await getPackage();
 
   let babelIncludes = ["node_modules/**"];
 
@@ -67,7 +85,13 @@ export default async function createBundle(opts, cache) {
     inputs
       .filter(file => isHtml.test(file) && !inputsHtml[file])
       .map(async file => {
-        inputsHtml[file] = await bundleHtml(file, opts.dir);
+        inputsHtml[file] = await bundleHtml(
+          file,
+          opts.dir,
+          /\.(js|ts|tsx|jsx|css)$/,
+          opts.htmlExports,
+          opts.htmlInject
+        );
       })
   );
   // store the scripts used by html files
@@ -248,7 +272,7 @@ export default async function createBundle(opts, cache) {
       if (opts.server && !currentServer) {
         currentServer = createServer(opts.dir, opts.watch, opts.port);
       } else if (currentServer) {
-        (await currentServer)();
+        currentServer.then(reload => reload());
       }
     })
     .catch(e => console.log(e));
@@ -267,3 +291,10 @@ function streamLog(message) {
 function onwarn(warning) {
   streamLog(warning + "");
 }
+
+/**
+ * @typedef {Object} Package
+ * @property {Object} dependencies
+ * @property {Object} [peerDependencies]
+ * @property {{plugins:any[],presets:any[]}} [babel]
+ */
