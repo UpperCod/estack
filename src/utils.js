@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, stat } from "fs";
+import { readFile, writeFile, mkdir, stat, copyFile, constants } from "fs";
 import { promisify } from "util";
 import path from "path";
 
@@ -11,6 +11,8 @@ export let asyncWriteFile = promisify(writeFile);
 export let asyncMkdir = promisify(mkdir);
 
 export let asyncStat = promisify(stat);
+
+export let asyncCopy = promisify(copyFile);
 
 let pkgDefault = {
   dependencies: {},
@@ -68,5 +70,17 @@ export async function getPackage() {
     };
   } catch (e) {
     return { ...pkgDefault };
+  }
+}
+
+export async function copy(src, dest) {
+  src = path.join(cwd, src);
+  dest = path.join(cwd, dest);
+  let [statSrc, statDest] = await Promise.all([
+    asyncStat(src).catch(() => null),
+    asyncStat(dest).catch(() => null)
+  ]);
+  if (statSrc && (!statDest || statSrc.ctimeMs != statDest.ctimeMs)) {
+    await asyncCopy(src, dest);
   }
 }

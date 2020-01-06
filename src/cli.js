@@ -10,6 +10,10 @@ sade("bundle [src] [dest]")
     "false"
   )
   .option(
+    "-c, --config",
+    "allows you to export a configuration from package.json"
+  )
+  .option(
     "--importmap",
     "create an importmap based on dependencies using unpkg",
     false

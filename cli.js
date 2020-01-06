@@ -37,6 +37,8 @@ let asyncMkdir = util.promisify(fs.mkdir);
 
 let asyncStat = util.promisify(fs.stat);
 
+let asyncCopy = util.promisify(fs.copyFile);
+
 let pkgDefault = {
   dependencies: {},
   devDependencies: {},
@@ -96,51 +98,178 @@ async function getPackage() {
   }
 }
 
+async function copy(src, dest) {
+  src = path__default.join(cwd, src);
+  dest = path__default.join(cwd, dest);
+  let [statSrc, statDest] = await Promise.all([
+    asyncStat(src).catch(() => null),
+    asyncStat(dest).catch(() => null)
+  ]);
+  if (statSrc && (!statDest || statSrc.ctimeMs != statDest.ctimeMs)) {
+    await asyncCopy(src, dest);
+  }
+}
+
 let ignore = ["#text", "#comment"];
 
-async function bundleHtml(file, dir) {
+let cacheHash = {};
+// define valid extensions to be considered as rollup script
+
+async function bundleHtml(file, dir, isExportFile, find, inject) {
+  // create a search object based on an expression
+  find = expToObject(
+    ["script[type=module][:src]", "link[:href][rel=stylesheet]"].concat(find)
+  );
+  inject = expToObject(inject);
+
   let { base, dir: dirOrg } = path__default.parse(file);
+
+  //read the HTML content
+
   let content = await read(file);
 
   let fragment = [].concat(html.parse(content));
-  let scripts = [];
 
-  let document = patch(fragment, src => {
-    scripts.push(path__default.join(dirOrg, src));
-  })
+  let files = [];
+
+  // modify the document obtaining the files and script that is used to export to dir
+
+  let document = patch(
+    fragment,
+    function addFile(src) {
+      src = path__default.join(dirOrg, src);
+      !files.includes(src) && files.push(src);
+      return getFileStatic(src, isExportFile);
+    },
+    find
+  )
     .map(fragment => html.serialize(fragment))
     .join("");
 
-  await write(path__default.join(dir, base), document);
-  return scripts;
+  await write(
+    path__default.join(dir, base),
+    inject.reduce(
+      (document, { nodeName, attrs }) =>
+        document.replace(
+          /(\<\/head\>)/,
+          `<${nodeName} ${Object.keys(attrs)
+            .map(name => `${name}="${attrs[name].value}"`)
+            .join(" ")}></${nodeName}>$1`
+        ),
+      document
+    )
+  );
+
+  let staticFiles = files.filter(file => !isExportFile.test(file));
+
+  let exportableFiles = files.filter(file => isExportFile.test(file));
+
+  // staticFiles are copied to the destination
+  await Promise.all(
+    staticFiles.map(file =>
+      copy(file, path__default.join(dir, getFileStatic(file, isExportFile)))
+    )
+  );
+
+  return exportableFiles;
 }
 
-function patch(fragment, addScript) {
+function patch(fragment, addFile, find) {
   let length = fragment.length;
   for (let i = 0; i < length; i++) {
     let node = fragment[i];
 
     if (ignore.includes(node.nodeName)) continue;
 
-    if (node.nodeName == "script") {
-      if (
-        node.attrs.some(
-          ({ name, value }) => name == "type" && value == "module"
-        )
-      ) {
-        node.attrs = node.attrs.map(({ name, value }) => {
-          if (name == "src" && !/^(http(s){0,1}:){0,1}\/\//.test(value)) {
-            addScript(value);
-            value = path__default.parse(value).name + ".js";
+    if (node.attrs) {
+      let nodeAttrs = node.attrs.reduce((attrs, { name, value }) => {
+        attrs[name] = value;
+        return attrs;
+      }, {});
+      for (let i = 0; i < find.length; i++) {
+        let { nodeName, attrs } = find[i];
+        if (nodeName == node.nodeName) {
+          let size = 0;
+          let sizeOk = 0;
+          let src;
+          for (let key in attrs) {
+            let attr = attrs[key];
+            size++;
+            if (key in nodeAttrs) {
+              if (attr.value == "*" || attr.value == nodeAttrs[key]) {
+                if (
+                  attr.src &&
+                  !/^(http(s){0,1}:){0,1}\/\//.test(nodeAttrs[key])
+                ) {
+                  src = {
+                    key,
+                    value: nodeAttrs[key]
+                  };
+                }
+                sizeOk++;
+              }
+            }
           }
-          return { name, value };
-        });
+          if (size == sizeOk && src) {
+            node.attrs = node.attrs.map(({ name, value }) =>
+              name == src.key
+                ? {
+                    name,
+                    value: addFile(value)
+                  }
+                : { name, value }
+            );
+          }
+        }
       }
-    } else {
-      node.childNodes && patch(node.childNodes, addScript);
     }
+
+    !["script"].includes(node.nodeName) &&
+      node.childNodes &&
+      patch(node.childNodes, addFile, find);
   }
   return fragment;
+}
+
+function getHash(str) {
+  return (cacheHash[str] =
+    cacheHash[str] ||
+    "file-" +
+      str.split("").reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
+      path__default.parse(str).ext);
+}
+// generates the name of the static file to insert into the HTML
+function getFileStatic(src, isExportFile) {
+  if (isExportFile.test(src)) {
+    let { name, ext } = path__default.parse(src);
+    return name + (ext == ".css" ? ext : ".js");
+  } else {
+    return getHash(src);
+  }
+}
+
+function expToObject(find) {
+  return []
+    .concat(find)
+    .filter(value => value)
+    .map(expression => {
+      if (!expression) return {};
+      let [nodeName, ...attrs] =
+        expression.match(/([\w-]+)|(\[[^\]]+\])/g) || [];
+      return {
+        nodeName,
+        attrs: attrs.reduce((attrs, attr) => {
+          let [all, src, type, value = "*"] =
+            attr.match(/\[(\:){0,1}([\w-]+)(?:=(.+)){0,1}\]/) || [];
+          attrs[type] = {
+            value: value,
+            src: src != null
+          };
+          return attrs;
+        }, {})
+      };
+    })
+    .filter(({ nodeName }) => nodeName);
 }
 
 let cwd$1 = process.cwd();
@@ -1337,8 +1466,7 @@ let inputsHtml = {};
 
 let optsDefault = {
   dir: "dist",
-  browsers: "> 3%",
-  watch: false
+  browsers: "> 3%"
 };
 
 let extensions = [".js", ".jsx", ".ts", ".tsx"];
@@ -1347,15 +1475,34 @@ let extensions = [".js", ".jsx", ".ts", ".tsx"];
  */
 let currentServer;
 /**
- *
- * @param {{src:string,dir:string,browsers?:string,watch?:boolean,minify?:boolean,server?:(boolean|number)} } opts
+ * @param {Object} opts
+ * @param {string[]} opts.src
+ * @param {string} [opts.dir]
+ * @param {string} [opts.browsers]
+ * @param {boolean} [opts.watch]
+ * @param {boolean} [opts.server]
+ * @param {number} [opts.port]
+ * @param {boolean|"unpkg"} opts.external
+ * @param {string} [opts.config]
+ * @param {string} [opts.jsx]
+ * @param {jsxFragment} [opts.jsxFragment]
+ * @param {string} [opts.importmap]
+ * @param {boolean} [opts.minify] - minifies the js and css, this option is ignored if the flag watch is used
+ * @param {string[]} [opts.htmlInject] - allows to inject the html generated nodes in the head, based on emmet type expressions, eg `script[src=url]`
+ * @param {string[]} [opts.htmlExports] - allows you to add more export exprations from the html, eg `my-element[:src]`
  */
 async function createBundle(opts, cache) {
-  opts = { ...optsDefault, ...opts };
+  /**@type {Package} */
+  let pkg = await getPackage();
+
+  // merge config
+  opts = { ...optsDefault, ...opts, ...pkg[opts.config] };
+
+  //normalizes the value
   opts.external = opts.external == "false" ? false : opts.external;
+
   /**@type {string[]}*/
   let inputs = await fastGlob(opts.src);
-  let pkg = await getPackage();
 
   let babelIncludes = ["node_modules/**"];
 
@@ -1380,7 +1527,13 @@ async function createBundle(opts, cache) {
     inputs
       .filter(file => isHtml.test(file) && !inputsHtml[file])
       .map(async file => {
-        inputsHtml[file] = await bundleHtml(file, opts.dir);
+        inputsHtml[file] = await bundleHtml(
+          file,
+          opts.dir,
+          /\.(js|ts|tsx|jsx|css)$/,
+          opts.htmlExports,
+          opts.htmlInject
+        );
       })
   );
   // store the scripts used by html files
@@ -1561,7 +1714,7 @@ async function createBundle(opts, cache) {
       if (opts.server && !currentServer) {
         currentServer = createServer(opts.dir, opts.watch, opts.port);
       } else if (currentServer) {
-        (await currentServer)();
+        currentServer.then(reload => reload());
       }
     })
     .catch(e => console.log(e));
@@ -1581,6 +1734,13 @@ function onwarn(warning) {
   streamLog(warning + "");
 }
 
+/**
+ * @typedef {Object} Package
+ * @property {Object} dependencies
+ * @property {Object} [peerDependencies]
+ * @property {{plugins:any[],presets:any[]}} [babel]
+ */
+
 sade("bundle [src] [dest]")
   .version("0.8.4")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
@@ -1588,6 +1748,10 @@ sade("bundle [src] [dest]")
     "-e, --external",
     "Does not include dependencies in the bundle",
     "false"
+  )
+  .option(
+    "-c, --config",
+    "allows you to export a configuration from package.json"
   )
   .option(
     "--importmap",
