@@ -12,6 +12,7 @@ var fs = require('fs');
 var util = require('util');
 var path = require('path');
 var path__default = _interopDefault(path);
+var marked = _interopDefault(require('marked'));
 var postcss = _interopDefault(require('postcss'));
 var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
 var cssnano = _interopDefault(require('cssnano'));
@@ -118,15 +119,26 @@ let cacheHash = {};
 async function bundleHtml(file, dir, isExportFile, find, inject) {
   // create a search object based on an expression
   find = expToObject(
-    ["script[type=module][:src]", "link[:href][rel=stylesheet]"].concat(find)
+    [
+      "script[type=module][:src]",
+      "link[:href][rel=stylesheet]",
+      "img[src]"
+    ].concat(find)
   );
+
   inject = expToObject(inject);
 
-  let { base, dir: dirOrg } = path__default.parse(file);
+  let { name, dir: dirOrg, ext } = path__default.parse(file);
 
   //read the HTML content
 
   let content = await read(file);
+
+  if (ext == ".md") {
+    content = marked(content);
+  }
+
+  let base = name + ".html";
 
   let fragment = [].concat(html.parse(content));
 
@@ -1460,7 +1472,7 @@ async function findPort(port, limit, pending) {
 
 let namePkg = "package.json";
 
-let isHtml = /\.html$/;
+let isHtml = /\.(html|md)$/;
 
 let inputsHtml = {};
 
@@ -1554,9 +1566,10 @@ async function createBundle(opts, cache) {
 
   if (!rollupInputs.length) return;
 
-  let external = opts.external
-    ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
-    : [...Object.keys(pkg.peerDependencies)];
+  let external =
+    opts.external || opts.importmap
+      ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
+      : [...Object.keys(pkg.peerDependencies)];
 
   let rollupInput = {
     input: rollupInputs,
@@ -1659,7 +1672,7 @@ async function createBundle(opts, cache) {
           break;
         case "END":
           streamLog(`bundle: ${new Date() - lastTime}ms`);
-          if (currentServer) (await currentServer)();
+          if (currentServer) currentServer.then(reload => reload());
           break;
         case "ERROR":
           onwarn(event.error);
