@@ -18,7 +18,8 @@ import path from "path";
 
 let namePkg = "package.json";
 
-let isHtml = /\.html$/;
+let isHtml = /\.(html|md)$/;
+bundleHtml;
 
 let inputsHtml = {};
 
@@ -218,7 +219,7 @@ export default async function createBundle(opts, cache) {
           break;
         case "END":
           streamLog(`bundle: ${new Date() - lastTime}ms`);
-          if (currentServer) (await currentServer)();
+          if (currentServer) currentServer.then(reload => reload());
           break;
         case "ERROR":
           onwarn(event.error);

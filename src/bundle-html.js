@@ -1,6 +1,7 @@
 import html from "parse5";
 import { read, write, copy } from "./utils";
 import path from "path";
+import marked from "marked";
 
 let ignore = ["#text", "#comment"];
 
@@ -10,15 +11,26 @@ let cacheHash = {};
 export async function bundleHtml(file, dir, isExportFile, find, inject) {
   // create a search object based on an expression
   find = expToObject(
-    ["script[type=module][:src]", "link[:href][rel=stylesheet]"].concat(find)
+    [
+      "script[type=module][:src]",
+      "link[:href][rel=stylesheet]",
+      "img[src]"
+    ].concat(find)
   );
+
   inject = expToObject(inject);
 
-  let { base, dir: dirOrg } = path.parse(file);
+  let { name, dir: dirOrg, ext } = path.parse(file);
 
   //read the HTML content
 
   let content = await read(file);
+
+  if (ext == ".md") {
+    content = marked(content);
+  }
+
+  let base = name + ".html";
 
   let fragment = [].concat(html.parse(content));
 
