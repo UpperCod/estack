@@ -112,9 +112,10 @@ export default async function createBundle(opts, cache) {
 
   if (!rollupInputs.length) return;
 
-  let external = opts.external
-    ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
-    : [...Object.keys(pkg.peerDependencies)];
+  let external =
+    opts.external || opts.importmap
+      ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
+      : [...Object.keys(pkg.peerDependencies)];
 
   let rollupInput = {
     input: rollupInputs,
