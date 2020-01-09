@@ -9,7 +9,7 @@ function getParts(id) {
 }
 
 export default function({ external, importmap }, indexExternals) {
-  let fileName = "import-map.importmap";
+  let fileName = "import-map.json";
   let imports = {};
   let pkgs = {};
 
