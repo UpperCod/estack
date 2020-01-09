@@ -8,11 +8,13 @@ var fastGlob = _interopDefault(require('fast-glob'));
 var rollup = require('rollup');
 var chokidar = _interopDefault(require('chokidar'));
 var html = _interopDefault(require('parse5'));
-var fs = require('fs');
+var fs = _interopDefault(require('fs'));
 var util = require('util');
 var path = require('path');
 var path__default = _interopDefault(path);
+var ems = _interopDefault(require('esm'));
 var marked = _interopDefault(require('marked'));
+var yaml = _interopDefault(require('js-yaml'));
 var postcss = _interopDefault(require('postcss'));
 var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
 var cssnano = _interopDefault(require('cssnano'));
@@ -28,6 +30,12 @@ var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
 var replace = _interopDefault(require('@rollup/plugin-replace'));
 var rollupPluginTerser = require('rollup-plugin-terser');
 
+let requireEms = ems(module);
+
+function requireExternal(file) {
+  return requireEms(path__default.join(cwd, file));
+}
+
 let cwd = process.cwd();
 
 let asyncReadFile = util.promisify(fs.readFile);
@@ -38,7 +46,7 @@ let asyncMkdir = util.promisify(fs.mkdir);
 
 let asyncStat = util.promisify(fs.stat);
 
-let asyncCopy = util.promisify(fs.copyFile);
+let asyncCopyFile = util.promisify(fs.copyFile);
 
 let pkgDefault = {
   dependencies: {},
@@ -47,11 +55,11 @@ let pkgDefault = {
   babel: {}
 };
 
-function read(file) {
+function readFile(file) {
   return asyncReadFile(path__default.join(cwd, file), "utf8");
 }
 
-async function write(file, data) {
+async function writeFile(file, data) {
   let dir = path__default.join(cwd, path__default.parse(file).dir);
   try {
     await asyncStat(dir);
@@ -92,14 +100,14 @@ async function getPackage() {
   try {
     return {
       ...pkgDefault,
-      ...JSON.parse(await read("package.json"))
+      ...JSON.parse(await readFile("package.json"))
     };
   } catch (e) {
     return { ...pkgDefault };
   }
 }
 
-async function copy(src, dest) {
+async function copyFile(src, dest) {
   src = path__default.join(cwd, src);
   dest = path__default.join(cwd, dest);
   let [statSrc, statDest] = await Promise.all([
@@ -107,7 +115,7 @@ async function copy(src, dest) {
     asyncStat(dest).catch(() => null)
   ]);
   if (statSrc && (!statDest || statSrc.ctimeMs != statDest.ctimeMs)) {
-    await asyncCopy(src, dest);
+    await asyncCopyFile(src, dest);
   }
 }
 
@@ -116,7 +124,14 @@ let ignore = ["#text", "#comment"];
 let cacheHash = {};
 // define valid extensions to be considered as rollup script
 
-async function bundleHtml(file, dir, isExportFile, find, inject) {
+async function bundleHtml(
+  file,
+  dir,
+  isExportFile,
+  find,
+  inject,
+  mdTemplate
+) {
   // create a search object based on an expression
   find = expToObject(
     [
@@ -130,21 +145,37 @@ async function bundleHtml(file, dir, isExportFile, find, inject) {
 
   let { name, dir: dirOrg, ext } = path__default.parse(file);
 
+  let base = name + ".html";
+
   //read the HTML content
 
-  let content = await read(file);
+  let content = await readFile(file);
+
+  let meta = {};
 
   if (ext == ".md") {
-    content = marked(content);
+    content = marked(
+      content.replace(/---([.\s\S]*)---/, (all, content, index) => {
+        if (!index) {
+          meta = yaml.safeLoad(content);
+          return "";
+        }
+        return all;
+      })
+    );
+    if (mdTemplate) {
+      content = mdTemplate({
+        content,
+        meta,
+        base,
+        linkMaps: "link-maps.json"
+      });
+    }
   }
-
-  let base = name + ".html";
 
   let fragment = [].concat(html.parse(content));
 
   let files = [];
-
-  // modify the document obtaining the files and script that is used to export to dir
 
   let document = patch(
     fragment,
@@ -158,7 +189,7 @@ async function bundleHtml(file, dir, isExportFile, find, inject) {
     .map(fragment => html.serialize(fragment))
     .join("");
 
-  await write(
+  await writeFile(
     path__default.join(dir, base),
     inject.reduce(
       (document, { nodeName, attrs }) =>
@@ -172,6 +203,8 @@ async function bundleHtml(file, dir, isExportFile, find, inject) {
     )
   );
 
+  // modify the document obtaining the files and script that is used to export to dir
+
   let staticFiles = files.filter(file => !isExportFile.test(file));
 
   let exportableFiles = files.filter(file => isExportFile.test(file));
@@ -179,11 +212,17 @@ async function bundleHtml(file, dir, isExportFile, find, inject) {
   // staticFiles are copied to the destination
   await Promise.all(
     staticFiles.map(file =>
-      copy(file, path__default.join(dir, getFileStatic(file, isExportFile)))
+      copyFile(file, path__default.join(dir, getFileStatic(file, isExportFile)))
     )
   );
 
-  return exportableFiles;
+  return {
+    type: ext.replace(/^\./, ""),
+    base,
+    meta,
+    exportableFiles,
+    staticFiles
+  };
 }
 
 function patch(fragment, addFile, find) {
@@ -348,7 +387,7 @@ function getParts(id) {
 }
 
 function pluginUnpkg({ external, importmap }, indexExternals) {
-  let fileName = "import-map.importmap";
+  let fileName = "import-map.json";
   let imports = {};
   let pkgs = {};
 
@@ -1534,8 +1573,13 @@ async function createBundle(opts, cache) {
     sourcemap: true,
     chunkFileNames: "chunks/[hash].js"
   };
+
+  let mdTemplate = opts.mdTemplate
+    ? requireExternal(opts.mdTemplate).default
+    : null;
+
   // look at the html files given by the expression, to get the input scripts
-  await Promise.all(
+  let htmlProcess = await Promise.all(
     inputs
       .filter(file => isHtml.test(file) && !inputsHtml[file])
       .map(async file => {
@@ -1544,15 +1588,22 @@ async function createBundle(opts, cache) {
           opts.dir,
           /\.(js|ts|tsx|jsx|css)$/,
           opts.htmlExports,
-          opts.htmlInject
+          opts.htmlInject,
+          mdTemplate
         );
       })
   );
+  if (htmlProcess.length) {
+    await writeFile(
+      path__default.join(opts.dir, "link-maps.json"),
+      JSON.stringify(inputsHtml)
+    );
+  }
   // store the scripts used by html files
   let htmlInputs = [];
 
   for (let file in inputsHtml) {
-    inputsHtml[file].forEach(
+    inputsHtml[file].exportableFiles.forEach(
       src => !htmlInputs.includes(src) && htmlInputs.push(src)
     );
   }
@@ -1755,7 +1806,7 @@ function onwarn(warning) {
  */
 
 sade("bundle [src] [dest]")
-  .version("0.10.0")
+  .version("0.11.0")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option(
     "-e, --external",
