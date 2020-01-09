@@ -2,7 +2,13 @@ import fastGlob from "fast-glob";
 import { rollup, watch as watchBundle } from "rollup";
 import chokidar from "chokidar";
 import { bundleHtml } from "./bundle-html";
-import { normalizePath, getPackage, mergeKeysArray } from "./utils";
+import {
+  writeFile,
+  normalizePath,
+  getPackage,
+  mergeKeysArray,
+  requireExternal
+} from "./utils";
 import pluginCss from "./plugin-css";
 import pluginUnpkg from "./plugin-unpkg";
 import { pluginForceExternal, DOUBLE_SLASH } from "./plugin-force-external";
@@ -81,8 +87,13 @@ export default async function createBundle(opts, cache) {
     sourcemap: true,
     chunkFileNames: "chunks/[hash].js"
   };
+
+  let mdTemplate = opts.mdTemplate
+    ? requireExternal(opts.mdTemplate).default
+    : null;
+
   // look at the html files given by the expression, to get the input scripts
-  await Promise.all(
+  let htmlProcess = await Promise.all(
     inputs
       .filter(file => isHtml.test(file) && !inputsHtml[file])
       .map(async file => {
@@ -91,15 +102,22 @@ export default async function createBundle(opts, cache) {
           opts.dir,
           /\.(js|ts|tsx|jsx|css)$/,
           opts.htmlExports,
-          opts.htmlInject
+          opts.htmlInject,
+          mdTemplate
         );
       })
   );
+  if (htmlProcess.length) {
+    await writeFile(
+      path.join(opts.dir, "link-maps.json"),
+      JSON.stringify(inputsHtml)
+    );
+  }
   // store the scripts used by html files
   let htmlInputs = [];
 
   for (let file in inputsHtml) {
-    inputsHtml[file].forEach(
+    inputsHtml[file].exportableFiles.forEach(
       src => !htmlInputs.includes(src) && htmlInputs.push(src)
     );
   }

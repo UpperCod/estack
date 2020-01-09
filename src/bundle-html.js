@@ -1,14 +1,22 @@
 import html from "parse5";
-import { read, write, copy } from "./utils";
+import { readFile, writeFile, copyFile } from "./utils";
 import path from "path";
 import marked from "marked";
+import yaml from "js-yaml";
 
 let ignore = ["#text", "#comment"];
 
 let cacheHash = {};
 // define valid extensions to be considered as rollup script
 
-export async function bundleHtml(file, dir, isExportFile, find, inject) {
+export async function bundleHtml(
+  file,
+  dir,
+  isExportFile,
+  find,
+  inject,
+  mdTemplate
+) {
   // create a search object based on an expression
   find = expToObject(
     [
@@ -22,21 +30,37 @@ export async function bundleHtml(file, dir, isExportFile, find, inject) {
 
   let { name, dir: dirOrg, ext } = path.parse(file);
 
+  let base = name + ".html";
+
   //read the HTML content
 
-  let content = await read(file);
+  let content = await readFile(file);
+
+  let meta = {};
 
   if (ext == ".md") {
-    content = marked(content);
+    content = marked(
+      content.replace(/---([.\s\S]*)---/, (all, content, index) => {
+        if (!index) {
+          meta = yaml.safeLoad(content);
+          return "";
+        }
+        return all;
+      })
+    );
+    if (mdTemplate) {
+      content = mdTemplate({
+        content,
+        meta,
+        base,
+        linkMaps: "link-maps.json"
+      });
+    }
   }
-
-  let base = name + ".html";
 
   let fragment = [].concat(html.parse(content));
 
   let files = [];
-
-  // modify the document obtaining the files and script that is used to export to dir
 
   let document = patch(
     fragment,
@@ -50,7 +74,7 @@ export async function bundleHtml(file, dir, isExportFile, find, inject) {
     .map(fragment => html.serialize(fragment))
     .join("");
 
-  await write(
+  await writeFile(
     path.join(dir, base),
     inject.reduce(
       (document, { nodeName, attrs }) =>
@@ -64,6 +88,8 @@ export async function bundleHtml(file, dir, isExportFile, find, inject) {
     )
   );
 
+  // modify the document obtaining the files and script that is used to export to dir
+
   let staticFiles = files.filter(file => !isExportFile.test(file));
 
   let exportableFiles = files.filter(file => isExportFile.test(file));
@@ -71,11 +97,17 @@ export async function bundleHtml(file, dir, isExportFile, find, inject) {
   // staticFiles are copied to the destination
   await Promise.all(
     staticFiles.map(file =>
-      copy(file, path.join(dir, getFileStatic(file, isExportFile)))
+      copyFile(file, path.join(dir, getFileStatic(file, isExportFile)))
     )
   );
 
-  return exportableFiles;
+  return {
+    type: ext.replace(/^\./, ""),
+    base,
+    meta,
+    exportableFiles,
+    staticFiles
+  };
 }
 
 function patch(fragment, addFile, find) {
