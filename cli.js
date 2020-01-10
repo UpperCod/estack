@@ -1737,7 +1737,7 @@ function onwarn(warning) {
  */
 
 sade("bundle [src] [dest]")
-  .version("0.11.0")
+  .version("0.12.0")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option(
     "-e, --external",
