@@ -88,6 +88,11 @@ export async function copyFile(src, dest) {
     asyncStat(dest).catch(() => null)
   ]);
   if (statSrc && (!statDest || statSrc.ctimeMs != statDest.ctimeMs)) {
+    if (!statDest) {
+      await asyncMkdir(path.parse(dest).dir, {
+        recursive: true
+      });
+    }
     await asyncCopyFile(src, dest);
   }
 }

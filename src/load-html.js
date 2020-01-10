@@ -1,45 +1,40 @@
 import html from "parse5";
-import { readFile, writeFile, copyFile } from "./utils";
+import { readFile, writeFile, copyFile, normalizePath } from "./utils";
 import path from "path";
 import marked from "marked";
 import yaml from "js-yaml";
 
-let ignore = ["#text", "#comment"];
+let cache = {};
 
 let cacheHash = {};
-// define valid extensions to be considered as rollup script
 
-export async function bundleHtml(
-  file,
-  dir,
-  isExportFile,
-  find,
-  inject,
-  mdTemplate
-) {
-  // create a search object based on an expression
-  find = expToObject(
-    [
-      "script[type=module][:src]",
-      "link[:href][rel=stylesheet]",
-      "img[src]"
-    ].concat(find)
-  );
+let isNotStatic = /\.(js|jsx|ts|tsx|css)$/;
 
-  inject = expToObject(inject);
+let ignore = ["#text", "#comment"];
+/**
+ *
+ * @param {string} src
+ * @param {string} dir
+ * @param {string[]} htmlExports
+ * @param {boolean} [disableCache]
+ */
+export default async function loadHtml(src, dir, htmlExports, disableCache) {
+  let content = await readFile(src);
 
-  let { name, dir: dirOrg, ext } = path.parse(file);
+  if (!disableCache && cache[src] && cache[src].content == content) {
+    return Cache.get(content);
+  }
+
+  let { ext, name, dir: dirOrg } = path.parse(src);
 
   let base = name + ".html";
 
-  //read the HTML content
-
-  let content = await readFile(file);
-
   let meta = {};
 
+  let htmlContent = content;
+
   if (ext == ".md") {
-    content = marked(
+    htmlContent = marked(
       content.replace(/---([.\s\S]*)---/, (all, content, index) => {
         if (!index) {
           meta = yaml.safeLoad(content);
@@ -48,69 +43,86 @@ export async function bundleHtml(
         return all;
       })
     );
-    if (mdTemplate) {
-      content = mdTemplate({
-        content,
-        meta,
-        base,
-        linkMaps: "link-maps.json"
-      });
-    }
   }
 
-  let fragment = [].concat(html.parse(content));
-
+  /**@type {string[]} */
   let files = [];
 
-  let document = patch(
-    fragment,
-    function addFile(src) {
-      src = path.join(dirOrg, src);
-      !files.includes(src) && files.push(src);
-      return getFileStatic(src, isExportFile);
-    },
-    find
-  )
-    .map(fragment => html.serialize(fragment))
-    .join("");
+  let findExpressions = formatExpressions(htmlExports);
 
-  await writeFile(
-    path.join(dir, base),
-    inject.reduce(
-      (document, { nodeName, attrs }) =>
-        document.replace(
-          /(\<\/head\>)/,
-          `<${nodeName} ${Object.keys(attrs)
-            .map(name => `${name}="${attrs[name].value}"`)
-            .join(" ")}></${nodeName}>$1`
-        ),
-      document
-    )
-  );
+  htmlContent = html.parse(htmlContent);
 
-  // modify the document obtaining the files and script that is used to export to dir
-
-  let staticFiles = files.filter(file => !isExportFile.test(file));
-
-  let exportableFiles = files.filter(file => isExportFile.test(file));
+  let fragment = findExpressions.length
+    ? analyze([].concat(htmlContent), addFile, findExpressions)
+    : htmlContent;
 
   // staticFiles are copied to the destination
   await Promise.all(
-    staticFiles.map(file =>
-      copyFile(file, path.join(dir, getFileStatic(file, isExportFile)))
-    )
+    files
+      .filter(file => !isNotStatic.test(file))
+      .map(file => copyFile(file, path.join(dir, getFileStatic(file))))
   );
 
-  return {
-    type: ext.replace(/^\./, ""),
+  function addFile(src) {
+    src = normalizePath(path.join(dirOrg, src));
+    !files.includes(src) && files.push(src);
+    return getFileStatic(src);
+  }
+  /**
+   * write the document to the destination directory
+   * @param {Function} [template]
+   * @param {Object} opts
+   */
+  function write(htmlInject, template, files) {
+    let document = fragment;
+
+    if (ext == ".md" && template) {
+      document = [].concat(
+        html.parse(
+          template({
+            ext,
+            base,
+            meta,
+            files,
+            content: fragment.join("")
+          })
+        )
+      );
+    }
+
+    return writeFile(
+      path.join(dir, base),
+      formatExpressions(htmlInject).reduce(
+        (document, { nodeName, attrs }) =>
+          document.replace(
+            /(\<\/head\>)/,
+            `<${nodeName} ${Object.keys(attrs)
+              .map(name => `${name}="${attrs[name].value}"`)
+              .join(" ")}></${nodeName}>$1`
+          ),
+        document.map(fragment => html.serialize(fragment)).join("")
+      )
+    );
+  }
+
+  return (cache[src] = {
+    content,
+    write,
+    files,
     base,
     meta,
-    exportableFiles,
-    staticFiles
-  };
+    ext,
+    src
+  });
 }
 
-function patch(fragment, addFile, find) {
+/**
+ *
+ * @param {Array} fragment
+ * @param {Function} addFile
+ * @param {Object} find
+ */
+function analyze(fragment, addFile, find) {
   let length = fragment.length;
   for (let i = 0; i < length; i++) {
     let node = fragment[i];
@@ -162,11 +174,15 @@ function patch(fragment, addFile, find) {
 
     !["script"].includes(node.nodeName) &&
       node.childNodes &&
-      patch(node.childNodes, addFile, find);
+      analyze(node.childNodes, addFile, find);
   }
   return fragment;
 }
 
+/**
+ * create an id based on the path
+ * @param {string} str
+ */
 function getHash(str) {
   return (cacheHash[str] =
     cacheHash[str] ||
@@ -175,8 +191,8 @@ function getHash(str) {
       path.parse(str).ext);
 }
 // generates the name of the static file to insert into the HTML
-function getFileStatic(src, isExportFile) {
-  if (isExportFile.test(src)) {
+function getFileStatic(src) {
+  if (isNotStatic.test(src)) {
     let { name, ext } = path.parse(src);
     return name + (ext == ".css" ? ext : ".js");
   } else {
@@ -184,7 +200,7 @@ function getFileStatic(src, isExportFile) {
   }
 }
 
-function expToObject(find) {
+function formatExpressions(find) {
   return []
     .concat(find)
     .filter(value => value)

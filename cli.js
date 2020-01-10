@@ -10,8 +10,7 @@ var chokidar = _interopDefault(require('chokidar'));
 var html = _interopDefault(require('parse5'));
 var fs = _interopDefault(require('fs'));
 var util = require('util');
-var path = require('path');
-var path__default = _interopDefault(path);
+var path = _interopDefault(require('path'));
 var ems = _interopDefault(require('esm'));
 var marked = _interopDefault(require('marked'));
 var yaml = _interopDefault(require('js-yaml'));
@@ -19,12 +18,11 @@ var postcss = _interopDefault(require('postcss'));
 var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
 var cssnano = _interopDefault(require('cssnano'));
 var atImport = _interopDefault(require('postcss-import'));
-var resolve = _interopDefault(require('resolve'));
 var net = _interopDefault(require('net'));
 var http = _interopDefault(require('http'));
 var url = _interopDefault(require('url'));
 var babel = _interopDefault(require('rollup-plugin-babel'));
-var resolve$1 = _interopDefault(require('@rollup/plugin-node-resolve'));
+var resolve = _interopDefault(require('@rollup/plugin-node-resolve'));
 var common = _interopDefault(require('@rollup/plugin-commonjs'));
 var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
 var replace = _interopDefault(require('@rollup/plugin-replace'));
@@ -33,7 +31,7 @@ var rollupPluginTerser = require('rollup-plugin-terser');
 let requireEms = ems(module);
 
 function requireExternal(file) {
-  return requireEms(path__default.join(cwd, file));
+  return requireEms(path.join(cwd, file));
 }
 
 let cwd = process.cwd();
@@ -56,11 +54,11 @@ let pkgDefault = {
 };
 
 function readFile(file) {
-  return asyncReadFile(path__default.join(cwd, file), "utf8");
+  return asyncReadFile(path.join(cwd, file), "utf8");
 }
 
 async function writeFile(file, data) {
-  let dir = path__default.join(cwd, path__default.parse(file).dir);
+  let dir = path.join(cwd, path.parse(file).dir);
   try {
     await asyncStat(dir);
   } catch (e) {
@@ -69,7 +67,7 @@ async function writeFile(file, data) {
     });
   }
 
-  return asyncWriteFile(path__default.join(cwd, file), data, "utf8");
+  return asyncWriteFile(path.join(cwd, file), data, "utf8");
 }
 
 function normalizePath(path) {
@@ -108,53 +106,53 @@ async function getPackage() {
 }
 
 async function copyFile(src, dest) {
-  src = path__default.join(cwd, src);
-  dest = path__default.join(cwd, dest);
+  src = path.join(cwd, src);
+  dest = path.join(cwd, dest);
   let [statSrc, statDest] = await Promise.all([
     asyncStat(src).catch(() => null),
     asyncStat(dest).catch(() => null)
   ]);
   if (statSrc && (!statDest || statSrc.ctimeMs != statDest.ctimeMs)) {
+    if (!statDest) {
+      await asyncMkdir(path.parse(dest).dir, {
+        recursive: true
+      });
+    }
     await asyncCopyFile(src, dest);
   }
 }
 
-let ignore = ["#text", "#comment"];
+let cache = {};
 
 let cacheHash = {};
-// define valid extensions to be considered as rollup script
 
-async function bundleHtml(
-  file,
-  dir,
-  isExportFile,
-  find,
-  inject,
-  mdTemplate
-) {
-  // create a search object based on an expression
-  find = expToObject(
-    [
-      "script[type=module][:src]",
-      "link[:href][rel=stylesheet]",
-      "img[src]"
-    ].concat(find)
-  );
+let isNotStatic = /\.(js|jsx|ts|tsx|css)$/;
 
-  inject = expToObject(inject);
+let ignore = ["#text", "#comment"];
+/**
+ *
+ * @param {string} src
+ * @param {string} dir
+ * @param {string[]} htmlExports
+ * @param {boolean} [disableCache]
+ */
+async function loadHtml(src, dir, htmlExports, disableCache) {
+  let content = await readFile(src);
 
-  let { name, dir: dirOrg, ext } = path__default.parse(file);
+  if (!disableCache && cache[src] && cache[src].content == content) {
+    return Cache.get(content);
+  }
+
+  let { ext, name, dir: dirOrg } = path.parse(src);
 
   let base = name + ".html";
 
-  //read the HTML content
-
-  let content = await readFile(file);
-
   let meta = {};
 
+  let htmlContent = content;
+
   if (ext == ".md") {
-    content = marked(
+    htmlContent = marked(
       content.replace(/---([.\s\S]*)---/, (all, content, index) => {
         if (!index) {
           meta = yaml.safeLoad(content);
@@ -163,69 +161,86 @@ async function bundleHtml(
         return all;
       })
     );
-    if (mdTemplate) {
-      content = mdTemplate({
-        content,
-        meta,
-        base,
-        linkMaps: "link-maps.json"
-      });
-    }
   }
 
-  let fragment = [].concat(html.parse(content));
-
+  /**@type {string[]} */
   let files = [];
 
-  let document = patch(
-    fragment,
-    function addFile(src) {
-      src = path__default.join(dirOrg, src);
-      !files.includes(src) && files.push(src);
-      return getFileStatic(src, isExportFile);
-    },
-    find
-  )
-    .map(fragment => html.serialize(fragment))
-    .join("");
+  let findExpressions = formatExpressions(htmlExports);
 
-  await writeFile(
-    path__default.join(dir, base),
-    inject.reduce(
-      (document, { nodeName, attrs }) =>
-        document.replace(
-          /(\<\/head\>)/,
-          `<${nodeName} ${Object.keys(attrs)
-            .map(name => `${name}="${attrs[name].value}"`)
-            .join(" ")}></${nodeName}>$1`
-        ),
-      document
-    )
-  );
+  htmlContent = html.parse(htmlContent);
 
-  // modify the document obtaining the files and script that is used to export to dir
-
-  let staticFiles = files.filter(file => !isExportFile.test(file));
-
-  let exportableFiles = files.filter(file => isExportFile.test(file));
+  let fragment = findExpressions.length
+    ? analyze([].concat(htmlContent), addFile, findExpressions)
+    : htmlContent;
 
   // staticFiles are copied to the destination
   await Promise.all(
-    staticFiles.map(file =>
-      copyFile(file, path__default.join(dir, getFileStatic(file, isExportFile)))
-    )
+    files
+      .filter(file => !isNotStatic.test(file))
+      .map(file => copyFile(file, path.join(dir, getFileStatic(file))))
   );
 
-  return {
-    type: ext.replace(/^\./, ""),
+  function addFile(src) {
+    src = normalizePath(path.join(dirOrg, src));
+    !files.includes(src) && files.push(src);
+    return getFileStatic(src);
+  }
+  /**
+   * write the document to the destination directory
+   * @param {Function} [template]
+   * @param {Object} opts
+   */
+  function write(htmlInject, template, files) {
+    let document = fragment;
+
+    if (ext == ".md" && template) {
+      document = [].concat(
+        html.parse(
+          template({
+            ext,
+            base,
+            meta,
+            files,
+            content: fragment.join("")
+          })
+        )
+      );
+    }
+
+    return writeFile(
+      path.join(dir, base),
+      formatExpressions(htmlInject).reduce(
+        (document, { nodeName, attrs }) =>
+          document.replace(
+            /(\<\/head\>)/,
+            `<${nodeName} ${Object.keys(attrs)
+              .map(name => `${name}="${attrs[name].value}"`)
+              .join(" ")}></${nodeName}>$1`
+          ),
+        document.map(fragment => html.serialize(fragment)).join("")
+      )
+    );
+  }
+
+  return (cache[src] = {
+    content,
+    write,
+    files,
     base,
     meta,
-    exportableFiles,
-    staticFiles
-  };
+    ext,
+    src
+  });
 }
 
-function patch(fragment, addFile, find) {
+/**
+ *
+ * @param {Array} fragment
+ * @param {Function} addFile
+ * @param {Object} find
+ */
+function analyze(fragment, addFile, find) {
   let length = fragment.length;
   for (let i = 0; i < length; i++) {
     let node = fragment[i];
@@ -277,29 +292,33 @@ function patch(fragment, addFile, find) {
 
     !["script"].includes(node.nodeName) &&
       node.childNodes &&
-      patch(node.childNodes, addFile, find);
+      analyze(node.childNodes, addFile, find);
   }
   return fragment;
 }
 
+/**
+ * create an id based on the path
+ * @param {string} str
+ */
 function getHash(str) {
   return (cacheHash[str] =
     cacheHash[str] ||
     "file-" +
       str.split("").reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
-      path__default.parse(str).ext);
+      path.parse(str).ext);
 }
 // generates the name of the static file to insert into the HTML
-function getFileStatic(src, isExportFile) {
-  if (isExportFile.test(src)) {
-    let { name, ext } = path__default.parse(src);
+function getFileStatic(src) {
+  if (isNotStatic.test(src)) {
+    let { name, ext } = path.parse(src);
     return name + (ext == ".css" ? ext : ".js");
   } else {
     return getHash(src);
   }
 }
 
-function expToObject(find) {
+function formatExpressions(find) {
   return []
     .concat(find)
     .filter(value => value)
@@ -332,13 +351,13 @@ function pluginCss(options = {}) {
     async transform(code, id) {
       let { isEntry } = this.getModuleInfo(id);
       if (isCss.test(id)) {
-        let { name, dir } = path__default.parse(id);
+        let { name, dir } = path.parse(id);
         let { css } = code.trim()
           ? await postcss([
               atImport({
                 resolve: file => {
-                  let id = path__default.join(
-                    /^\./.test(file) ? dir : path__default.join(cwd$1, "node_modules"),
+                  let id = path.join(
+                    /^\./.test(file) ? dir : path.join(cwd$1, "node_modules"),
                     file
                   );
                   // Add an id to bundle.watchFile
@@ -375,91 +394,6 @@ function pluginCss(options = {}) {
         if (isEntry && isCss.test(facadeModuleId)) {
           delete bundle[key];
         }
-      }
-    }
-  };
-}
-
-function getParts(id) {
-  let [input, ...next] =
-    id.replace(/^\//, "").match(/((?:@[^\/]+(?:\/)){0,1}[^\/]+)(.*)/) || [];
-  return next;
-}
-
-function pluginUnpkg({ external, importmap }, indexExternals) {
-  let fileName = "import-map.json";
-  let imports = {};
-  let pkgs = {};
-
-  let isExternal = id => {
-    if (/^(@|\w)/.test(id)) {
-      let [root] = getParts(id);
-      return indexExternals.some(index => index.indexOf(root) == 0);
-    }
-  };
-
-  let resolveUnpkg = async id =>
-    new Promise(scopeResolve => {
-      let [root, child] = getParts(id);
-      let [subRoot] = child ? getParts(child) : [];
-      let file;
-      let getFile = pkg => pkg.module || pkg.main || pkg.browser;
-      resolve(
-        id,
-        {
-          basedir: cwd,
-          packageFilter(pkg, dir) {
-            if (subRoot) {
-              if (pkg.name == subRoot) {
-                file = getFile(pkg);
-                return pkg;
-              }
-            } else {
-              if (pkg.name == root && !pkgs[root]) {
-                pkgs[root] = pkg;
-              }
-              return pkg;
-            }
-          }
-        },
-        async err => {
-          let md = file || getFile(pkgs[root]);
-          let version = pkgs[root].version;
-
-          let concat = subRoot ? (file ? "/" + subRoot + "/" + md : child) : md;
-
-          if (!/\.[\w]+$/.test(concat)) {
-            concat += ".js";
-          }
-
-          scopeResolve(
-            `https://unpkg.com/${path.join(`${root}@${version}`, concat).replace(
-              /\\/g,
-              "/"
-            )}?module`
-          );
-        }
-      );
-    });
-  return {
-    async resolveId(id, importer) {
-      if (importer && isExternal(id) && (external == "unpkg" || importmap)) {
-        if (!imports[id]) {
-          imports[id] = await resolveUnpkg(id);
-        }
-        return {
-          id: external == "unpkg" ? imports[id] : id,
-          external: true
-        };
-      }
-    },
-    generateBundle(opts, bundle) {
-      if (importmap) {
-        bundle[fileName] = {
-          fileName,
-          isAsset: true,
-          source: JSON.stringify({ imports })
-        };
       }
     }
   };
@@ -1394,9 +1328,9 @@ async function createServer(dir, watch, portStart) {
 
       resource = resource == "/" || pathname == "/" ? "index" : resource;
 
-      let fileUrl = path__default.join(cwd, dir, resource + (reqFile ? "" : ".html"));
+      let fileUrl = path.join(cwd, dir, resource + (reqFile ? "" : ".html"));
 
-      let fallbackUrl = path__default.join(cwd, dir, "index.html");
+      let fallbackUrl = path.join(cwd, dir, "index.html");
 
       let ext = reqFile ? reqFile[1] : "html";
 
@@ -1513,7 +1447,9 @@ let namePkg = "package.json";
 
 let isHtml = /\.(html|md)$/;
 
-let inputsHtml = {};
+let isInputRollup = /\.(js|jsx|ts|tsx|css)$/;
+
+let htmlReady = {};
 
 let optsDefault = {
   dir: "dist",
@@ -1533,7 +1469,7 @@ let currentServer;
  * @param {boolean} [opts.watch]
  * @param {boolean} [opts.server]
  * @param {number} [opts.port]
- * @param {boolean|"unpkg"} opts.external
+ * @param {boolean} opts.external
  * @param {string} [opts.config]
  * @param {string} [opts.jsx]
  * @param {jsxFragment} [opts.jsxFragment]
@@ -1550,7 +1486,6 @@ async function createBundle(opts, cache) {
   opts = { ...optsDefault, ...opts, ...pkg[opts.config] };
 
   //normalizes the value
-  opts.external = opts.external == "false" ? false : opts.external;
 
   /**@type {string[]}*/
   let inputs = await fastGlob(opts.src);
@@ -1559,9 +1494,9 @@ async function createBundle(opts, cache) {
 
   // transform src into valid path to include in babel
   for (let src of opts.src) {
-    let { dir } = path__default.parse(src);
+    let { dir } = path.parse(src);
 
-    dir = path__default.join(dir, "**");
+    dir = path.join(dir, "**");
     if (!babelIncludes.includes(dir)) {
       babelIncludes.push(dir);
     }
@@ -1578,63 +1513,59 @@ async function createBundle(opts, cache) {
     ? requireExternal(opts.mdTemplate).default
     : null;
 
+  let htmlExports = [
+    "script[type=module][:src]",
+    "link[:href][rel=stylesheet]"
+  ].concat(opts.htmlExports);
+
   // look at the html files given by the expression, to get the input scripts
-  let htmlProcess = await Promise.all(
+  let htmlProcessed = await Promise.all(
     inputs
-      .filter(file => isHtml.test(file) && !inputsHtml[file])
-      .map(async file => {
-        inputsHtml[file] = await bundleHtml(
-          file,
-          opts.dir,
-          /\.(js|ts|tsx|jsx|css)$/,
-          opts.htmlExports,
-          opts.htmlInject,
-          mdTemplate
-        );
-      })
+      .filter(file => isHtml.test(file) && !htmlReady[file])
+      .map(
+        async src =>
+          (htmlReady[src] = await loadHtml(src, opts.dir, htmlExports))
+      )
   );
-  if (htmlProcess.length) {
-    await writeFile(
-      path__default.join(opts.dir, "link-maps.json"),
-      JSON.stringify(inputsHtml)
-    );
-  }
+
+  let htmlReadyArray = Object.keys(htmlReady).map(src => htmlReady[src]);
+
+  await htmlProcessed.map(html =>
+    html.write(
+      opts.htmlInject,
+      mdTemplate,
+      htmlReadyArray
+        .filter(({ ext }) => ext == ".md")
+        .map(({ base, meta }) => ({ base, meta }))
+    )
+  );
+
   // store the scripts used by html files
-  let htmlInputs = [];
+  let rollupInputs = htmlReadyArray
+    .reduce((inputs, { files }) => inputs.concat(files), [])
+    .concat(inputs)
+    .filter(src => isInputRollup.test(src));
 
-  for (let file in inputsHtml) {
-    inputsHtml[file].exportableFiles.forEach(
-      src => !htmlInputs.includes(src) && htmlInputs.push(src)
-    );
-  }
-
-  /**@type {string[]}*/
-  let rollupInputs = inputs
-    .filter(file => !isHtml.test(file))
-    .filter(file => !htmlInputs.includes(file));
-
-  rollupInputs = rollupInputs.concat(htmlInputs);
+  rollupInputs = rollupInputs.filter(
+    (src, index) => index == rollupInputs.indexOf(src)
+  );
 
   if (!rollupInputs.length) return;
-
-  let external =
-    opts.external || opts.importmap
-      ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
-      : [...Object.keys(pkg.peerDependencies)];
 
   let rollupInput = {
     input: rollupInputs,
     // when using the flat --external, you avoid adding the dependencies to the bundle
-    external: opts.external == "unpkg" || opts.importmap ? [] : external,
+    external: opts.external
+      ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
+      : [...Object.keys(pkg.peerDependencies)],
     plugins: [
       pluginForceExternal(),
-      pluginUnpkg(opts, external),
       pluginCss(opts), //use the properties {watch,browsers}
       replace({
         [DOUBLE_SLASH]: "",
         "process.env.NODE_ENV": JSON.stringify("production")
       }),
-      resolve$1({
+      resolve({
         extensions,
         dedupe: ["react", "react-dom"]
       }),
@@ -1741,7 +1672,7 @@ async function createBundle(opts, cache) {
           if (inputs.includes(file) || event == "unlink") return;
           if (isHtml.test(file)) {
             // forces the bundle to ignore the entries of the deleted file
-            delete inputsHtml[file];
+            delete htmlReady[file];
             build(true);
           }
           break;
@@ -1749,7 +1680,7 @@ async function createBundle(opts, cache) {
           if (file == namePkg) build(true);
           if (isHtml.test(file)) {
             // before each change of the html file, its inputs are obtained again
-            delete inputsHtml[file];
+            delete htmlReady[file];
             build(true);
           }
           break;
@@ -1811,7 +1742,7 @@ sade("bundle [src] [dest]")
   .option(
     "-e, --external",
     "Does not include dependencies in the bundle",
-    "false"
+    false
   )
   .option(
     "-c, --config",

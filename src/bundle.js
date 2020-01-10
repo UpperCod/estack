@@ -1,16 +1,16 @@
 import fastGlob from "fast-glob";
 import { rollup, watch as watchBundle } from "rollup";
 import chokidar from "chokidar";
-import { bundleHtml } from "./bundle-html";
+import loadHtml from "./load-html";
+
 import {
-  writeFile,
   normalizePath,
   getPackage,
   mergeKeysArray,
   requireExternal
 } from "./utils";
+
 import pluginCss from "./plugin-css";
-import pluginUnpkg from "./plugin-unpkg";
 import { pluginForceExternal, DOUBLE_SLASH } from "./plugin-force-external";
 import createServer from "./server";
 
@@ -25,9 +25,10 @@ import path from "path";
 let namePkg = "package.json";
 
 let isHtml = /\.(html|md)$/;
-bundleHtml;
 
-let inputsHtml = {};
+let isInputRollup = /\.(js|jsx|ts|tsx|css)$/;
+
+let htmlReady = {};
 
 let optsDefault = {
   dir: "dist",
@@ -47,7 +48,7 @@ let currentServer;
  * @param {boolean} [opts.watch]
  * @param {boolean} [opts.server]
  * @param {number} [opts.port]
- * @param {boolean|"unpkg"} opts.external
+ * @param {boolean} opts.external
  * @param {string} [opts.config]
  * @param {string} [opts.jsx]
  * @param {jsxFragment} [opts.jsxFragment]
@@ -64,7 +65,6 @@ export default async function createBundle(opts, cache) {
   opts = { ...optsDefault, ...opts, ...pkg[opts.config] };
 
   //normalizes the value
-  opts.external = opts.external == "false" ? false : opts.external;
 
   /**@type {string[]}*/
   let inputs = await fastGlob(opts.src);
@@ -92,57 +92,53 @@ export default async function createBundle(opts, cache) {
     ? requireExternal(opts.mdTemplate).default
     : null;
 
+  let htmlExports = [
+    "script[type=module][:src]",
+    "link[:href][rel=stylesheet]"
+  ].concat(opts.htmlExports);
+
   // look at the html files given by the expression, to get the input scripts
-  let htmlProcess = await Promise.all(
+  let htmlProcessed = await Promise.all(
     inputs
-      .filter(file => isHtml.test(file) && !inputsHtml[file])
-      .map(async file => {
-        inputsHtml[file] = await bundleHtml(
-          file,
-          opts.dir,
-          /\.(js|ts|tsx|jsx|css)$/,
-          opts.htmlExports,
-          opts.htmlInject,
-          mdTemplate
-        );
-      })
+      .filter(file => isHtml.test(file) && !htmlReady[file])
+      .map(
+        async src =>
+          (htmlReady[src] = await loadHtml(src, opts.dir, htmlExports))
+      )
   );
-  if (htmlProcess.length) {
-    await writeFile(
-      path.join(opts.dir, "link-maps.json"),
-      JSON.stringify(inputsHtml)
-    );
-  }
+
+  let htmlReadyArray = Object.keys(htmlReady).map(src => htmlReady[src]);
+
+  await htmlProcessed.map(html =>
+    html.write(
+      opts.htmlInject,
+      mdTemplate,
+      htmlReadyArray
+        .filter(({ ext }) => ext == ".md")
+        .map(({ base, meta }) => ({ base, meta }))
+    )
+  );
+
   // store the scripts used by html files
-  let htmlInputs = [];
+  let rollupInputs = htmlReadyArray
+    .reduce((inputs, { files }) => inputs.concat(files), [])
+    .concat(inputs)
+    .filter(src => isInputRollup.test(src));
 
-  for (let file in inputsHtml) {
-    inputsHtml[file].exportableFiles.forEach(
-      src => !htmlInputs.includes(src) && htmlInputs.push(src)
-    );
-  }
-
-  /**@type {string[]}*/
-  let rollupInputs = inputs
-    .filter(file => !isHtml.test(file))
-    .filter(file => !htmlInputs.includes(file));
-
-  rollupInputs = rollupInputs.concat(htmlInputs);
+  rollupInputs = rollupInputs.filter(
+    (src, index) => index == rollupInputs.indexOf(src)
+  );
 
   if (!rollupInputs.length) return;
-
-  let external =
-    opts.external || opts.importmap
-      ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
-      : [...Object.keys(pkg.peerDependencies)];
 
   let rollupInput = {
     input: rollupInputs,
     // when using the flat --external, you avoid adding the dependencies to the bundle
-    external: opts.external == "unpkg" || opts.importmap ? [] : external,
+    external: opts.external
+      ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
+      : [...Object.keys(pkg.peerDependencies)],
     plugins: [
       pluginForceExternal(),
-      pluginUnpkg(opts, external),
       pluginCss(opts), //use the properties {watch,browsers}
       replace({
         [DOUBLE_SLASH]: "",
@@ -255,7 +251,7 @@ export default async function createBundle(opts, cache) {
           if (inputs.includes(file) || event == "unlink") return;
           if (isHtml.test(file)) {
             // forces the bundle to ignore the entries of the deleted file
-            delete inputsHtml[file];
+            delete htmlReady[file];
             build(true);
           }
           break;
@@ -263,7 +259,7 @@ export default async function createBundle(opts, cache) {
           if (file == namePkg) build(true);
           if (isHtml.test(file)) {
             // before each change of the html file, its inputs are obtained again
-            delete inputsHtml[file];
+            delete htmlReady[file];
             build(true);
           }
           break;

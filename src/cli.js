@@ -7,7 +7,7 @@ sade("bundle [src] [dest]")
   .option(
     "-e, --external",
     "Does not include dependencies in the bundle",
-    "false"
+    false
   )
   .option(
     "-c, --config",
