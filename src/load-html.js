@@ -42,13 +42,19 @@ export default async function loadHtml(
   let htmlContent = content;
 
   if (ext == ".md") {
-    let renderer;
+    let options = {};
     if (mdTemplate.nodeTypes) {
-      renderer = new marked.Renderer();
+      options.renderer = new marked.Renderer();
       for (let key in mdTemplate.nodeTypes) {
-        renderer[key] = mdTemplate.nodeTypes[key];
+        let value = mdTemplate.nodeTypes[key];
+        if (key == "highlight") {
+          options[key] = value;
+        } else {
+          options.renderer[key] = value;
+        }
       }
     }
+
     htmlContent = marked(
       content.replace(/---([.\s\S]*)---/, (all, content, index) => {
         if (!index) {
@@ -57,7 +63,7 @@ export default async function loadHtml(
         }
         return all;
       }),
-      renderer ? { renderer } : null
+      mdTemplate.nodeTypes ? options : null
     );
   }
 
@@ -188,7 +194,7 @@ function analyze(fragment, addFile, find) {
       }
     }
 
-    !["script"].includes(node.nodeName) &&
+    !["script", "pre", "code"].includes(node.nodeName) &&
       node.childNodes &&
       analyze(node.childNodes, addFile, find);
   }
