@@ -100,7 +100,7 @@ export default async function loadHtml(
             base,
             meta,
             files,
-            content: fragment.join("")
+            content: fragment.map(html.serialize).join("")
           })
         )
       );
@@ -116,7 +116,7 @@ export default async function loadHtml(
               .map(name => `${name}="${attrs[name].value}"`)
               .join(" ")}></${nodeName}>$1`
           ),
-        document.map(fragment => html.serialize(fragment)).join("")
+        document.map(html.serialize).join("")
       )
     );
   }

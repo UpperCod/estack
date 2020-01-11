@@ -218,7 +218,7 @@ async function loadHtml(
             base,
             meta,
             files,
-            content: fragment.join("")
+            content: fragment.map(html.serialize).join("")
           })
         )
       );
@@ -234,7 +234,7 @@ async function loadHtml(
               .map(name => `${name}="${attrs[name].value}"`)
               .join(" ")}></${nodeName}>$1`
           ),
-        document.map(fragment => html.serialize(fragment)).join("")
+        document.map(html.serialize).join("")
       )
     );
   }
@@ -1756,7 +1756,7 @@ function onwarn(warning) {
  */
 
 sade("bundle [src] [dest]")
-  .version("0.13.0")
+  .version("0.13.1")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option(
     "-e, --external",
