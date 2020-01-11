@@ -134,13 +134,21 @@ let ignore = ["#text", "#comment"];
  * @param {string} src
  * @param {string} dir
  * @param {string[]} htmlExports
+ * @param {Object} mdTemplate
+ * @param {Object} mdTemplate.nodeTypes
  * @param {boolean} [disableCache]
  */
-async function loadHtml(src, dir, htmlExports, disableCache) {
+async function loadHtml(
+  src,
+  dir,
+  htmlExports,
+  mdTemplate,
+  disableCache
+) {
   let content = await readFile(src);
 
   if (!disableCache && cache[src] && cache[src].content == content) {
-    return Cache.get(content);
+    return cache[src];
   }
 
   let { ext, name, dir: dirOrg } = path.parse(src);
@@ -152,6 +160,13 @@ async function loadHtml(src, dir, htmlExports, disableCache) {
   let htmlContent = content;
 
   if (ext == ".md") {
+    let renderer;
+    if (mdTemplate.nodeTypes) {
+      renderer = new marked.Renderer();
+      for (let key in mdTemplate.nodeTypes) {
+        renderer[key] = mdTemplate.nodeTypes[key];
+      }
+    }
     htmlContent = marked(
       content.replace(/---([.\s\S]*)---/, (all, content, index) => {
         if (!index) {
@@ -159,7 +174,8 @@ async function loadHtml(src, dir, htmlExports, disableCache) {
           return "";
         }
         return all;
-      })
+      }),
+      renderer ? { renderer } : null
     );
   }
 
@@ -191,13 +207,13 @@ async function loadHtml(src, dir, htmlExports, disableCache) {
    * @param {Function} [template]
    * @param {Object} opts
    */
-  function write(htmlInject, template, files) {
+  function write(htmlInject, mdTemplate, files) {
     let document = fragment;
 
-    if (ext == ".md" && template) {
+    if (ext == ".md" && mdTemplate.template) {
       document = [].concat(
         html.parse(
-          template({
+          mdTemplate.template({
             ext,
             base,
             meta,
@@ -1509,9 +1525,7 @@ async function createBundle(opts, cache) {
     chunkFileNames: "chunks/[hash].js"
   };
 
-  let mdTemplate = opts.mdTemplate
-    ? requireExternal(opts.mdTemplate).default
-    : null;
+  let mdTemplate = opts.mdTemplate ? requireExternal(opts.mdTemplate) : {};
 
   let htmlExports = [
     "script[type=module][:src]",
@@ -1524,7 +1538,12 @@ async function createBundle(opts, cache) {
       .filter(file => isHtml.test(file) && !htmlReady[file])
       .map(
         async src =>
-          (htmlReady[src] = await loadHtml(src, opts.dir, htmlExports))
+          (htmlReady[src] = await loadHtml(
+            src,
+            opts.dir,
+            htmlExports,
+            mdTemplate
+          ))
       )
   );
 
@@ -1737,7 +1756,7 @@ function onwarn(warning) {
  */
 
 sade("bundle [src] [dest]")
-  .version("0.12.0")
+  .version("0.13.0")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option(
     "-e, --external",

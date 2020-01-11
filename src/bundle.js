@@ -88,9 +88,7 @@ export default async function createBundle(opts, cache) {
     chunkFileNames: "chunks/[hash].js"
   };
 
-  let mdTemplate = opts.mdTemplate
-    ? requireExternal(opts.mdTemplate).default
-    : null;
+  let mdTemplate = opts.mdTemplate ? requireExternal(opts.mdTemplate) : {};
 
   let htmlExports = [
     "script[type=module][:src]",
@@ -103,7 +101,12 @@ export default async function createBundle(opts, cache) {
       .filter(file => isHtml.test(file) && !htmlReady[file])
       .map(
         async src =>
-          (htmlReady[src] = await loadHtml(src, opts.dir, htmlExports))
+          (htmlReady[src] = await loadHtml(
+            src,
+            opts.dir,
+            htmlExports,
+            mdTemplate
+          ))
       )
   );
 

@@ -16,13 +16,21 @@ let ignore = ["#text", "#comment"];
  * @param {string} src
  * @param {string} dir
  * @param {string[]} htmlExports
+ * @param {Object} mdTemplate
+ * @param {Object} mdTemplate.nodeTypes
  * @param {boolean} [disableCache]
  */
-export default async function loadHtml(src, dir, htmlExports, disableCache) {
+export default async function loadHtml(
+  src,
+  dir,
+  htmlExports,
+  mdTemplate,
+  disableCache
+) {
   let content = await readFile(src);
 
   if (!disableCache && cache[src] && cache[src].content == content) {
-    return Cache.get(content);
+    return cache[src];
   }
 
   let { ext, name, dir: dirOrg } = path.parse(src);
@@ -34,6 +42,13 @@ export default async function loadHtml(src, dir, htmlExports, disableCache) {
   let htmlContent = content;
 
   if (ext == ".md") {
+    let renderer;
+    if (mdTemplate.nodeTypes) {
+      renderer = new marked.Renderer();
+      for (let key in mdTemplate.nodeTypes) {
+        renderer[key] = mdTemplate.nodeTypes[key];
+      }
+    }
     htmlContent = marked(
       content.replace(/---([.\s\S]*)---/, (all, content, index) => {
         if (!index) {
@@ -41,7 +56,8 @@ export default async function loadHtml(src, dir, htmlExports, disableCache) {
           return "";
         }
         return all;
-      })
+      }),
+      renderer ? { renderer } : null
     );
   }
 
@@ -73,13 +89,13 @@ export default async function loadHtml(src, dir, htmlExports, disableCache) {
    * @param {Function} [template]
    * @param {Object} opts
    */
-  function write(htmlInject, template, files) {
+  function write(htmlInject, mdTemplate, files) {
     let document = fragment;
 
-    if (ext == ".md" && template) {
+    if (ext == ".md" && mdTemplate.template) {
       document = [].concat(
         html.parse(
-          template({
+          mdTemplate.template({
             ext,
             base,
             meta,
