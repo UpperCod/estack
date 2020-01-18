@@ -26,6 +26,8 @@ let namePkg = "package.json";
 
 let isHtml = /\.(html|md)$/;
 
+let isMd = /\.md$/;
+
 let isInputRollup = /\.(js|jsx|ts|tsx|css)$/;
 
 let htmlReady = {};
@@ -262,7 +264,17 @@ export default async function createBundle(opts, cache) {
           if (file == namePkg) build(true);
           if (isHtml.test(file)) {
             // before each change of the html file, its inputs are obtained again
+
             delete htmlReady[file];
+            // force the rewrite of all markdown files
+            if (isMd.test(file)) {
+              for (let file in htmlReady) {
+                if (isMd.test(htmlReady[file].ext)) {
+                  delete htmlReady[file];
+                }
+              }
+            }
+
             build(true);
           }
           break;

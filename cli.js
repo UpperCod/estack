@@ -174,7 +174,7 @@ async function loadHtml(
     }
 
     htmlContent = marked(
-      content.replace(/---([.\s\S]*)---/, (all, content, index) => {
+      content.replace(/---\s([.\s\S]*)\s---\s/, (all, content, index) => {
         if (!index) {
           meta = yaml.safeLoad(content);
           return "";
@@ -1469,6 +1469,8 @@ let namePkg = "package.json";
 
 let isHtml = /\.(html|md)$/;
 
+let isMd = /\.md$/;
+
 let isInputRollup = /\.(js|jsx|ts|tsx|css)$/;
 
 let htmlReady = {};
@@ -1705,7 +1707,17 @@ async function createBundle(opts, cache) {
           if (file == namePkg) build(true);
           if (isHtml.test(file)) {
             // before each change of the html file, its inputs are obtained again
+
             delete htmlReady[file];
+            // force the rewrite of all markdown files
+            if (isMd.test(file)) {
+              for (let file in htmlReady) {
+                if (isMd.test(htmlReady[file].ext)) {
+                  delete htmlReady[file];
+                }
+              }
+            }
+
             build(true);
           }
           break;
@@ -1762,7 +1774,7 @@ function onwarn(warning) {
  */
 
 sade("bundle [src] [dest]")
-  .version("0.13.2")
+  .version("0.13.3")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option(
     "-e, --external",

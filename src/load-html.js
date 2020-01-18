@@ -56,7 +56,7 @@ export default async function loadHtml(
     }
 
     htmlContent = marked(
-      content.replace(/---([.\s\S]*)---/, (all, content, index) => {
+      content.replace(/---\s([.\s\S]*)\s---\s/, (all, content, index) => {
         if (!index) {
           meta = yaml.safeLoad(content);
           return "";
