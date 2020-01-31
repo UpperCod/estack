@@ -25,11 +25,11 @@ export default async function loadHtml(
   dir,
   htmlExports,
   mdTemplate,
-  disableCache
+  mdConfigTemplate
 ) {
   let content = await readFile(src);
 
-  if (!disableCache && cache[src] && cache[src].content == content) {
+  if (cache[src] && cache[src].content == content) {
     return cache[src];
   }
 
@@ -95,7 +95,7 @@ export default async function loadHtml(
    * @param {Function} [template]
    * @param {Object} opts
    */
-  function write(htmlInject, mdTemplate, files) {
+  function write(htmlInject, files) {
     let document = fragment;
 
     if (ext == ".md" && mdTemplate.template) {
@@ -106,6 +106,7 @@ export default async function loadHtml(
             base,
             meta,
             files,
+            config: mdConfigTemplate,
             content: fragment.map(html.serialize).join("")
           })
         )
