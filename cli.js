@@ -143,11 +143,11 @@ async function loadHtml(
   dir,
   htmlExports,
   mdTemplate,
-  disableCache
+  mdConfigTemplate
 ) {
   let content = await readFile(src);
 
-  if (!disableCache && cache[src] && cache[src].content == content) {
+  if (cache[src] && cache[src].content == content) {
     return cache[src];
   }
 
@@ -213,7 +213,7 @@ async function loadHtml(
    * @param {Function} [template]
    * @param {Object} opts
    */
-  function write(htmlInject, mdTemplate, files) {
+  function write(htmlInject, files) {
     let document = fragment;
 
     if (ext == ".md" && mdTemplate.template) {
@@ -224,6 +224,7 @@ async function loadHtml(
             base,
             meta,
             files,
+            config: mdConfigTemplate,
             content: fragment.map(html.serialize).join("")
           })
         )
@@ -1533,7 +1534,9 @@ async function createBundle(opts, cache) {
     chunkFileNames: "chunks/[hash].js"
   };
 
-  let mdTemplate = opts.mdTemplate ? requireExternal(opts.mdTemplate) : {};
+  let [mdDirTemplate, mdConfigTemplate = {}] = [].concat(opts.mdTemplate);
+
+  let mdTemplate = mdDirTemplate ? requireExternal(mdDirTemplate) : {};
 
   let htmlExports = [
     "script[type=module][:src]",
@@ -1550,7 +1553,8 @@ async function createBundle(opts, cache) {
             src,
             opts.dir,
             htmlExports,
-            mdTemplate
+            mdTemplate,
+            mdConfigTemplate
           ))
       )
   );
@@ -1560,7 +1564,6 @@ async function createBundle(opts, cache) {
   await htmlProcessed.map(html =>
     html.write(
       opts.htmlInject,
-      mdTemplate,
       htmlReadyArray
         .filter(({ ext }) => ext == ".md")
         .map(({ base, meta }) => ({ base, meta }))
@@ -1774,7 +1777,7 @@ function onwarn(warning) {
  */
 
 sade("bundle [src] [dest]")
-  .version("0.13.3")
+  .version("0.14.0")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option(
     "-e, --external",
