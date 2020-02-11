@@ -15,27 +15,22 @@ let ignore = ["#text", "#comment"];
  *
  * @param {string} src
  * @param {string} dir
- * @param {string[]} htmlExports
- * @param {Object} mdTemplate
- * @param {Object} mdTemplate.nodeTypes
+ * @param {string[]} exports
+ * @param {Object} markdownTemplate
+ * @param {Object} markdownTemplate.nodeTypes
  * @param {boolean} [disableCache]
  */
-export default async function loadHtml(
+export default async function readHtml({
   src,
   dir,
-  htmlExports,
-  mdTemplate,
-  mdConfigTemplate
-) {
+  exports,
+  markdownTemplate
+}) {
   let content = await readFile(src);
-
-  if (cache[src] && cache[src].content == content) {
-    return cache[src];
-  }
 
   let { ext, name, dir: dirOrg } = path.parse(src);
 
-  let base = name + ".html";
+  let link = name + ".html";
 
   let meta = {};
 
@@ -43,10 +38,10 @@ export default async function loadHtml(
 
   if (ext == ".md") {
     let options = {};
-    if (mdTemplate.nodeTypes) {
+    if (markdownTemplate.nodeTypes) {
       options.renderer = new marked.Renderer();
-      for (let key in mdTemplate.nodeTypes) {
-        let value = mdTemplate.nodeTypes[key];
+      for (let key in markdownTemplate.nodeTypes) {
+        let value = markdownTemplate.nodeTypes[key];
         if (key == "highlight") {
           options[key] = value;
         } else {
@@ -63,14 +58,14 @@ export default async function loadHtml(
         }
         return all;
       }),
-      mdTemplate.nodeTypes ? options : null
+      markdownTemplate.nodeTypes ? options : null
     );
   }
 
   /**@type {string[]} */
   let files = [];
-
-  let findExpressions = formatExpressions(htmlExports);
+  // create the search object to perform the query
+  let findExpressions = formatExpressions(exports);
 
   htmlContent = html.parse(htmlContent);
 
@@ -90,23 +85,22 @@ export default async function loadHtml(
     !files.includes(src) && files.push(src);
     return getFileStatic(src);
   }
+
   /**
    * write the document to the destination directory
    * @param {Function} [template]
    * @param {Object} opts
    */
-  function write(htmlInject, files) {
+  function write(markdownData) {
     let document = fragment;
 
-    if (ext == ".md" && mdTemplate.template) {
+    if (ext == ".md" && markdownTemplate.template) {
       document = [].concat(
         html.parse(
-          mdTemplate.template({
-            ext,
-            base,
+          markdownTemplate.template({
+            ...markdownData,
+            link,
             meta,
-            files,
-            config: mdConfigTemplate,
             content: fragment.map(html.serialize).join("")
           })
         )
@@ -114,25 +108,15 @@ export default async function loadHtml(
     }
 
     return writeFile(
-      path.join(dir, base),
-      formatExpressions(htmlInject).reduce(
-        (document, { nodeName, attrs }) =>
-          document.replace(
-            /(\<\/head\>)/,
-            `<${nodeName} ${Object.keys(attrs)
-              .map(name => `${name}="${attrs[name].value}"`)
-              .join(" ")}></${nodeName}>$1`
-          ),
-        document.map(html.serialize).join("")
-      )
+      path.join(dir, link),
+      document.map(html.serialize).join("")
     );
   }
 
   return (cache[src] = {
-    content,
+    exports: files.filter(src => isNotStatic.test(src)),
     write,
-    files,
-    base,
+    link,
     meta,
     ext,
     src

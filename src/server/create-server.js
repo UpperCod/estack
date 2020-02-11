@@ -2,13 +2,18 @@ import net from "net";
 import path from "path";
 import http from "http";
 import url from "url";
-import { asyncStat, asyncReadFile, cwd } from "./utils";
-import types from "./server-types";
+import { asyncFs, cwd } from "../utils";
+import types from "./content-types";
 
-export default async function createServer(dir, watch, portStart) {
-  let port = await findPort(portStart, portStart + 100);
-
-  let reloadPort = await findPort(5000, 5080);
+export default async function createServer({
+  dir,
+  watch,
+  port: portStart = 8000
+}) {
+  let [port, reloadPort] = await Promise.all([
+    findPort(portStart, portStart + 100),
+    findPort(5000, 5080)
+  ]);
 
   http
     .createServer(async (req, res) => {
@@ -26,7 +31,7 @@ export default async function createServer(dir, watch, portStart) {
       let ext = reqFile ? reqFile[1] : "html";
 
       let responseSuccess = async (url, ext) => {
-        let file = await asyncReadFile(url, "binary");
+        let file = await asyncFs.readFile(url, "binary");
         if (ext == "html" && watch) {
           file += `
             <script>
@@ -39,7 +44,7 @@ export default async function createServer(dir, watch, portStart) {
       };
       // Check if files exists at the location
       try {
-        await asyncStat(fileUrl);
+        await asyncFs.stat(fileUrl);
         try {
           await responseSuccess(fileUrl, ext);
         } catch (e) {
@@ -48,7 +53,7 @@ export default async function createServer(dir, watch, portStart) {
       } catch (e) {
         if (ext == "html") {
           try {
-            await asyncStat(fallbackUrl);
+            await asyncFs.stat(fallbackUrl);
             await responseSuccess(fallbackUrl, "html");
           } catch {
             sendError(res, 404);
@@ -83,8 +88,11 @@ export default async function createServer(dir, watch, portStart) {
 
   console.log(`\nserver running on http://localhost:${port}\n`);
 
-  return function reload() {
-    responses.forEach(res => sendMessage(res, "message", "reloading page"));
+  return {
+    reload() {
+      if (watch)
+        responses.forEach(res => sendMessage(res, "message", "reloading page"));
+    }
   };
 }
 

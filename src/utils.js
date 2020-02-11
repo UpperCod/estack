@@ -1,5 +1,4 @@
 import fs from "fs";
-import { promisify } from "util";
 import path from "path";
 import ems from "esm";
 
@@ -9,17 +8,9 @@ export function requireExternal(file) {
   return requireEms(path.join(cwd, file));
 }
 
+export let asyncFs = fs.promises;
+
 export let cwd = process.cwd();
-
-export let asyncReadFile = promisify(fs.readFile);
-
-export let asyncWriteFile = promisify(fs.writeFile);
-
-export let asyncMkdir = promisify(fs.mkdir);
-
-export let asyncStat = promisify(fs.stat);
-
-export let asyncCopyFile = promisify(fs.copyFile);
 
 let pkgDefault = {
   dependencies: {},
@@ -29,20 +20,20 @@ let pkgDefault = {
 };
 
 export function readFile(file) {
-  return asyncReadFile(path.join(cwd, file), "utf8");
+  return asyncFs.readFile(path.join(cwd, file), "utf8");
 }
 
 export async function writeFile(file, data) {
   let dir = path.join(cwd, path.parse(file).dir);
   try {
-    await asyncStat(dir);
+    await asyncFs.stat(dir);
   } catch (e) {
-    await asyncMkdir(dir, {
+    await asyncFs.mkdir(dir, {
       recursive: true
     });
   }
 
-  return asyncWriteFile(path.join(cwd, file), data, "utf8");
+  return asyncFs.writeFile(path.join(cwd, file), data, "utf8");
 }
 
 export function normalizePath(path) {
@@ -84,15 +75,15 @@ export async function copyFile(src, dest) {
   src = path.join(cwd, src);
   dest = path.join(cwd, dest);
   let [statSrc, statDest] = await Promise.all([
-    asyncStat(src).catch(() => null),
-    asyncStat(dest).catch(() => null)
+    asyncFs.stat(src).catch(() => null),
+    asyncFs.stat(dest).catch(() => null)
   ]);
   if (statSrc && (!statDest || statSrc.ctimeMs != statDest.ctimeMs)) {
     if (!statDest) {
-      await asyncMkdir(path.parse(dest).dir, {
+      await asyncFs.mkdir(path.parse(dest).dir, {
         recursive: true
       });
     }
-    await asyncCopyFile(src, dest);
+    await asyncFs.copyFile(src, dest);
   }
 }

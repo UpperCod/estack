@@ -7,9 +7,9 @@ import atImport from "postcss-import";
 let cwd = process.cwd();
 let isCss = /\.css$/;
 
-export default function(options = {}) {
+export default function pluginImportCss(options = {}) {
   return {
-    name: "plugin-css",
+    name: "plugin-import-css",
     async transform(code, id) {
       let { isEntry } = this.getModuleInfo(id);
       if (isCss.test(id)) {

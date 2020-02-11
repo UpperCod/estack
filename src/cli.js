@@ -4,11 +4,7 @@ import createBundle from "./bundle";
 sade("bundle [src] [dest]")
   .version("PKG.VERSION")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
-  .option(
-    "-e, --external",
-    "Does not include dependencies in the bundle",
-    false
-  )
+  .option("-e, --external", "Does not include dependencies in the bundle")
   .option(
     "-c, --config",
     "allows you to export a configuration from package.json"
@@ -29,16 +25,17 @@ sade("bundle [src] [dest]")
     false
   )
   .example("src/index.html dist --watch --server")
-  .example("src/index.html dist --watch --server")
+  .example("src/index.html dist --external")
+  .example("src/index.html dist --external react,react-dom")
   .example("src/index.js dist --watch")
   .example("src/*.js dist")
   .example("src/*.html")
   .example("")
-  .action((src, dir = "dist", opts) => {
+  .action((src, dir = "dist", options) => {
     createBundle({
-      ...opts,
-      dir,
-      src: src ? src.split(/ *, */g) : []
+      ...options,
+      src,
+      dir
     }).catch(e => console.log("" + e));
   })
   .parse(process.argv);

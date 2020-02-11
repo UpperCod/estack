@@ -1,317 +1,178 @@
-import fastGlob from "fast-glob";
-import { rollup, watch as watchBundle } from "rollup";
+import rollup from "rollup";
+import glob from "fast-glob";
+import readHtml from "./read-html";
+import rollupConfig from "./rollup/config-plugins";
+import { getPackage, normalizePath, requireExternal } from "./utils";
+import createServer from "./server/create-server";
 import chokidar from "chokidar";
-import loadHtml from "./load-html";
-
-import {
-  normalizePath,
-  getPackage,
-  mergeKeysArray,
-  requireExternal
-} from "./utils";
-
-import pluginCss from "./plugin-css";
-import { pluginForceExternal, DOUBLE_SLASH } from "./plugin-force-external";
-import createServer from "./server";
-
-import babel from "rollup-plugin-babel";
-import resolve from "@rollup/plugin-node-resolve";
-import common from "@rollup/plugin-commonjs";
-import sizes from "@atomico/rollup-plugin-sizes";
-import replace from "@rollup/plugin-replace";
-import { terser } from "rollup-plugin-terser";
-import path from "path";
-
-let namePkg = "package.json";
 
 let isHtml = /\.(html|md)$/;
 
-let isMd = /\.md$/;
+let htmlExports = [
+  "script[type=module][:src]",
+  "link[:href][rel=stylesheet]",
+  "link[:href][rel=manifest]",
+  "link[:href][rel=shortcut icon]",
+  "img[:src]",
+  "video[:src]"
+];
 
-let isInputRollup = /\.(js|jsx|ts|tsx|css)$/;
+export default async function createBundle(options) {
+  let watchers = [];
+  let server;
+  let lastTime;
+  let cache;
 
-let htmlReady = {};
+  streamLog("...loading");
 
-let optsDefault = {
-  dir: "dist",
-  browsers: "> 3%"
-};
+  options = await formatOptions(options);
 
-let extensions = [".js", ".jsx", ".ts", ".tsx"];
-/**
- * @type {?Function}
- */
-let currentServer;
-/**
- * @param {Object} opts
- * @param {string[]} opts.src
- * @param {string} [opts.dir]
- * @param {string} [opts.browsers]
- * @param {boolean} [opts.watch]
- * @param {boolean} [opts.server]
- * @param {number} [opts.port]
- * @param {boolean} opts.external
- * @param {string} [opts.config]
- * @param {string} [opts.jsx]
- * @param {jsxFragment} [opts.jsxFragment]
- * @param {string} [opts.importmap]
- * @param {boolean} [opts.minify] - minifies the js and css, this option is ignored if the flag watch is used
- * @param {string[]} [opts.htmlInject] - allows to inject the html generated nodes in the head, based on emmet type expressions, eg `script[src=url]`
- * @param {string[]} [opts.htmlExports] - allows you to add more export exprations from the html, eg `my-element[:src]`
- */
-export default async function createBundle(opts, cache) {
-  /**@type {Package} */
-  let pkg = await getPackage();
-
-  // merge config
-  opts = { ...optsDefault, ...opts, ...pkg[opts.config] };
-
-  //normalizes the value
-
-  /**@type {string[]}*/
-  let inputs = await fastGlob(opts.src);
-
-  let babelIncludes = ["node_modules/**"];
-
-  // transform src into valid path to include in babel
-  for (let src of opts.src) {
-    let { dir } = path.parse(src);
-
-    dir = path.join(dir, "**");
-    if (!babelIncludes.includes(dir)) {
-      babelIncludes.push(dir);
-    }
+  if (options.server) {
+    server = await createServer(options);
   }
 
-  let rollupOutput = {
-    dir: opts.dir,
-    format: "es",
-    sourcemap: true,
-    chunkFileNames: "chunks/[hash].js"
-  };
+  async function build(options) {
+    // close the observers created within the scope build
+    watchers.forEach(watch => watch.close());
 
-  let [mdDirTemplate, mdConfigTemplate = {}] = [].concat(opts.mdTemplate);
+    watchers = [];
 
-  let mdTemplate = mdDirTemplate ? requireExternal(mdDirTemplate) : {};
+    let inputs = await glob(options.src);
 
-  let htmlExports = [
-    "script[type=module][:src]",
-    "link[:href][rel=stylesheet]"
-  ].concat(opts.htmlExports);
+    let [inputsHtml, inputsRollup] = inputs.reduce(
+      ([inputsHtml, inputsRollup], src) => {
+        (isHtml.test(src) ? inputsHtml : inputsRollup).push(src);
+        return [inputsHtml, inputsRollup];
+      },
+      [[], []]
+    );
 
-  // look at the html files given by the expression, to get the input scripts
-  let htmlProcessed = await Promise.all(
-    inputs
-      .filter(file => isHtml.test(file) && !htmlReady[file])
-      .map(
-        async src =>
-          (htmlReady[src] = await loadHtml(
-            src,
-            opts.dir,
-            htmlExports,
-            mdTemplate,
-            mdConfigTemplate
-          ))
+    let html = await Promise.all(
+      inputsHtml.map(src =>
+        readHtml({
+          src,
+          dir: options.dir,
+          exports: htmlExports,
+          markdownTemplate: options.markdownTemplate,
+          markdownConfigTemplate: options.markdownConfigTemplate
+        })
       )
-  );
+    );
 
-  let htmlReadyArray = Object.keys(htmlReady).map(src => htmlReady[src]);
+    inputsRollup = html.reduce(
+      (inputsRollup, html) => [
+        ...inputsRollup,
+        ...html.exports.filter(src => !inputsRollup.includes(src))
+      ],
+      inputsRollup
+    );
 
-  await htmlProcessed.map(html =>
-    html.write(
-      opts.htmlInject,
-      htmlReadyArray
+    let markdownData = {
+      custom: options.markdownConfigTemplate,
+      pages: html
         .filter(({ ext }) => ext == ".md")
-        .map(({ base, meta }) => ({ base, meta }))
-    )
-  );
+        .map(({ link, meta }) => ({ link, meta }))
+    };
 
-  // store the scripts used by html files
-  let rollupInputs = htmlReadyArray
-    .reduce((inputs, { files }) => inputs.concat(files), [])
-    .concat(inputs)
-    .filter(src => isInputRollup.test(src));
+    await Promise.all(html.map(html => html.write(markdownData)));
 
-  rollupInputs = rollupInputs.filter(
-    (src, index) => index == rollupInputs.indexOf(src)
-  );
+    let rollupInput = {
+      cache,
+      onwarn: streamLog,
+      input: inputsRollup,
+      external: options.external,
+      ...rollupConfig(options)
+    };
 
-  if (!rollupInputs.length) return;
+    let rollupOutput = {
+      dir: options.dir,
+      format: "es",
+      sourcemap: true,
+      chunkFileNames: "chunks/[hash].js"
+    };
 
-  let rollupInput = {
-    input: rollupInputs,
-    // when using the flat --external, you avoid adding the dependencies to the bundle
-    external: opts.external
-      ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
-      : [...Object.keys(pkg.peerDependencies)],
-    plugins: [
-      pluginForceExternal(),
-      pluginCss(opts), //use the properties {watch,browsers}
-      replace({
-        [DOUBLE_SLASH]: "",
-        "process.env.NODE_ENV": JSON.stringify("production")
-      }),
-      resolve({
-        extensions,
-        dedupe: ["react", "react-dom"]
-      }),
-      babel({
-        include: babelIncludes,
-        extensions,
-        //  Merge settings from pkg.bundle
-        ...mergeKeysArray(
-          ["presets", "plugins"],
-          {
-            presets: [
-              [
-                "@babel/preset-typescript",
-                opts.jsx == "react"
-                  ? {}
-                  : {
-                      jsxPragma: opts.jsx
-                    }
-              ],
-              [
-                "@babel/preset-env",
-                {
-                  targets: opts.browsers,
-                  exclude: [
-                    /**
-                     * to enable or disable preset plugins
-                     * {@link https://github.com/babel/babel/blob/master/packages/babel-preset-env/src/available-plugins.js}
-                     */
-                    "transform-typeof-symbol",
-                    "transform-regenerator",
-                    "transform-async-to-generator"
-                  ]
-                }
-              ]
-            ],
-            plugins: [
-              [
-                "@babel/plugin-transform-react-jsx",
-                {
-                  pragma:
-                    opts.jsx == "react" ? "React.createElement" : opts.jsx,
-                  pragmaFrag:
-                    opts.jsxFragment == "react" || opts.jsx == "react"
-                      ? "React.Fragment"
-                      : opts.jsxFragment
-                }
-              ]
-            ]
-          },
-          pkg.babel
-        )
-      }),
-      common(),
-      // default minify the code once it escapes the watch
-      ...(opts.watch
-        ? []
-        : opts.minify
-        ? [terser({ sourcemap: true })]
-        : [sizes()])
-    ],
-    cache,
-    onwarn
-  };
-  /**@type {Object} */
-  let bundle = await rollup(rollupInput);
+    let bundle = await rollup.rollup(rollupInput);
 
-  /**
-   * almacena los watcher en una array para luego
-   * eliminar las suscripciones
-   */
-  let watchers = [];
+    cache = bundle.cache;
 
-  if (opts.watch) {
-    let rollupWatch = watchBundle({
-      ...rollupInput,
-      output: rollupOutput,
-      watch: { exclude: "node_modules/**" }
-    });
+    if (options.watch) {
+      let rollupWatch = rollup.watch({
+        ...rollupInput,
+        output: rollupOutput,
+        watch: { exclude: "node_modules/**" }
+      });
 
-    let lastTime;
+      rollupWatch.on("event", async event => {
+        switch (event.code) {
+          case "START":
+            lastTime = new Date();
+            break;
+          case "END":
+            streamLog(`bundle: ${new Date() - lastTime}ms`);
+            if (server) server.reload();
+            break;
+          case "ERROR":
+            streamLog(event.error);
+            break;
+        }
+      });
 
-    rollupWatch.on("event", async event => {
-      switch (event.code) {
-        case "START":
-          lastTime = new Date();
-          break;
-        case "END":
-          streamLog(`bundle: ${new Date() - lastTime}ms`);
-          if (currentServer) currentServer.then(reload => reload());
-          break;
-        case "ERROR":
-          onwarn(event.error);
-          break;
-      }
-    });
+      watchers.push(rollupWatch);
+    }
 
+    bundle.write(rollupOutput);
+  }
+
+  if (options.watch) {
     let chokidarWatch = chokidar.watch("file", {});
 
     chokidarWatch.on("all", async (event, file) => {
       file = normalizePath(file);
-      switch (event) {
-        case "add":
-        case "unlink":
-          if (inputs.includes(file) || event == "unlink") return;
-          if (isHtml.test(file)) {
-            // forces the bundle to ignore the entries of the deleted file
-            delete htmlReady[file];
-            build(true);
-          }
-          break;
-        case "change":
-          if (file == namePkg) build(true);
-          if (isHtml.test(file)) {
-            // before each change of the html file, its inputs are obtained again
-
-            delete htmlReady[file];
-            // force the rewrite of all markdown files
-            if (isMd.test(file)) {
-              for (let file in htmlReady) {
-                if (isMd.test(htmlReady[file].ext)) {
-                  delete htmlReady[file];
-                }
-              }
-            }
-
-            build(true);
-          }
-          break;
-      }
+      build(options);
     });
 
-    chokidarWatch.add([opts.src, namePkg]);
-
-    watchers.push(rollupWatch, chokidarWatch);
+    chokidarWatch.add([options.src, "package.json"]);
   }
 
-  async function build(force) {
-    if (force) {
-      if (opts.watch) {
-        watchers.forEach(watcher => watcher.close());
-      }
-      return createBundle(opts, bundle.cache);
-    } else {
-      return bundle.write(rollupOutput);
-    }
+  build(options);
+}
+
+async function formatOptions({ src = [], config, external, ...ignore }) {
+  let pkg = await getPackage();
+  src = Array.isArray(src) ? src : src.split(/ *, */g);
+
+  if (external) {
+    external = Array.isArray(external)
+      ? external
+      : [true, "true"].includes(external)
+      ? Object.keys(pkg.dependencies)
+      : external.split(/ *, */);
   }
 
-  return build()
-    .then(async () => {
-      // create a server that is capable of subscribing to bundle changes, for a livereload
-      if (opts.server && !currentServer) {
-        currentServer = createServer(opts.dir, opts.watch, opts.port);
-      } else if (currentServer) {
-        currentServer.then(reload => reload());
-      }
-    })
-    .catch(e => console.log(e));
+  external = [...(external || []), ...Object.keys(pkg.peerDependencies)];
+
+  let pkgConfig = pkg[config] || {};
+
+  let [markdownTemplate, markdownConfigTemplate = {}] = [].concat(
+    pkgConfig.markdownTemplate
+  );
+
+  markdownTemplate = markdownTemplate ? requireExternal(markdownTemplate) : {};
+
+  return {
+    babel: {},
+    src,
+    external,
+    babel: pkg.babel,
+    ...ignore,
+    ...pkgConfig,
+    markdownTemplate,
+    markdownConfigTemplate
+  };
 }
 
 function streamLog(message) {
+  message = message + "";
   try {
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
@@ -320,14 +181,3 @@ function streamLog(message) {
     console.log(message);
   }
 }
-
-function onwarn(warning) {
-  streamLog(warning + "");
-}
-
-/**
- * @typedef {Object} Package
- * @property {Object} dependencies
- * @property {Object} [peerDependencies]
- * @property {{plugins:any[],presets:any[]}} [babel]
- */
