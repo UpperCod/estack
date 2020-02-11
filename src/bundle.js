@@ -22,6 +22,8 @@ export default async function createBundle(options) {
   let server;
   let lastTime;
   let cache;
+  let currentBuild;
+  let rebuild = () => (currentBuild = build(options));
 
   streamLog("...loading");
 
@@ -121,20 +123,36 @@ export default async function createBundle(options) {
     }
 
     bundle.write(rollupOutput);
+
+    return [...inputsHtml, ...inputsRollup];
   }
+
+  rebuild();
 
   if (options.watch) {
     let chokidarWatch = chokidar.watch("file", {});
 
     chokidarWatch.on("all", async (event, file) => {
+      let files = await currentBuild;
+
       file = normalizePath(file);
-      build(options);
+
+      let exist = files.includes(file);
+
+      switch (event) {
+        case "unlink":
+          if (exist) rebuild();
+          break;
+        case "change":
+          if (isHtml.test(file)) rebuild();
+          break;
+        case "add":
+          if (!exist) rebuild();
+      }
     });
 
     chokidarWatch.add([options.src, "package.json"]);
   }
-
-  build(options);
 }
 
 async function formatOptions({ src = [], config, external, ...ignore }) {

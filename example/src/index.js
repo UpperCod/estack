@@ -1,1 +1,1 @@
-console.log(document.body + "everyss");
+import "./style/base.css?inject&scope=my-component";

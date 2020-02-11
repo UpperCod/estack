@@ -1,4 +1,7 @@
+/*@scope my-component*/
+/*@inject*/
+
 button {
-	color: orange;
-	size: 20px;
+  color: orange;
+  size: 20px;
 }
