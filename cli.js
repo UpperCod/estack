@@ -4,16 +4,19 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var sade = _interopDefault(require('sade'));
-var fastGlob = _interopDefault(require('fast-glob'));
-var rollup = require('rollup');
-var chokidar = _interopDefault(require('chokidar'));
+var rollup = _interopDefault(require('rollup'));
+var glob = _interopDefault(require('fast-glob'));
 var html = _interopDefault(require('parse5'));
 var fs = _interopDefault(require('fs'));
-var util = require('util');
 var path = _interopDefault(require('path'));
 var ems = _interopDefault(require('esm'));
 var marked = _interopDefault(require('marked'));
 var yaml = _interopDefault(require('js-yaml'));
+var babel = _interopDefault(require('rollup-plugin-babel'));
+var resolve = _interopDefault(require('@rollup/plugin-node-resolve'));
+var common = _interopDefault(require('@rollup/plugin-commonjs'));
+var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
+var replace = _interopDefault(require('@rollup/plugin-replace'));
 var postcss = _interopDefault(require('postcss'));
 var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
 var cssnano = _interopDefault(require('cssnano'));
@@ -21,12 +24,7 @@ var atImport = _interopDefault(require('postcss-import'));
 var net = _interopDefault(require('net'));
 var http = _interopDefault(require('http'));
 var url = _interopDefault(require('url'));
-var babel = _interopDefault(require('rollup-plugin-babel'));
-var resolve = _interopDefault(require('@rollup/plugin-node-resolve'));
-var common = _interopDefault(require('@rollup/plugin-commonjs'));
-var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
-var replace = _interopDefault(require('@rollup/plugin-replace'));
-var rollupPluginTerser = require('rollup-plugin-terser');
+var chokidar = _interopDefault(require('chokidar'));
 
 let requireEms = ems(module);
 
@@ -34,17 +32,9 @@ function requireExternal(file) {
   return requireEms(path.join(cwd, file));
 }
 
+let asyncFs = fs.promises;
+
 let cwd = process.cwd();
-
-let asyncReadFile = util.promisify(fs.readFile);
-
-let asyncWriteFile = util.promisify(fs.writeFile);
-
-let asyncMkdir = util.promisify(fs.mkdir);
-
-let asyncStat = util.promisify(fs.stat);
-
-let asyncCopyFile = util.promisify(fs.copyFile);
 
 let pkgDefault = {
   dependencies: {},
@@ -54,20 +44,20 @@ let pkgDefault = {
 };
 
 function readFile(file) {
-  return asyncReadFile(path.join(cwd, file), "utf8");
+  return asyncFs.readFile(path.join(cwd, file), "utf8");
 }
 
 async function writeFile(file, data) {
   let dir = path.join(cwd, path.parse(file).dir);
   try {
-    await asyncStat(dir);
+    await asyncFs.stat(dir);
   } catch (e) {
-    await asyncMkdir(dir, {
+    await asyncFs.mkdir(dir, {
       recursive: true
     });
   }
 
-  return asyncWriteFile(path.join(cwd, file), data, "utf8");
+  return asyncFs.writeFile(path.join(cwd, file), data, "utf8");
 }
 
 function normalizePath(path) {
@@ -109,16 +99,16 @@ async function copyFile(src, dest) {
   src = path.join(cwd, src);
   dest = path.join(cwd, dest);
   let [statSrc, statDest] = await Promise.all([
-    asyncStat(src).catch(() => null),
-    asyncStat(dest).catch(() => null)
+    asyncFs.stat(src).catch(() => null),
+    asyncFs.stat(dest).catch(() => null)
   ]);
   if (statSrc && (!statDest || statSrc.ctimeMs != statDest.ctimeMs)) {
     if (!statDest) {
-      await asyncMkdir(path.parse(dest).dir, {
+      await asyncFs.mkdir(path.parse(dest).dir, {
         recursive: true
       });
     }
-    await asyncCopyFile(src, dest);
+    await asyncFs.copyFile(src, dest);
   }
 }
 
@@ -133,27 +123,22 @@ let ignore = ["#text", "#comment"];
  *
  * @param {string} src
  * @param {string} dir
- * @param {string[]} htmlExports
- * @param {Object} mdTemplate
- * @param {Object} mdTemplate.nodeTypes
+ * @param {string[]} exports
+ * @param {Object} markdownTemplate
+ * @param {Object} markdownTemplate.nodeTypes
  * @param {boolean} [disableCache]
  */
-async function loadHtml(
+async function readHtml({
   src,
   dir,
-  htmlExports,
-  mdTemplate,
-  mdConfigTemplate
-) {
+  exports,
+  markdownTemplate
+}) {
   let content = await readFile(src);
-
-  if (cache[src] && cache[src].content == content) {
-    return cache[src];
-  }
 
   let { ext, name, dir: dirOrg } = path.parse(src);
 
-  let base = name + ".html";
+  let link = name + ".html";
 
   let meta = {};
 
@@ -161,10 +146,10 @@ async function loadHtml(
 
   if (ext == ".md") {
     let options = {};
-    if (mdTemplate.nodeTypes) {
+    if (markdownTemplate.nodeTypes) {
       options.renderer = new marked.Renderer();
-      for (let key in mdTemplate.nodeTypes) {
-        let value = mdTemplate.nodeTypes[key];
+      for (let key in markdownTemplate.nodeTypes) {
+        let value = markdownTemplate.nodeTypes[key];
         if (key == "highlight") {
           options[key] = value;
         } else {
@@ -181,14 +166,14 @@ async function loadHtml(
         }
         return all;
       }),
-      mdTemplate.nodeTypes ? options : null
+      markdownTemplate.nodeTypes ? options : null
     );
   }
 
   /**@type {string[]} */
   let files = [];
-
-  let findExpressions = formatExpressions(htmlExports);
+  // create the search object to perform the query
+  let findExpressions = formatExpressions(exports);
 
   htmlContent = html.parse(htmlContent);
 
@@ -208,23 +193,22 @@ async function loadHtml(
     !files.includes(src) && files.push(src);
     return getFileStatic(src);
   }
+
   /**
    * write the document to the destination directory
    * @param {Function} [template]
    * @param {Object} opts
    */
-  function write(htmlInject, files) {
+  function write(markdownData) {
     let document = fragment;
 
-    if (ext == ".md" && mdTemplate.template) {
+    if (ext == ".md" && markdownTemplate.template) {
       document = [].concat(
         html.parse(
-          mdTemplate.template({
-            ext,
-            base,
+          markdownTemplate.template({
+            ...markdownData,
+            link,
             meta,
-            files,
-            config: mdConfigTemplate,
             content: fragment.map(html.serialize).join("")
           })
         )
@@ -232,25 +216,15 @@ async function loadHtml(
     }
 
     return writeFile(
-      path.join(dir, base),
-      formatExpressions(htmlInject).reduce(
-        (document, { nodeName, attrs }) =>
-          document.replace(
-            /(\<\/head\>)/,
-            `<${nodeName} ${Object.keys(attrs)
-              .map(name => `${name}="${attrs[name].value}"`)
-              .join(" ")}></${nodeName}>$1`
-          ),
-        document.map(html.serialize).join("")
-      )
+      path.join(dir, link),
+      document.map(html.serialize).join("")
     );
   }
 
   return (cache[src] = {
-    content,
+    exports: files.filter(src => isNotStatic.test(src)),
     write,
-    files,
-    base,
+    link,
     meta,
     ext,
     src
@@ -368,9 +342,9 @@ function formatExpressions(find) {
 let cwd$1 = process.cwd();
 let isCss = /\.css$/;
 
-function pluginCss(options = {}) {
+function pluginImportCss(options = {}) {
   return {
-    name: "plugin-css",
+    name: "plugin-import-css",
     async transform(code, id) {
       let { isEntry } = this.getModuleInfo(id);
       if (isCss.test(id)) {
@@ -422,17 +396,88 @@ function pluginCss(options = {}) {
   };
 }
 
-const DOUBLE_SLASH = `DOUBLE_${Math.random()}_SLASH`;
+let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
-function pluginForceExternal() {
-  return {
-    name: "force-external",
-    resolveId(id) {
-      if (/^(http(s){0,1}\:){0,1}\/\/.*/.test(id)) {
-        id = id.replace(/^(\/\/)/, `${DOUBLE_SLASH}$1`);
-        return { id, external: true };
-      }
+function configPlugins(options) {
+  let babelIncludes = ["node_modules/**"];
+  // transform src into valid path to include in babel
+  for (let src of options.src) {
+    let { dir } = path.parse(src);
+
+    dir = path.join(dir, "**");
+    if (!babelIncludes.includes(dir)) {
+      babelIncludes.push(dir);
     }
+  }
+
+  return {
+    plugins: [
+      pluginImportCss(options),
+      resolve({
+        extensions,
+        dedupe: ["react", "react-dom"]
+      }),
+      common(),
+
+      babel({
+        include: babelIncludes,
+        extensions,
+        ...mergeKeysArray(
+          ["presets", "plugins"],
+          {
+            presets: [
+              [
+                "@babel/preset-typescript",
+                options.jsx == "react"
+                  ? {}
+                  : {
+                      jsxPragma: options.jsx
+                    }
+              ],
+              [
+                "@babel/preset-env",
+                {
+                  targets: options.browsers,
+                  modules: false,
+                  exclude: [
+                    "transform-typeof-symbol",
+                    "transform-regenerator",
+                    "transform-async-to-generator"
+                  ]
+                }
+              ]
+            ],
+            plugins: [
+              ["@babel/plugin-proposal-optional-chaining"],
+              ["@babel/plugin-syntax-nullish-coalescing-operator"],
+              ["@babel/plugin-proposal-class-properties"],
+              [
+                "@babel/plugin-transform-react-jsx",
+                {
+                  pragma:
+                    options.jsx == "react"
+                      ? "React.createElement"
+                      : options.jsx,
+                  pragmaFrag:
+                    options.jsxFragment == "react" || options.jsx == "react"
+                      ? "React.Fragment"
+                      : options.jsxFragment
+                }
+              ]
+            ]
+          },
+          options.babel
+        )
+      }),
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("production")
+      }),
+      ...(options.watch
+        ? []
+        : options.minify
+        ? [terser({ sourcemap: true })]
+        : [sizes()])
+    ]
   };
 }
 
@@ -1337,10 +1382,15 @@ var types = {
   "x-conference/x-cooltalk": ["ice"]
 };
 
-async function createServer(dir, watch, portStart) {
-  let port = await findPort(portStart, portStart + 100);
-
-  let reloadPort = await findPort(5000, 5080);
+async function createServer({
+  dir,
+  watch,
+  port: portStart = 8000
+}) {
+  let [port, reloadPort] = await Promise.all([
+    findPort(portStart, portStart + 100),
+    findPort(5000, 5080)
+  ]);
 
   http
     .createServer(async (req, res) => {
@@ -1358,7 +1408,7 @@ async function createServer(dir, watch, portStart) {
       let ext = reqFile ? reqFile[1] : "html";
 
       let responseSuccess = async (url, ext) => {
-        let file = await asyncReadFile(url, "binary");
+        let file = await asyncFs.readFile(url, "binary");
         if (ext == "html" && watch) {
           file += `
             <script>
@@ -1371,7 +1421,7 @@ async function createServer(dir, watch, portStart) {
       };
       // Check if files exists at the location
       try {
-        await asyncStat(fileUrl);
+        await asyncFs.stat(fileUrl);
         try {
           await responseSuccess(fileUrl, ext);
         } catch (e) {
@@ -1380,7 +1430,7 @@ async function createServer(dir, watch, portStart) {
       } catch (e) {
         if (ext == "html") {
           try {
-            await asyncStat(fallbackUrl);
+            await asyncFs.stat(fallbackUrl);
             await responseSuccess(fallbackUrl, "html");
           } catch {
             sendError(res, 404);
@@ -1415,8 +1465,11 @@ async function createServer(dir, watch, portStart) {
 
   console.log(`\nserver running on http://localhost:${port}\n`);
 
-  return function reload() {
-    responses.forEach(res => sendMessage(res, "message", "reloading page"));
+  return {
+    reload() {
+      if (watch)
+        responses.forEach(res => sendMessage(res, "message", "reloading page"));
+    }
   };
 }
 
@@ -1466,296 +1519,173 @@ async function findPort(port, limit, pending) {
   return pending.promise;
 }
 
-let namePkg = "package.json";
-
 let isHtml = /\.(html|md)$/;
 
-let isMd = /\.md$/;
+let htmlExports = [
+  "script[type=module][:src]",
+  "link[:href][rel=stylesheet]",
+  "link[:href][rel=manifest]",
+  "link[:href][rel=shortcut icon]",
+  "img[:src]",
+  "video[:src]"
+];
 
-let isInputRollup = /\.(js|jsx|ts|tsx|css)$/;
+async function createBundle(options) {
+  let watchers = [];
+  let server;
+  let lastTime;
+  let cache;
 
-let htmlReady = {};
+  streamLog("...loading");
 
-let optsDefault = {
-  dir: "dist",
-  browsers: "> 3%"
-};
+  options = await formatOptions(options);
 
-let extensions = [".js", ".jsx", ".ts", ".tsx"];
-/**
- * @type {?Function}
- */
-let currentServer;
-/**
- * @param {Object} opts
- * @param {string[]} opts.src
- * @param {string} [opts.dir]
- * @param {string} [opts.browsers]
- * @param {boolean} [opts.watch]
- * @param {boolean} [opts.server]
- * @param {number} [opts.port]
- * @param {boolean} opts.external
- * @param {string} [opts.config]
- * @param {string} [opts.jsx]
- * @param {jsxFragment} [opts.jsxFragment]
- * @param {string} [opts.importmap]
- * @param {boolean} [opts.minify] - minifies the js and css, this option is ignored if the flag watch is used
- * @param {string[]} [opts.htmlInject] - allows to inject the html generated nodes in the head, based on emmet type expressions, eg `script[src=url]`
- * @param {string[]} [opts.htmlExports] - allows you to add more export exprations from the html, eg `my-element[:src]`
- */
-async function createBundle(opts, cache) {
-  /**@type {Package} */
-  let pkg = await getPackage();
-
-  // merge config
-  opts = { ...optsDefault, ...opts, ...pkg[opts.config] };
-
-  //normalizes the value
-
-  /**@type {string[]}*/
-  let inputs = await fastGlob(opts.src);
-
-  let babelIncludes = ["node_modules/**"];
-
-  // transform src into valid path to include in babel
-  for (let src of opts.src) {
-    let { dir } = path.parse(src);
-
-    dir = path.join(dir, "**");
-    if (!babelIncludes.includes(dir)) {
-      babelIncludes.push(dir);
-    }
+  if (options.server) {
+    server = await createServer(options);
   }
 
-  let rollupOutput = {
-    dir: opts.dir,
-    format: "es",
-    sourcemap: true,
-    chunkFileNames: "chunks/[hash].js"
-  };
+  async function build(options) {
+    // close the observers created within the scope build
+    watchers.forEach(watch => watch.close());
 
-  let [mdDirTemplate, mdConfigTemplate = {}] = [].concat(opts.mdTemplate);
+    watchers = [];
 
-  let mdTemplate = mdDirTemplate ? requireExternal(mdDirTemplate) : {};
+    let inputs = await glob(options.src);
 
-  let htmlExports = [
-    "script[type=module][:src]",
-    "link[:href][rel=stylesheet]"
-  ].concat(opts.htmlExports);
+    let [inputsHtml, inputsRollup] = inputs.reduce(
+      ([inputsHtml, inputsRollup], src) => {
+        (isHtml.test(src) ? inputsHtml : inputsRollup).push(src);
+        return [inputsHtml, inputsRollup];
+      },
+      [[], []]
+    );
 
-  // look at the html files given by the expression, to get the input scripts
-  let htmlProcessed = await Promise.all(
-    inputs
-      .filter(file => isHtml.test(file) && !htmlReady[file])
-      .map(
-        async src =>
-          (htmlReady[src] = await loadHtml(
-            src,
-            opts.dir,
-            htmlExports,
-            mdTemplate,
-            mdConfigTemplate
-          ))
+    let html = await Promise.all(
+      inputsHtml.map(src =>
+        readHtml({
+          src,
+          dir: options.dir,
+          exports: htmlExports,
+          markdownTemplate: options.markdownTemplate,
+          markdownConfigTemplate: options.markdownConfigTemplate
+        })
       )
-  );
+    );
 
-  let htmlReadyArray = Object.keys(htmlReady).map(src => htmlReady[src]);
+    inputsRollup = html.reduce(
+      (inputsRollup, html) => [
+        ...inputsRollup,
+        ...html.exports.filter(src => !inputsRollup.includes(src))
+      ],
+      inputsRollup
+    );
 
-  await htmlProcessed.map(html =>
-    html.write(
-      opts.htmlInject,
-      htmlReadyArray
+    let markdownData = {
+      custom: options.markdownConfigTemplate,
+      pages: html
         .filter(({ ext }) => ext == ".md")
-        .map(({ base, meta }) => ({ base, meta }))
-    )
-  );
+        .map(({ link, meta }) => ({ link, meta }))
+    };
 
-  // store the scripts used by html files
-  let rollupInputs = htmlReadyArray
-    .reduce((inputs, { files }) => inputs.concat(files), [])
-    .concat(inputs)
-    .filter(src => isInputRollup.test(src));
+    await Promise.all(html.map(html => html.write(markdownData)));
 
-  rollupInputs = rollupInputs.filter(
-    (src, index) => index == rollupInputs.indexOf(src)
-  );
+    let rollupInput = {
+      cache,
+      onwarn: streamLog,
+      input: inputsRollup,
+      external: options.external,
+      ...configPlugins(options)
+    };
 
-  if (!rollupInputs.length) return;
+    let rollupOutput = {
+      dir: options.dir,
+      format: "es",
+      sourcemap: true,
+      chunkFileNames: "chunks/[hash].js"
+    };
 
-  let rollupInput = {
-    input: rollupInputs,
-    // when using the flat --external, you avoid adding the dependencies to the bundle
-    external: opts.external
-      ? [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]
-      : [...Object.keys(pkg.peerDependencies)],
-    plugins: [
-      pluginForceExternal(),
-      pluginCss(opts), //use the properties {watch,browsers}
-      replace({
-        [DOUBLE_SLASH]: "",
-        "process.env.NODE_ENV": JSON.stringify("production")
-      }),
-      resolve({
-        extensions,
-        dedupe: ["react", "react-dom"]
-      }),
-      babel({
-        include: babelIncludes,
-        extensions,
-        //  Merge settings from pkg.bundle
-        ...mergeKeysArray(
-          ["presets", "plugins"],
-          {
-            presets: [
-              [
-                "@babel/preset-typescript",
-                opts.jsx == "react"
-                  ? {}
-                  : {
-                      jsxPragma: opts.jsx
-                    }
-              ],
-              [
-                "@babel/preset-env",
-                {
-                  targets: opts.browsers,
-                  exclude: [
-                    /**
-                     * to enable or disable preset plugins
-                     * {@link https://github.com/babel/babel/blob/master/packages/babel-preset-env/src/available-plugins.js}
-                     */
-                    "transform-typeof-symbol",
-                    "transform-regenerator",
-                    "transform-async-to-generator"
-                  ]
-                }
-              ]
-            ],
-            plugins: [
-              [
-                "@babel/plugin-transform-react-jsx",
-                {
-                  pragma:
-                    opts.jsx == "react" ? "React.createElement" : opts.jsx,
-                  pragmaFrag:
-                    opts.jsxFragment == "react" || opts.jsx == "react"
-                      ? "React.Fragment"
-                      : opts.jsxFragment
-                }
-              ]
-            ]
-          },
-          pkg.babel
-        )
-      }),
-      common(),
-      // default minify the code once it escapes the watch
-      ...(opts.watch
-        ? []
-        : opts.minify
-        ? [rollupPluginTerser.terser({ sourcemap: true })]
-        : [sizes()])
-    ],
-    cache,
-    onwarn
-  };
-  /**@type {Object} */
-  let bundle = await rollup.rollup(rollupInput);
+    let bundle = await rollup.rollup(rollupInput);
 
-  /**
-   * almacena los watcher en una array para luego
-   * eliminar las suscripciones
-   */
-  let watchers = [];
+    cache = bundle.cache;
 
-  if (opts.watch) {
-    let rollupWatch = rollup.watch({
-      ...rollupInput,
-      output: rollupOutput,
-      watch: { exclude: "node_modules/**" }
-    });
+    if (options.watch) {
+      let rollupWatch = rollup.watch({
+        ...rollupInput,
+        output: rollupOutput,
+        watch: { exclude: "node_modules/**" }
+      });
 
-    let lastTime;
+      rollupWatch.on("event", async event => {
+        switch (event.code) {
+          case "START":
+            lastTime = new Date();
+            break;
+          case "END":
+            streamLog(`bundle: ${new Date() - lastTime}ms`);
+            if (server) server.reload();
+            break;
+          case "ERROR":
+            streamLog(event.error);
+            break;
+        }
+      });
 
-    rollupWatch.on("event", async event => {
-      switch (event.code) {
-        case "START":
-          lastTime = new Date();
-          break;
-        case "END":
-          streamLog(`bundle: ${new Date() - lastTime}ms`);
-          if (currentServer) currentServer.then(reload => reload());
-          break;
-        case "ERROR":
-          onwarn(event.error);
-          break;
-      }
-    });
+      watchers.push(rollupWatch);
+    }
 
+    bundle.write(rollupOutput);
+  }
+
+  if (options.watch) {
     let chokidarWatch = chokidar.watch("file", {});
 
     chokidarWatch.on("all", async (event, file) => {
       file = normalizePath(file);
-      switch (event) {
-        case "add":
-        case "unlink":
-          if (inputs.includes(file) || event == "unlink") return;
-          if (isHtml.test(file)) {
-            // forces the bundle to ignore the entries of the deleted file
-            delete htmlReady[file];
-            build(true);
-          }
-          break;
-        case "change":
-          if (file == namePkg) build(true);
-          if (isHtml.test(file)) {
-            // before each change of the html file, its inputs are obtained again
-
-            delete htmlReady[file];
-            // force the rewrite of all markdown files
-            if (isMd.test(file)) {
-              for (let file in htmlReady) {
-                if (isMd.test(htmlReady[file].ext)) {
-                  delete htmlReady[file];
-                }
-              }
-            }
-
-            build(true);
-          }
-          break;
-      }
+      build(options);
     });
 
-    chokidarWatch.add([opts.src, namePkg]);
-
-    watchers.push(rollupWatch, chokidarWatch);
+    chokidarWatch.add([options.src, "package.json"]);
   }
 
-  async function build(force) {
-    if (force) {
-      if (opts.watch) {
-        watchers.forEach(watcher => watcher.close());
-      }
-      return createBundle(opts, bundle.cache);
-    } else {
-      return bundle.write(rollupOutput);
-    }
+  build(options);
+}
+
+async function formatOptions({ src = [], config, external, ...ignore }) {
+  let pkg = await getPackage();
+  src = Array.isArray(src) ? src : src.split(/ *, */g);
+
+  if (external) {
+    external = Array.isArray(external)
+      ? external
+      : [true, "true"].includes(external)
+      ? Object.keys(pkg.dependencies)
+      : external.split(/ *, */);
   }
 
-  return build()
-    .then(async () => {
-      // create a server that is capable of subscribing to bundle changes, for a livereload
-      if (opts.server && !currentServer) {
-        currentServer = createServer(opts.dir, opts.watch, opts.port);
-      } else if (currentServer) {
-        currentServer.then(reload => reload());
-      }
-    })
-    .catch(e => console.log(e));
+  external = [...(external || []), ...Object.keys(pkg.peerDependencies)];
+
+  let pkgConfig = pkg[config] || {};
+
+  let [markdownTemplate, markdownConfigTemplate = {}] = [].concat(
+    pkgConfig.markdownTemplate
+  );
+
+  markdownTemplate = markdownTemplate ? requireExternal(markdownTemplate) : {};
+
+  return {
+    babel: {},
+    src,
+    external,
+    babel: pkg.babel,
+    ...ignore,
+    ...pkgConfig,
+    markdownTemplate,
+    markdownConfigTemplate
+  };
 }
 
 function streamLog(message) {
+  message = message + "";
   try {
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
@@ -1765,25 +1695,10 @@ function streamLog(message) {
   }
 }
 
-function onwarn(warning) {
-  streamLog(warning + "");
-}
-
-/**
- * @typedef {Object} Package
- * @property {Object} dependencies
- * @property {Object} [peerDependencies]
- * @property {{plugins:any[],presets:any[]}} [babel]
- */
-
 sade("bundle [src] [dest]")
-  .version("0.14.0")
+  .version("0.15.0")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
-  .option(
-    "-e, --external",
-    "Does not include dependencies in the bundle",
-    false
-  )
+  .option("-e, --external", "Does not include dependencies in the bundle")
   .option(
     "-c, --config",
     "allows you to export a configuration from package.json"
@@ -1804,16 +1719,17 @@ sade("bundle [src] [dest]")
     false
   )
   .example("src/index.html dist --watch --server")
-  .example("src/index.html dist --watch --server")
+  .example("src/index.html dist --external")
+  .example("src/index.html dist --external react,react-dom")
   .example("src/index.js dist --watch")
   .example("src/*.js dist")
   .example("src/*.html")
   .example("")
-  .action((src, dir = "dist", opts) => {
+  .action((src, dir = "dist", options) => {
     createBundle({
-      ...opts,
-      dir,
-      src: src ? src.split(/ *, */g) : []
+      ...options,
+      src,
+      dir
     }).catch(e => console.log("" + e));
   })
   .parse(process.argv);

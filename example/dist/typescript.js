@@ -1,6 +1,7 @@
-function typescript (props) {
-  return h("div", null, "hola ", props.age);
+function h() {
+  return {
+    div: ""
+  };
 }
-
-export default typescript;
+console.log(h());
 //# sourceMappingURL=typescript.js.map

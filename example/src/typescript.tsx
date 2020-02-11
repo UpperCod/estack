@@ -1,6 +1,5 @@
-interface Props{
-    age : number
+function h(){
+    return {div:""}
 }
-export default function (props : Props ){
-return <div>hola {props.age}</div>;
-}
+let x = 10;
+console.log(<div>hola</div>);
