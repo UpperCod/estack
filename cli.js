@@ -1,32 +1,30 @@
 #!/usr/bin/env node
-"use strict";
+'use strict';
 
-function _interopDefault(ex) {
-  return ex && typeof ex === "object" && "default" in ex ? ex["default"] : ex;
-}
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var sade = _interopDefault(require("sade"));
-var rollup = _interopDefault(require("rollup"));
-var glob = _interopDefault(require("fast-glob"));
-var html = _interopDefault(require("parse5"));
-var fs = _interopDefault(require("fs"));
-var path = _interopDefault(require("path"));
-var ems = _interopDefault(require("esm"));
-var marked = _interopDefault(require("marked"));
-var yaml = _interopDefault(require("js-yaml"));
-var babel = _interopDefault(require("rollup-plugin-babel"));
-var resolve = _interopDefault(require("@rollup/plugin-node-resolve"));
-var common = _interopDefault(require("@rollup/plugin-commonjs"));
-var sizes = _interopDefault(require("@atomico/rollup-plugin-sizes"));
-var replace = _interopDefault(require("@rollup/plugin-replace"));
-var postcss = _interopDefault(require("postcss"));
-var postcssPresetEnv = _interopDefault(require("postcss-preset-env"));
-var cssnano = _interopDefault(require("cssnano"));
-var atImport = _interopDefault(require("postcss-import"));
-var net = _interopDefault(require("net"));
-var http = _interopDefault(require("http"));
-var url = _interopDefault(require("url"));
-var chokidar = _interopDefault(require("chokidar"));
+var sade = _interopDefault(require('sade'));
+var rollup = _interopDefault(require('rollup'));
+var glob = _interopDefault(require('fast-glob'));
+var html = _interopDefault(require('parse5'));
+var fs = _interopDefault(require('fs'));
+var path = _interopDefault(require('path'));
+var ems = _interopDefault(require('esm'));
+var marked = _interopDefault(require('marked'));
+var yaml = _interopDefault(require('js-yaml'));
+var babel = _interopDefault(require('rollup-plugin-babel'));
+var resolve = _interopDefault(require('@rollup/plugin-node-resolve'));
+var common = _interopDefault(require('@rollup/plugin-commonjs'));
+var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
+var replace = _interopDefault(require('@rollup/plugin-replace'));
+var postcss = _interopDefault(require('postcss'));
+var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
+var cssnano = _interopDefault(require('cssnano'));
+var atImport = _interopDefault(require('postcss-import'));
+var net = _interopDefault(require('net'));
+var http = _interopDefault(require('http'));
+var url = _interopDefault(require('url'));
+var chokidar = _interopDefault(require('chokidar'));
 
 let requireEms = ems(module);
 
@@ -130,7 +128,12 @@ let ignore = ["#text", "#comment"];
  * @param {Object} markdownTemplate.nodeTypes
  * @param {boolean} [disableCache]
  */
-async function readHtml({ src, dir, exports, markdownTemplate }) {
+async function readHtml({
+  src,
+  dir,
+  exports,
+  markdownTemplate
+}) {
   let content = await readFile(src);
 
   let { ext, name, dir: dirOrg } = path.parse(src);
@@ -414,8 +417,6 @@ function configPlugins(options) {
         extensions,
         dedupe: ["react", "react-dom"]
       }),
-      common(),
-
       babel({
         include: babelIncludes,
         extensions,
@@ -445,9 +446,6 @@ function configPlugins(options) {
               ]
             ],
             plugins: [
-              ["@babel/plugin-proposal-optional-chaining"],
-              ["@babel/plugin-syntax-nullish-coalescing-operator"],
-              ["@babel/plugin-proposal-class-properties"],
               [
                 "@babel/plugin-transform-react-jsx",
                 {
@@ -460,12 +458,16 @@ function configPlugins(options) {
                       ? "React.Fragment"
                       : options.jsxFragment
                 }
-              ]
+              ],
+              ["@babel/plugin-proposal-optional-chaining"],
+              ["@babel/plugin-syntax-nullish-coalescing-operator"],
+              ["@babel/plugin-proposal-class-properties"]
             ]
           },
           options.babel
         )
       }),
+      common(),
       replace({
         "process.env.NODE_ENV": JSON.stringify("production")
       }),
@@ -1379,7 +1381,11 @@ var types = {
   "x-conference/x-cooltalk": ["ice"]
 };
 
-async function createServer({ dir, watch, port: portStart = 8000 }) {
+async function createServer({
+  dir,
+  watch,
+  port: portStart = 8000
+}) {
   let [port, reloadPort] = await Promise.all([
     findPort(portStart, portStart + 100),
     findPort(5000, 5080)
@@ -1707,7 +1713,7 @@ function streamLog(message) {
 }
 
 sade("bundle [src] [dest]")
-  .version("0.15.0")
+  .version("0.15.2")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option("-e, --external", "Does not include dependencies in the bundle")
   .option(

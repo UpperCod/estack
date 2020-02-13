@@ -28,8 +28,6 @@ export default function configPlugins(options) {
         extensions,
         dedupe: ["react", "react-dom"]
       }),
-      common(),
-
       babel({
         include: babelIncludes,
         extensions,
@@ -59,9 +57,6 @@ export default function configPlugins(options) {
               ]
             ],
             plugins: [
-              ["@babel/plugin-proposal-optional-chaining"],
-              ["@babel/plugin-syntax-nullish-coalescing-operator"],
-              ["@babel/plugin-proposal-class-properties"],
               [
                 "@babel/plugin-transform-react-jsx",
                 {
@@ -74,12 +69,16 @@ export default function configPlugins(options) {
                       ? "React.Fragment"
                       : options.jsxFragment
                 }
-              ]
+              ],
+              ["@babel/plugin-proposal-optional-chaining"],
+              ["@babel/plugin-syntax-nullish-coalescing-operator"],
+              ["@babel/plugin-proposal-class-properties"]
             ]
           },
           options.babel
         )
       }),
+      common(),
       replace({
         "process.env.NODE_ENV": JSON.stringify("production")
       }),
