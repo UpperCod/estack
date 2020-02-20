@@ -4,6 +4,7 @@ import resolve from "@rollup/plugin-node-resolve";
 import common from "@rollup/plugin-commonjs";
 import sizes from "@atomico/rollup-plugin-sizes";
 import replace from "@rollup/plugin-replace";
+import { terser } from "rollup-plugin-terser";
 import pluginImportCss from "./plugin-import-css";
 import { mergeKeysArray } from "../utils";
 
@@ -85,7 +86,7 @@ export default function configPlugins(options) {
       ...(options.watch
         ? []
         : options.minify
-        ? [terser({ sourcemap: true })]
+        ? [terser({ sourcemap: options.sourcemap }), sizes()]
         : [sizes()])
     ]
   };

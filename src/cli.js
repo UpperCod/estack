@@ -9,11 +9,7 @@ sade("bundle [src] [dest]")
     "-c, --config",
     "allows you to export a configuration from package.json"
   )
-  .option(
-    "--importmap",
-    "create an importmap based on dependencies using unpkg",
-    false
-  )
+  .option("--sourcemap", "enable the use of sourcemap", true)
   .option("--server", "Create a server, by default localhost:8000", false)
   .option("--port", "define the server port", 8000)
   .option("--browsers", "define the target of the bundle", "> 3%")

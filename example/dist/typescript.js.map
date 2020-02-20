@@ -1,1 +1,0 @@
-{"version":3,"file":"typescript.js","sources":["../src/typescript.tsx"],"sourcesContent":["function h(){\r\n    return {div:\"\"}\r\n}\r\nlet x = 10;\r\nconsole.log(<div>hola</div>);\r\n"],"names":["h","div","console","log"],"mappings":"AAAA,SAASA,CAAT,GAAY;AACR,SAAO;AAACC,IAAAA,GAAG,EAAC;AAAL,GAAP;AACH;AAEDC,OAAO,CAACC,GAAR,CAAY,GAAZ"}

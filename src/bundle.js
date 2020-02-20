@@ -89,7 +89,7 @@ export default async function createBundle(options) {
     let rollupOutput = {
       dir: options.dir,
       format: "es",
-      sourcemap: true,
+      sourcemap: options.sourcemap,
       chunkFileNames: "chunks/[hash].js"
     };
 

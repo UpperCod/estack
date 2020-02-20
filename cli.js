@@ -17,6 +17,7 @@ var resolve = _interopDefault(require('@rollup/plugin-node-resolve'));
 var common = _interopDefault(require('@rollup/plugin-commonjs'));
 var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
 var replace = _interopDefault(require('@rollup/plugin-replace'));
+var rollupPluginTerser = require('rollup-plugin-terser');
 var postcss = _interopDefault(require('postcss'));
 var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
 var cssnano = _interopDefault(require('cssnano'));
@@ -474,7 +475,7 @@ function configPlugins(options) {
       ...(options.watch
         ? []
         : options.minify
-        ? [terser({ sourcemap: true })]
+        ? [rollupPluginTerser.terser({ sourcemap: options.sourcemap }), sizes()]
         : [sizes()])
     ]
   };
@@ -1601,7 +1602,7 @@ async function createBundle(options) {
     let rollupOutput = {
       dir: options.dir,
       format: "es",
-      sourcemap: true,
+      sourcemap: options.sourcemap,
       chunkFileNames: "chunks/[hash].js"
     };
 
@@ -1713,18 +1714,14 @@ function streamLog(message) {
 }
 
 sade("bundle [src] [dest]")
-  .version("0.15.2")
+  .version("0.15.3")
   .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
   .option("-e, --external", "Does not include dependencies in the bundle")
   .option(
     "-c, --config",
     "allows you to export a configuration from package.json"
   )
-  .option(
-    "--importmap",
-    "create an importmap based on dependencies using unpkg",
-    false
-  )
+  .option("--sourcemap", "enable the use of sourcemap", true)
   .option("--server", "Create a server, by default localhost:8000", false)
   .option("--port", "define the server port", 8000)
   .option("--browsers", "define the target of the bundle", "> 3%")
