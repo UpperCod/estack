@@ -1,31 +1,33 @@
 #!/usr/bin/env node
-'use strict';
+"use strict";
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+function _interopDefault(ex) {
+  return ex && typeof ex === "object" && "default" in ex ? ex["default"] : ex;
+}
 
-var sade = _interopDefault(require('sade'));
-var rollup = _interopDefault(require('rollup'));
-var glob = _interopDefault(require('fast-glob'));
-var html = _interopDefault(require('parse5'));
-var fs = _interopDefault(require('fs'));
-var path = _interopDefault(require('path'));
-var ems = _interopDefault(require('esm'));
-var marked = _interopDefault(require('marked'));
-var yaml = _interopDefault(require('js-yaml'));
-var babel = _interopDefault(require('rollup-plugin-babel'));
-var resolve = _interopDefault(require('@rollup/plugin-node-resolve'));
-var common = _interopDefault(require('@rollup/plugin-commonjs'));
-var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
-var replace = _interopDefault(require('@rollup/plugin-replace'));
-var rollupPluginTerser = require('rollup-plugin-terser');
-var postcss = _interopDefault(require('postcss'));
-var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
-var cssnano = _interopDefault(require('cssnano'));
-var atImport = _interopDefault(require('postcss-import'));
-var net = _interopDefault(require('net'));
-var http = _interopDefault(require('http'));
-var url = _interopDefault(require('url'));
-var chokidar = _interopDefault(require('chokidar'));
+var sade = _interopDefault(require("sade"));
+var rollup = _interopDefault(require("rollup"));
+var glob = _interopDefault(require("fast-glob"));
+var html = _interopDefault(require("parse5"));
+var fs = _interopDefault(require("fs"));
+var path = _interopDefault(require("path"));
+var ems = _interopDefault(require("esm"));
+var marked = _interopDefault(require("marked"));
+var yaml = _interopDefault(require("js-yaml"));
+var babel = _interopDefault(require("rollup-plugin-babel"));
+var resolve = _interopDefault(require("@rollup/plugin-node-resolve"));
+var common = _interopDefault(require("@rollup/plugin-commonjs"));
+var sizes = _interopDefault(require("@atomico/rollup-plugin-sizes"));
+var replace = _interopDefault(require("@rollup/plugin-replace"));
+var rollupPluginTerser = require("rollup-plugin-terser");
+var postcss = _interopDefault(require("postcss"));
+var postcssPresetEnv = _interopDefault(require("postcss-preset-env"));
+var cssnano = _interopDefault(require("cssnano"));
+var atImport = _interopDefault(require("postcss-import"));
+var net = _interopDefault(require("net"));
+var http = _interopDefault(require("http"));
+var url = _interopDefault(require("url"));
+var chokidar = _interopDefault(require("chokidar"));
 
 let requireEms = ems(module);
 
@@ -129,12 +131,7 @@ let ignore = ["#text", "#comment"];
  * @param {Object} markdownTemplate.nodeTypes
  * @param {boolean} [disableCache]
  */
-async function readHtml({
-  src,
-  dir,
-  exports,
-  markdownTemplate
-}) {
+async function readHtml({ src, dir, exports, markdownTemplate }) {
   let content = await readFile(src);
 
   let { ext, name, dir: dirOrg } = path.parse(src);
@@ -145,7 +142,12 @@ async function readHtml({
 
   let htmlContent = content;
 
-  if (ext == ".md") {
+  /**@type {string[]} */
+  let files = [];
+
+  let isMarkdown = ext == ".md";
+
+  if (isMarkdown) {
     let options = {};
     if (markdownTemplate.nodeTypes) {
       options.renderer = new marked.Renderer();
@@ -169,14 +171,17 @@ async function readHtml({
       }),
       markdownTemplate.nodeTypes ? options : null
     );
+
+    meta.import = []
+      .concat(meta.import)
+      .filter(value => value)
+      .map(addFile);
   }
 
-  /**@type {string[]} */
-  let files = [];
   // create the search object to perform the query
   let findExpressions = formatExpressions(exports);
 
-  htmlContent = html.parse(htmlContent);
+  htmlContent = html.parseFragment(htmlContent);
 
   let fragment = findExpressions.length
     ? analyze([].concat(htmlContent), addFile, findExpressions)
@@ -203,7 +208,7 @@ async function readHtml({
   function write(markdownData) {
     let document = fragment;
 
-    if (ext == ".md" && markdownTemplate.template) {
+    if (isMarkdown && markdownTemplate.template) {
       document = [].concat(
         html.parse(
           markdownTemplate.template({
@@ -1382,11 +1387,7 @@ var types = {
   "x-conference/x-cooltalk": ["ice"]
 };
 
-async function createServer({
-  dir,
-  watch,
-  port: portStart = 8000
-}) {
+async function createServer({ dir, watch, port: portStart = 8000 }) {
   let [port, reloadPort] = await Promise.all([
     findPort(portStart, portStart + 100),
     findPort(5000, 5080)
@@ -1670,6 +1671,10 @@ async function createBundle(options) {
 
 async function formatOptions({ src = [], config, external, ...ignore }) {
   let pkg = await getPackage();
+
+  let { src: srcPkg, ...pkgConfig } = pkg[config] || {};
+  src = srcPkg || src;
+
   src = Array.isArray(src) ? src : src.split(/ *, */g);
 
   if (external) {
@@ -1682,13 +1687,20 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
 
   external = [...(external || []), ...Object.keys(pkg.peerDependencies)];
 
-  let pkgConfig = pkg[config] || {};
-
-  let [markdownTemplate, markdownConfigTemplate = {}] = [].concat(
+  let [dirMarkdownTemplate, markdownConfigTemplate = {}] = [].concat(
     pkgConfig.markdownTemplate
   );
 
-  markdownTemplate = markdownTemplate ? requireExternal(markdownTemplate) : {};
+  let markdownTemplate = dirMarkdownTemplate
+    ? requireExternal(dirMarkdownTemplate)
+    : {};
+
+  if (markdownTemplate && markdownTemplate.sources) {
+    src = [
+      ...src,
+      ...markdownTemplate.sources.map(src => dirMarkdownTemplate + "/" + src)
+    ];
+  }
 
   return {
     babel: {},

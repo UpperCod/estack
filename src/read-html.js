@@ -36,7 +36,12 @@ export default async function readHtml({
 
   let htmlContent = content;
 
-  if (ext == ".md") {
+  /**@type {string[]} */
+  let files = [];
+
+  let isMarkdown = ext == ".md";
+
+  if (isMarkdown) {
     let options = {};
     if (markdownTemplate.nodeTypes) {
       options.renderer = new marked.Renderer();
@@ -60,14 +65,17 @@ export default async function readHtml({
       }),
       markdownTemplate.nodeTypes ? options : null
     );
+
+    meta.import = []
+      .concat(meta.import)
+      .filter(value => value)
+      .map(addFile);
   }
 
-  /**@type {string[]} */
-  let files = [];
   // create the search object to perform the query
   let findExpressions = formatExpressions(exports);
 
-  htmlContent = html.parse(htmlContent);
+  htmlContent = html.parseFragment(htmlContent);
 
   let fragment = findExpressions.length
     ? analyze([].concat(htmlContent), addFile, findExpressions)
@@ -94,7 +102,7 @@ export default async function readHtml({
   function write(markdownData) {
     let document = fragment;
 
-    if (ext == ".md" && markdownTemplate.template) {
+    if (isMarkdown && markdownTemplate.template) {
       document = [].concat(
         html.parse(
           markdownTemplate.template({

@@ -157,6 +157,10 @@ export default async function createBundle(options) {
 
 async function formatOptions({ src = [], config, external, ...ignore }) {
   let pkg = await getPackage();
+
+  let { src: srcPkg, ...pkgConfig } = pkg[config] || {};
+  src = srcPkg || src;
+
   src = Array.isArray(src) ? src : src.split(/ *, */g);
 
   if (external) {
@@ -169,13 +173,20 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
 
   external = [...(external || []), ...Object.keys(pkg.peerDependencies)];
 
-  let pkgConfig = pkg[config] || {};
-
-  let [markdownTemplate, markdownConfigTemplate = {}] = [].concat(
+  let [dirMarkdownTemplate, markdownConfigTemplate = {}] = [].concat(
     pkgConfig.markdownTemplate
   );
 
-  markdownTemplate = markdownTemplate ? requireExternal(markdownTemplate) : {};
+  let markdownTemplate = dirMarkdownTemplate
+    ? requireExternal(dirMarkdownTemplate)
+    : {};
+
+  if (markdownTemplate && markdownTemplate.sources) {
+    src = [
+      ...src,
+      ...markdownTemplate.sources.map(src => dirMarkdownTemplate + "/" + src)
+    ];
+  }
 
   return {
     babel: {},

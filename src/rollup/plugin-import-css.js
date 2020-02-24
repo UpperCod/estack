@@ -43,6 +43,7 @@ export default function pluginImportCss(options = {}) {
             fileName,
             source: css || ""
           });
+          return null;
         }
         return {
           code: isEntry ? "" : "export default  `" + css + "`;",
