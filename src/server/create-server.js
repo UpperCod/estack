@@ -5,33 +5,29 @@ import url from "url";
 import { asyncFs, cwd } from "../utils";
 import types from "./content-types";
 
-export default async function createServer({
-  dir,
-  watch,
-  port: portStart = 8000
-}) {
-  let [port, reloadPort] = await Promise.all([
+export async function createServer({ dest, watch, port: portStart = 8000 }) {
+  const [port, reloadPort] = await Promise.all([
     findPort(portStart, portStart + 100),
     findPort(5000, 5080)
   ]);
 
   http
     .createServer(async (req, res) => {
-      let { pathname } = url.parse(req.url);
+      const { pathname } = url.parse(req.url);
 
-      let reqFile = pathname.match(/\.([\w]+)$/);
+      const reqFile = pathname.match(/\.([\w]+)$/);
+
       let resource = decodeURI(pathname);
-
       resource = resource == "/" || pathname == "/" ? "index" : resource;
 
-      let fileUrl = path.join(cwd, dir, resource + (reqFile ? "" : ".html"));
+      const fileUrl = path.join(cwd, dest, resource + (reqFile ? "" : ".html"));
 
-      let fallbackUrl = path.join(cwd, dir, "index.html");
+      const fallbackUrl = path.join(cwd, dest, "index.html");
 
-      let ext = reqFile ? reqFile[1] : "html";
+      const ext = reqFile ? reqFile[1] : "html";
 
-      let responseSuccess = async (url, ext) => {
-        let file = await asyncFs.readFile(url, "binary");
+      const responseSuccess = async (url, ext) => {
+        const file = await asyncFs.readFile(url, "binary");
         if (ext == "html" && watch) {
           file += `
             <script>
@@ -64,7 +60,8 @@ export default async function createServer({
     })
     .listen(parseInt(port, 10));
 
-  let responses = [];
+  const responses = [];
+
   if (watch) {
     http
       .createServer((request, res) => {
@@ -96,7 +93,7 @@ export default async function createServer({
   };
 }
 
-let mime = Object.entries(types).reduce(
+const mime = Object.entries(types).reduce(
   (all, [type, exts]) =>
     Object.assign(all, ...exts.map(ext => ({ [ext]: type }))),
   {}
@@ -128,7 +125,7 @@ async function findPort(port, limit, pending) {
       pending.reject = reject;
     });
   }
-  let client = net.createConnection({ port });
+  const client = net.createConnection({ port });
   client.on("connect", () => {
     client.end();
     if (port > limit) {

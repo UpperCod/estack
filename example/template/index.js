@@ -1,5 +1,5 @@
 export function template(data) {
-  return html`
+  return /*html*/ `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -9,11 +9,8 @@ export function template(data) {
       </head>
       <body>
         <doc-page>
-          <doc-aside links=${JSON.stringify(links)} logo="${logo}"></doc-aside>
-          <doc-content>${content}</doc-content>
           <doc-aside></doc-aside>
         </doc-page>
-        <script type="module" src="doc-page.js"></script>
       </body>
     </html>
   `;

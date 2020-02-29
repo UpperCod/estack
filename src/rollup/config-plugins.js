@@ -10,7 +10,7 @@ import { mergeKeysArray } from "../utils";
 
 let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
-export default function configPlugins(options) {
+export function rollupPlugins(options) {
   let babelIncludes = ["node_modules/**"];
   // transform src into valid path to include in babel
   for (let src of options.src) {
@@ -22,72 +22,68 @@ export default function configPlugins(options) {
     }
   }
 
-  return {
-    plugins: [
-      pluginImportCss(options),
-      resolve({
-        extensions,
-        dedupe: ["react", "react-dom"]
-      }),
-      babel({
-        include: babelIncludes,
-        extensions,
-        ...mergeKeysArray(
-          ["presets", "plugins"],
-          {
-            presets: [
-              [
-                "@babel/preset-typescript",
-                options.jsx == "react"
-                  ? {}
-                  : {
-                      jsxPragma: options.jsx
-                    }
-              ],
-              [
-                "@babel/preset-env",
-                {
-                  targets: options.browsers,
-                  modules: false,
-                  exclude: [
-                    "transform-typeof-symbol",
-                    "transform-regenerator",
-                    "transform-async-to-generator"
-                  ]
-                }
-              ]
+  return [
+    pluginImportCss(options),
+    resolve({
+      extensions,
+      dedupe: ["react", "react-dom"]
+    }),
+    babel({
+      include: babelIncludes,
+      extensions,
+      ...mergeKeysArray(
+        ["presets", "plugins"],
+        {
+          presets: [
+            [
+              "@babel/preset-typescript",
+              options.jsx == "react"
+                ? {}
+                : {
+                    jsxPragma: options.jsx
+                  }
             ],
-            plugins: [
-              [
-                "@babel/plugin-transform-react-jsx",
-                {
-                  pragma:
-                    options.jsx == "react"
-                      ? "React.createElement"
-                      : options.jsx,
-                  pragmaFrag:
-                    options.jsxFragment == "react" || options.jsx == "react"
-                      ? "React.Fragment"
-                      : options.jsxFragment
-                }
-              ],
-              ["@babel/plugin-proposal-optional-chaining"],
-              ["@babel/plugin-syntax-nullish-coalescing-operator"],
-              ["@babel/plugin-proposal-class-properties"]
+            [
+              "@babel/preset-env",
+              {
+                targets: options.browsers,
+                modules: false,
+                exclude: [
+                  "transform-typeof-symbol",
+                  "transform-regenerator",
+                  "transform-async-to-generator"
+                ]
+              }
             ]
-          },
-          options.babel
-        )
-      }),
-      common(),
-      replace({
-        "process.env.NODE_ENV": JSON.stringify("production")
-      }),
-      ...(options.watch
-        ? []
-        : options.minify
-        ? [terser({ sourcemap: options.sourcemap }), sizes()]
-        : [sizes()])
-    ]
-  };
+          ],
+          plugins: [
+            [
+              "@babel/plugin-transform-react-jsx",
+              {
+                pragma:
+                  options.jsx == "react" ? "React.createElement" : options.jsx,
+                pragmaFrag:
+                  options.jsxFragment == "react" || options.jsx == "react"
+                    ? "React.Fragment"
+                    : options.jsxFragment
+              }
+            ],
+            ["@babel/plugin-proposal-optional-chaining"],
+            ["@babel/plugin-syntax-nullish-coalescing-operator"],
+            ["@babel/plugin-proposal-class-properties"]
+          ]
+        },
+        options.babel
+      )
+    }),
+    common(),
+    replace({
+      "process.env.NODE_ENV": JSON.stringify("production")
+    }),
+    ...(options.watch
+      ? []
+      : options.minify
+      ? [terser({ sourcemap: options.sourcemap }), sizes()]
+      : [sizes()])
+  ];
 }

@@ -1,89 +1,17 @@
 import path from "path";
 import chokidar from "chokidar";
 
+function delay(ms) {
+  return value => new Promise(resolve => setTimeout(resolve, ms, value));
+}
+
 export function watch(glob, listener) {
-  let group;
-
-  let subEntries = {};
-
-  let entries = [];
-
-  let waitingProcess;
-
-  let loadProcess = () => {
-    if (!waitingProcess) {
-      group = {
-        add: [],
-        unlink: [],
-        change: []
-      };
-      waitingProcess = true;
-      setTimeout(() => {
-        waitingProcess = false;
-        for (let key in group) {
-          if (group[key].length) {
-            listener({
-              group,
-              entries,
-              addEntry,
-              addSubEntry
-            });
-          }
-        }
-      }, 200);
-    }
-  };
-
-  let addSubEntry = (parent, child) => {
-    let file = path.join(path.parse(parent).dir, child);
-    if (!subEntries[file]) {
-      subEntries[file] = [];
-      watcher.add(file);
-    }
-    if (!subEntries[file].includes(parent)) {
-      subEntries[file].push(parent);
-    }
-  };
-
-  let addEntry = file => {
-    if (!entries.includes(file)) {
-      watcher.add(file);
-    }
-  };
-
-  let addToGroup = (type, value) => {
-    !group[type].includes(value) && group[type].push(value);
-  };
-
+  let pipe;
   let watcher = chokidar
     .watch(glob)
-    .on("add", file => {
-      if (subEntries[file]) return;
-      loadProcess();
-      if (!entries.includes(file)) {
-        addToGroup("add", file);
-        entries.push(file);
-      }
-    })
-    .on("change", file => {
-      loadProcess();
-      if (subEntries[file]) {
-        subEntries[file].forEach(file => addToGroup("change", file));
-      }
-      if (entries.includes(file)) {
-        addToGroup("change", file);
-      }
-    })
-    .on("unlink", file => {
-      loadProcess();
-      if (subEntries[file]) {
-        subEntries[file].forEach(file => addToGroup("change", file));
-      }
-      if (entries.includes(file)) {
-        entries = entries.filter(entry => entry != file);
-        addToGroup("unlink", file);
-      }
-    });
+    .on("add", file => {})
+    .on("change", file => {})
+    .on("unlink", file => {});
 
   return watcher;
 }

@@ -1,23 +1,30 @@
 import fs from "fs";
 import path from "path";
-import ems from "esm";
 
-export let requireEms = ems(module);
+export const asyncFs = fs.promises;
 
-export function requireExternal(file) {
-  return requireEms(path.join(cwd, file));
-}
+export const cwd = process.cwd();
 
-export let asyncFs = fs.promises;
-
-export let cwd = process.cwd();
-
-let pkgDefault = {
+const pkgDefault = {
   dependencies: {},
   devDependencies: {},
   peerDependencies: {},
   babel: {}
 };
+
+export const isUrl = file => /^(http(s){0,1}:){0,1}\/\//.test(file);
+
+export const asyncGroup = group => Promise.all(group);
+
+export const isHtml = file => /\.(md|html)/.test(file);
+
+export const isJs = file => /\.(js|ts|jsx,tsx)$/.test(file);
+
+export const isCss = file => /\.css$/.test(file);
+
+export const isFixLink = file => isHtml(file) || isJs(file) || isCss(file);
+
+export const isNotFixLink = file => !isFixLink(file);
 
 export function readFile(file) {
   return asyncFs.readFile(path.join(cwd, file), "utf8");
@@ -34,10 +41,6 @@ export async function writeFile(file, data) {
   }
 
   return asyncFs.writeFile(path.join(cwd, file), data, "utf8");
-}
-
-export function normalizePath(path) {
-  return path.replace(/(\\+)/g, "/");
 }
 
 export function mergeKeysArray(keys, ...config) {
@@ -85,5 +88,16 @@ export async function copyFile(src, dest) {
       });
     }
     await asyncFs.copyFile(src, dest);
+  }
+}
+
+export function streamLog(message) {
+  message = message + "";
+  try {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+    process.stdout.write(message);
+  } catch (e) {
+    console.log(message);
   }
 }

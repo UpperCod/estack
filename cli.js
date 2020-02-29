@@ -1,57 +1,99 @@
 #!/usr/bin/env node
-"use strict";
+'use strict';
 
-function _interopDefault(ex) {
-  return ex && typeof ex === "object" && "default" in ex ? ex["default"] : ex;
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var sade = _interopDefault(require('sade'));
+var path = _interopDefault(require('path'));
+var glob = _interopDefault(require('fast-glob'));
+var rollup = _interopDefault(require('rollup'));
+var parse5 = _interopDefault(require('parse5'));
+var fs = _interopDefault(require('fs'));
+var postcss = _interopDefault(require('postcss'));
+var postcssPresetEnv = _interopDefault(require('postcss-preset-env'));
+var cssnano = _interopDefault(require('cssnano'));
+var atImport = _interopDefault(require('postcss-import'));
+var babel = _interopDefault(require('rollup-plugin-babel'));
+var resolve = _interopDefault(require('@rollup/plugin-node-resolve'));
+var common = _interopDefault(require('@rollup/plugin-commonjs'));
+var sizes = _interopDefault(require('@atomico/rollup-plugin-sizes'));
+var replace = _interopDefault(require('@rollup/plugin-replace'));
+var rollupPluginTerser = require('rollup-plugin-terser');
+var net = _interopDefault(require('net'));
+var http = _interopDefault(require('http'));
+var url = _interopDefault(require('url'));
+var chokidar = _interopDefault(require('chokidar'));
+
+function serializeHtml(astHtml) {
+  return parse5.serialize(astHtml);
 }
 
-var sade = _interopDefault(require("sade"));
-var rollup = _interopDefault(require("rollup"));
-var glob = _interopDefault(require("fast-glob"));
-var html = _interopDefault(require("parse5"));
-var fs = _interopDefault(require("fs"));
-var path = _interopDefault(require("path"));
-var ems = _interopDefault(require("esm"));
-var marked = _interopDefault(require("marked"));
-var yaml = _interopDefault(require("js-yaml"));
-var babel = _interopDefault(require("rollup-plugin-babel"));
-var resolve = _interopDefault(require("@rollup/plugin-node-resolve"));
-var common = _interopDefault(require("@rollup/plugin-commonjs"));
-var sizes = _interopDefault(require("@atomico/rollup-plugin-sizes"));
-var replace = _interopDefault(require("@rollup/plugin-replace"));
-var rollupPluginTerser = require("rollup-plugin-terser");
-var postcss = _interopDefault(require("postcss"));
-var postcssPresetEnv = _interopDefault(require("postcss-preset-env"));
-var cssnano = _interopDefault(require("cssnano"));
-var atImport = _interopDefault(require("postcss-import"));
-var net = _interopDefault(require("net"));
-var http = _interopDefault(require("http"));
-var url = _interopDefault(require("url"));
-var chokidar = _interopDefault(require("chokidar"));
+function analyzeHtml(content, map) {
+  let astHtml = parse5.parse(content);
+  let parallel = [];
 
-let requireEms = ems(module);
+  function consume(astHtml) {
+    astHtml.map(node => {
+      parallel.push(
+        map({
+          ...node,
+          setAttribute(name, value) {
+            node.attrs = node.attrs.map(attr =>
+              attr.name == name ? { name, value } : attr
+            );
+          },
+          getAttribute(name) {
+            return node.attrs
+              .filter(attr => attr.name == name)
+              .reduce((_, { value }) => value, null);
+          }
+        })
+      );
+      if (
+        !["script", "pre", "code", "style"].includes(node.nodeName) &&
+        node.childNodes
+      ) {
+        consume(node.childNodes);
+      }
+    });
+  }
 
-function requireExternal(file) {
-  return requireEms(path.join(cwd, file));
+  map && consume(astHtml.childNodes);
+
+  return Promise.all(parallel).then(() => astHtml);
 }
 
-let asyncFs = fs.promises;
+const asyncFs = fs.promises;
 
-let cwd = process.cwd();
+const cwd$1 = process.cwd();
 
-let pkgDefault = {
+const pkgDefault = {
   dependencies: {},
   devDependencies: {},
   peerDependencies: {},
   babel: {}
 };
 
+const isUrl = file => /^(http(s){0,1}:){0,1}\/\//.test(file);
+
+const asyncGroup = group => Promise.all(group);
+
+const isHtml = file => /\.(md|html)/.test(file);
+
+const isJs = file => /\.(js|ts|jsx,tsx)$/.test(file);
+
+const isCss = file => /\.css$/.test(file);
+
+const isFixLink = file => isHtml(file) || isJs(file) || isCss(file);
+
+const isNotFixLink = file => !isFixLink(file);
+
 function readFile(file) {
-  return asyncFs.readFile(path.join(cwd, file), "utf8");
+  return asyncFs.readFile(path.join(cwd$1, file), "utf8");
 }
 
 async function writeFile(file, data) {
-  let dir = path.join(cwd, path.parse(file).dir);
+  let dir = path.join(cwd$1, path.parse(file).dir);
   try {
     await asyncFs.stat(dir);
   } catch (e) {
@@ -60,11 +102,7 @@ async function writeFile(file, data) {
     });
   }
 
-  return asyncFs.writeFile(path.join(cwd, file), data, "utf8");
-}
-
-function normalizePath(path) {
-  return path.replace(/(\\+)/g, "/");
+  return asyncFs.writeFile(path.join(cwd$1, file), data, "utf8");
 }
 
 function mergeKeysArray(keys, ...config) {
@@ -99,8 +137,8 @@ async function getPackage() {
 }
 
 async function copyFile(src, dest) {
-  src = path.join(cwd, src);
-  dest = path.join(cwd, dest);
+  src = path.join(cwd$1, src);
+  dest = path.join(cwd$1, dest);
   let [statSrc, statDest] = await Promise.all([
     asyncFs.stat(src).catch(() => null),
     asyncFs.stat(dest).catch(() => null)
@@ -115,252 +153,83 @@ async function copyFile(src, dest) {
   }
 }
 
-let cache = {};
+function streamLog(message) {
+  message = message + "";
+  try {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+    process.stdout.write(message);
+  } catch (e) {
+    console.log(message);
+  }
+}
 
-let cacheHash = {};
-
-let isNotStatic = /\.(js|jsx|ts|tsx|css)$/;
-
-let ignore = ["#text", "#comment"];
-/**
- *
- * @param {string} src
- * @param {string} dir
- * @param {string[]} exports
- * @param {Object} markdownTemplate
- * @param {Object} markdownTemplate.nodeTypes
- * @param {boolean} [disableCache]
- */
-async function readHtml({ src, dir, exports, markdownTemplate }) {
-  let content = await readFile(src);
-
-  let { ext, name, dir: dirOrg } = path.parse(src);
-
-  let link = name + ".html";
-
-  let meta = {};
-
-  let htmlContent = content;
-
-  /**@type {string[]} */
-  let files = [];
-
-  let isMarkdown = ext == ".md";
-
-  if (isMarkdown) {
-    let options = {};
-    if (markdownTemplate.nodeTypes) {
-      options.renderer = new marked.Renderer();
-      for (let key in markdownTemplate.nodeTypes) {
-        let value = markdownTemplate.nodeTypes[key];
-        if (key == "highlight") {
-          options[key] = value;
-        } else {
-          options.renderer[key] = value;
-        }
+async function readHtml({ code, addFile }) {
+  const meta = {};
+  const astHtml = await analyzeHtml(code, async node => {
+    if (node.nodeName == "link") {
+      const isCss = node.getAttribute("rel") == "stylesheet";
+      const href = node.getAttribute("href");
+      if (isCss && href && !isUrl(href)) {
+        node.setAttribute("href", await addFile(href));
+      }
+    } else if (["script", "img", "video"].includes(node.nodeName)) {
+      const src = node.getAttribute("src");
+      if (src && !isUrl(src)) {
+        node.setAttribute("src", await addFile(src));
       }
     }
-
-    htmlContent = marked(
-      content.replace(/---\s([.\s\S]*)\s---\s/, (all, content, index) => {
-        if (!index) {
-          meta = yaml.safeLoad(content);
-          return "";
-        }
-        return all;
-      }),
-      markdownTemplate.nodeTypes ? options : null
-    );
-
-    meta.import = []
-      .concat(meta.import)
-      .filter(value => value)
-      .map(addFile);
-  }
-
-  // create the search object to perform the query
-  let findExpressions = formatExpressions(exports);
-
-  htmlContent = html.parseFragment(htmlContent);
-
-  let fragment = findExpressions.length
-    ? analyze([].concat(htmlContent), addFile, findExpressions)
-    : htmlContent;
-
-  // staticFiles are copied to the destination
-  await Promise.all(
-    files
-      .filter(file => !isNotStatic.test(file))
-      .map(file => copyFile(file, path.join(dir, getFileStatic(file))))
-  );
-
-  function addFile(src) {
-    src = normalizePath(path.join(dirOrg, src));
-    !files.includes(src) && files.push(src);
-    return getFileStatic(src);
-  }
-
-  /**
-   * write the document to the destination directory
-   * @param {Function} [template]
-   * @param {Object} opts
-   */
-  function write(markdownData) {
-    let document = fragment;
-
-    if (isMarkdown && markdownTemplate.template) {
-      document = [].concat(
-        html.parse(
-          markdownTemplate.template({
-            ...markdownData,
-            link,
-            meta,
-            content: fragment.map(html.serialize).join("")
-          })
-        )
-      );
-    }
-
-    return writeFile(
-      path.join(dir, link),
-      document.map(html.serialize).join("")
-    );
-  }
-
-  return (cache[src] = {
-    exports: files.filter(src => isNotStatic.test(src)),
-    write,
-    link,
-    meta,
-    ext,
-    src
   });
+  return {
+    code: serializeHtml(astHtml),
+    meta
+  };
 }
 
-/**
- *
- * @param {Array} fragment
- * @param {Function} addFile
- * @param {Object} find
- */
-function analyze(fragment, addFile, find) {
-  let length = fragment.length;
-  for (let i = 0; i < length; i++) {
-    let node = fragment[i];
+async function readCss({ file, code, addWatchFile, minify, browsers }) {
+  let { dir } = path.parse(file);
 
-    if (ignore.includes(node.nodeName)) continue;
-
-    if (node.attrs) {
-      let nodeAttrs = node.attrs.reduce((attrs, { name, value }) => {
-        attrs[name] = value;
-        return attrs;
-      }, {});
-      for (let i = 0; i < find.length; i++) {
-        let { nodeName, attrs } = find[i];
-        if (nodeName == node.nodeName) {
-          let size = 0;
-          let sizeOk = 0;
-          let src;
-          for (let key in attrs) {
-            let attr = attrs[key];
-            size++;
-            if (key in nodeAttrs) {
-              if (attr.value == "*" || attr.value == nodeAttrs[key]) {
-                if (
-                  attr.src &&
-                  !/^(http(s){0,1}:){0,1}\/\//.test(nodeAttrs[key])
-                ) {
-                  src = {
-                    key,
-                    value: nodeAttrs[key]
-                  };
-                }
-                sizeOk++;
-              }
-            }
-          }
-          if (size == sizeOk && src) {
-            node.attrs = node.attrs.map(({ name, value }) =>
-              name == src.key
-                ? {
-                    name,
-                    value: addFile(value)
-                  }
-                : { name, value }
-            );
-          }
-        }
+  let plugins = [
+    atImport({
+      resolve: file => {
+        let id = path.join(
+          /^\./.test(file) ? dir : path.join(cwd, "node_modules"),
+          file
+        );
+        // Add an id to bundle.watchFile
+        addWatchFile && addWatchFile(id);
+        return id;
       }
-    }
-
-    !["script", "pre", "code"].includes(node.nodeName) &&
-      node.childNodes &&
-      analyze(node.childNodes, addFile, find);
-  }
-  return fragment;
-}
-
-/**
- * create an id based on the path
- * @param {string} str
- */
-function getHash(str) {
-  return (cacheHash[str] =
-    cacheHash[str] ||
-    "file-" +
-      str.split("").reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
-      path.parse(str).ext);
-}
-// generates the name of the static file to insert into the HTML
-function getFileStatic(src) {
-  if (isNotStatic.test(src)) {
-    let { name, ext } = path.parse(src);
-    return name + (ext == ".css" ? ext : ".js");
-  } else {
-    return getHash(src);
-  }
-}
-
-function formatExpressions(find) {
-  return []
-    .concat(find)
-    .filter(value => value)
-    .map(expression => {
-      if (!expression) return {};
-      let [nodeName, ...attrs] =
-        expression.match(/([\w-]+)|(\[[^\]]+\])/g) || [];
-      return {
-        nodeName,
-        attrs: attrs.reduce((attrs, attr) => {
-          let [all, src, type, value = "*"] =
-            attr.match(/\[(\:){0,1}([\w-]+)(?:=(.+)){0,1}\]/) || [];
-          attrs[type] = {
-            value: value,
-            src: src != null
-          };
-          return attrs;
-        }, {})
-      };
+    }),
+    postcssPresetEnv({
+      stage: 0,
+      browsers
     })
-    .filter(({ nodeName }) => nodeName);
+  ];
+
+  minify && plugins.push(cssnano());
+
+  code = await postcss(plugins).process(code, { from: undefined });
+
+  return code.css;
 }
 
-let cwd$1 = process.cwd();
-let isCss = /\.css$/;
+let cwd$2 = process.cwd();
+let isCss$1 = /\.css$/;
 
 function pluginImportCss(options = {}) {
   return {
     name: "plugin-import-css",
     async transform(code, id) {
       let { isEntry } = this.getModuleInfo(id);
-      if (isCss.test(id)) {
+      if (isCss$1.test(id)) {
         let { name, dir } = path.parse(id);
         let { css } = code.trim()
           ? await postcss([
               atImport({
                 resolve: file => {
                   let id = path.join(
-                    /^\./.test(file) ? dir : path.join(cwd$1, "node_modules"),
+                    /^\./.test(file) ? dir : path.join(cwd$2, "node_modules"),
                     file
                   );
                   // Add an id to bundle.watchFile
@@ -384,6 +253,7 @@ function pluginImportCss(options = {}) {
             fileName,
             source: css || ""
           });
+          return null;
         }
         return {
           code: isEntry ? "" : "export default  `" + css + "`;",
@@ -394,7 +264,7 @@ function pluginImportCss(options = {}) {
     generateBundle(opts, bundle) {
       for (let key in bundle) {
         let { isEntry, facadeModuleId } = bundle[key];
-        if (isEntry && isCss.test(facadeModuleId)) {
+        if (isEntry && isCss$1.test(facadeModuleId)) {
           delete bundle[key];
         }
       }
@@ -404,7 +274,7 @@ function pluginImportCss(options = {}) {
 
 let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
-function configPlugins(options) {
+function rollupPlugins(options) {
   let babelIncludes = ["node_modules/**"];
   // transform src into valid path to include in babel
   for (let src of options.src) {
@@ -416,74 +286,70 @@ function configPlugins(options) {
     }
   }
 
-  return {
-    plugins: [
-      pluginImportCss(options),
-      resolve({
-        extensions,
-        dedupe: ["react", "react-dom"]
-      }),
-      babel({
-        include: babelIncludes,
-        extensions,
-        ...mergeKeysArray(
-          ["presets", "plugins"],
-          {
-            presets: [
-              [
-                "@babel/preset-typescript",
-                options.jsx == "react"
-                  ? {}
-                  : {
-                      jsxPragma: options.jsx
-                    }
-              ],
-              [
-                "@babel/preset-env",
-                {
-                  targets: options.browsers,
-                  modules: false,
-                  exclude: [
-                    "transform-typeof-symbol",
-                    "transform-regenerator",
-                    "transform-async-to-generator"
-                  ]
-                }
-              ]
+  return [
+    pluginImportCss(options),
+    resolve({
+      extensions,
+      dedupe: ["react", "react-dom"]
+    }),
+    babel({
+      include: babelIncludes,
+      extensions,
+      ...mergeKeysArray(
+        ["presets", "plugins"],
+        {
+          presets: [
+            [
+              "@babel/preset-typescript",
+              options.jsx == "react"
+                ? {}
+                : {
+                    jsxPragma: options.jsx
+                  }
             ],
-            plugins: [
-              [
-                "@babel/plugin-transform-react-jsx",
-                {
-                  pragma:
-                    options.jsx == "react"
-                      ? "React.createElement"
-                      : options.jsx,
-                  pragmaFrag:
-                    options.jsxFragment == "react" || options.jsx == "react"
-                      ? "React.Fragment"
-                      : options.jsxFragment
-                }
-              ],
-              ["@babel/plugin-proposal-optional-chaining"],
-              ["@babel/plugin-syntax-nullish-coalescing-operator"],
-              ["@babel/plugin-proposal-class-properties"]
+            [
+              "@babel/preset-env",
+              {
+                targets: options.browsers,
+                modules: false,
+                exclude: [
+                  "transform-typeof-symbol",
+                  "transform-regenerator",
+                  "transform-async-to-generator"
+                ]
+              }
             ]
-          },
-          options.babel
-        )
-      }),
-      common(),
-      replace({
-        "process.env.NODE_ENV": JSON.stringify("production")
-      }),
-      ...(options.watch
-        ? []
-        : options.minify
-        ? [rollupPluginTerser.terser({ sourcemap: options.sourcemap }), sizes()]
-        : [sizes()])
-    ]
-  };
+          ],
+          plugins: [
+            [
+              "@babel/plugin-transform-react-jsx",
+              {
+                pragma:
+                  options.jsx == "react" ? "React.createElement" : options.jsx,
+                pragmaFrag:
+                  options.jsxFragment == "react" || options.jsx == "react"
+                    ? "React.Fragment"
+                    : options.jsxFragment
+              }
+            ],
+            ["@babel/plugin-proposal-optional-chaining"],
+            ["@babel/plugin-syntax-nullish-coalescing-operator"],
+            ["@babel/plugin-proposal-class-properties"]
+          ]
+        },
+        options.babel
+      )
+    }),
+    common(),
+    replace({
+      "process.env.NODE_ENV": JSON.stringify("production")
+    }),
+    ...(options.watch
+      ? []
+      : options.minify
+      ? [rollupPluginTerser.terser({ sourcemap: options.sourcemap }), sizes()]
+      : [sizes()])
+  ];
 }
 
 var types = {
@@ -1387,29 +1253,29 @@ var types = {
   "x-conference/x-cooltalk": ["ice"]
 };
 
-async function createServer({ dir, watch, port: portStart = 8000 }) {
-  let [port, reloadPort] = await Promise.all([
+async function createServer({ dest, watch, port: portStart = 8000 }) {
+  const [port, reloadPort] = await Promise.all([
     findPort(portStart, portStart + 100),
     findPort(5000, 5080)
   ]);
 
   http
     .createServer(async (req, res) => {
-      let { pathname } = url.parse(req.url);
+      const { pathname } = url.parse(req.url);
 
-      let reqFile = pathname.match(/\.([\w]+)$/);
+      const reqFile = pathname.match(/\.([\w]+)$/);
+
       let resource = decodeURI(pathname);
-
       resource = resource == "/" || pathname == "/" ? "index" : resource;
 
-      let fileUrl = path.join(cwd, dir, resource + (reqFile ? "" : ".html"));
+      const fileUrl = path.join(cwd$1, dest, resource + (reqFile ? "" : ".html"));
 
-      let fallbackUrl = path.join(cwd, dir, "index.html");
+      const fallbackUrl = path.join(cwd$1, dest, "index.html");
 
-      let ext = reqFile ? reqFile[1] : "html";
+      const ext = reqFile ? reqFile[1] : "html";
 
-      let responseSuccess = async (url, ext) => {
-        let file = await asyncFs.readFile(url, "binary");
+      const responseSuccess = async (url, ext) => {
+        const file = await asyncFs.readFile(url, "binary");
         if (ext == "html" && watch) {
           file += `
             <script>
@@ -1442,7 +1308,8 @@ async function createServer({ dir, watch, port: portStart = 8000 }) {
     })
     .listen(parseInt(port, 10));
 
-  let responses = [];
+  const responses = [];
+
   if (watch) {
     http
       .createServer((request, res) => {
@@ -1474,7 +1341,7 @@ async function createServer({ dir, watch, port: portStart = 8000 }) {
   };
 }
 
-let mime = Object.entries(types).reduce(
+const mime = Object.entries(types).reduce(
   (all, [type, exts]) =>
     Object.assign(all, ...exts.map(ext => ({ [ext]: type }))),
   {}
@@ -1506,7 +1373,7 @@ async function findPort(port, limit, pending) {
       pending.reject = reject;
     });
   }
-  let client = net.createConnection({ port });
+  const client = net.createConnection({ port });
   client.on("connect", () => {
     client.end();
     if (port > limit) {
@@ -1520,160 +1387,198 @@ async function findPort(port, limit, pending) {
   return pending.promise;
 }
 
-let isHtml = /\.(html|md)$/;
+function watch(glob, listener) {
+  let watcher = chokidar
+    .watch(glob)
+    .on("add", file => {})
+    .on("change", file => {})
+    .on("unlink", file => {});
 
-let htmlExports = [
-  "script[type=module][:src]",
-  "link[:href][rel=stylesheet]",
-  "link[:href][rel=manifest]",
-  "link[:href][rel=shortcut icon]",
-  "img[:src]",
-  "video[:src]"
-];
+  return watcher;
+}
 
 async function createBundle(options) {
-  let watchers = [];
-  let server;
-  let lastTime;
-  let cache;
-  let currentBuild;
-  let rebuild = () => (currentBuild = build(options));
-
-  streamLog("...loading");
-
   options = await formatOptions(options);
 
-  if (options.server) {
-    server = await createServer(options);
-  }
+  let files = await glob(options.src);
 
-  async function build(options) {
-    // close the observers created within the scope build
-    watchers.forEach(watch => watch.close());
+  const mapFiles = new Map();
 
-    watchers = [];
+  const isReady = file => mapFiles.has(file);
 
-    let inputs = await glob(options.src);
+  const isNotReady = file => !isReady(file);
 
-    let [inputsHtml, inputsRollup] = inputs.reduce(
-      ([inputsHtml, inputsRollup], src) => {
-        (isHtml.test(src) ? inputsHtml : inputsRollup).push(src);
-        return [inputsHtml, inputsRollup];
-      },
-      [[], []]
-    );
-
-    let html = await Promise.all(
-      inputsHtml.map(src =>
-        readHtml({
-          src,
-          dir: options.dir,
-          exports: htmlExports,
-          markdownTemplate: options.markdownTemplate,
-          markdownConfigTemplate: options.markdownConfigTemplate
-        })
-      )
-    );
-
-    inputsRollup = html.reduce(
-      (inputsRollup, html) => [
-        ...inputsRollup,
-        ...html.exports.filter(src => !inputsRollup.includes(src))
-      ],
-      inputsRollup
-    );
-
-    let markdownData = {
-      custom: options.markdownConfigTemplate,
-      pages: html
-        .filter(({ ext }) => ext == ".md")
-        .map(({ link, meta }) => ({ link, meta }))
-    };
-
-    await Promise.all(html.map(html => html.write(markdownData)));
-
-    let rollupInput = {
-      cache,
-      onwarn: streamLog,
-      input: inputsRollup,
-      external: options.external,
-      ...configPlugins(options)
-    };
-
-    let rollupOutput = {
-      dir: options.dir,
-      format: "es",
-      sourcemap: options.sourcemap,
-      chunkFileNames: "chunks/[hash].js"
-    };
-
-    let bundle = await rollup.rollup(rollupInput);
-
-    cache = bundle.cache;
-
-    if (options.watch) {
-      let rollupWatch = rollup.watch({
-        ...rollupInput,
-        output: rollupOutput,
-        watch: { exclude: "node_modules/**" }
-      });
-
-      rollupWatch.on("event", async event => {
-        switch (event.code) {
-          case "START":
-            lastTime = new Date();
-            break;
-          case "END":
-            streamLog(`bundle: ${new Date() - lastTime}ms`);
-            if (server) server.reload();
-            break;
-          case "ERROR":
-            streamLog(event.error);
-            break;
-        }
-      });
-
-      watchers.push(rollupWatch);
-    }
-
-    bundle.write(rollupOutput);
-
-    return [...inputsHtml, ...inputsRollup];
-  }
-
-  rebuild();
-
-  if (options.watch) {
-    let chokidarWatch = chokidar.watch("file", {});
-
-    chokidarWatch.on("all", async (event, file) => {
-      let files = await currentBuild;
-
-      file = normalizePath(file);
-
-      let exist = files.includes(file);
-
-      switch (event) {
-        case "unlink":
-          if (exist) rebuild();
-          break;
-        case "change":
-          if (isHtml.test(file)) rebuild();
-          break;
-        case "add":
-          if (!exist) rebuild();
-      }
+  const takeFile = file => {
+    mapFiles.set(file, {
+      imported: []
     });
+    return file;
+  };
 
-    chokidarWatch.add([options.src, "package.json"]);
+  const cacheStat = new Map();
+
+  const getLink = file => {
+    let { name, ext } = path.parse(file);
+    return isFixLink(ext)
+      ? name + (isJs(ext) ? ".js" : ext)
+      : "file-" +
+          file.split("").reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
+          ext;
+  };
+
+  const getDest = file => path.join(options.dest, file);
+
+  let lastTime = new Date();
+  let watchers = [];
+
+  let server;
+
+  if (options.server) {
+    server = await createServer({
+      dest: options.dest,
+      watch: options.watch,
+      port: options.port
+    });
+  }
+
+  async function readFiles(files) {
+    let groupHtml = await files
+      .filter(isHtml)
+      .filter(isNotReady)
+      .map(takeFile)
+      .map(async file => {
+        const { dir } = path.parse(file);
+        const { meta, code } = await readHtml({
+          code: await readFile(file),
+          async addFile(childFile) {
+            const findFile = path.join(dir, childFile);
+
+            if (!cacheStat.has(findFile)) {
+              let exists = true;
+              try {
+                await asyncFs.stat(findFile);
+              } catch (e) {
+                exists = false;
+              }
+              cacheStat.set(findFile, exists);
+            }
+
+            if (!cacheStat.get(findFile)) return childFile;
+
+            if (!files.includes(findFile)) {
+              files.push(findFile);
+            }
+            if (!mapFiles.get(file).imported.includes(findFile)) {
+              mapFiles.get(file).imported.push(findFile);
+            }
+
+            return getLink(findFile);
+          }
+        });
+        return {
+          link: getLink(file),
+          code,
+          meta
+        };
+      });
+
+    groupHtml = await asyncGroup(groupHtml);
+
+    const pages = groupHtml.map(({ link, meta }) => ({ link, meta }));
+    // write the html files, the goal of this being done separately,
+    // is to group the pages before writing to metadata
+    await asyncGroup(
+      groupHtml.map(({ link, code, meta }) => writeFile(getDest(link), code))
+    );
+    // parallel task block
+    await asyncGroup([
+      asyncGroup(
+        files
+          .filter(isCss)
+          .filter(isNotReady)
+          .map(takeFile)
+          .map(async file => {
+            const code = await readFile(file);
+            const nextCode = await readCss({ file, code });
+            if (nextCode != code) {
+              return writeFile(getDest(getLink(file)), code);
+            }
+          })
+      ),
+      asyncGroup(
+        files
+          .filter(isNotFixLink)
+          .filter(isNotReady)
+          .map(takeFile)
+          .map(async file => copyFile(file, getDest(getLink(file))))
+      )
+    ]);
+
+    // Rollup only restarts if a new js has been added from external sources
+    if (
+      files
+        .filter(isJs)
+        .filter(isNotReady)
+        .map(takeFile).length
+    ) {
+      watchers = watchers.filter(watcher => {
+        watcher.close();
+      });
+
+      const input = {
+        input: [...mapFiles].map(([file]) => file).filter(isJs),
+        onwarn: streamLog,
+        external: options.external,
+        plurgins: rollupPlugins(options)
+      };
+
+      const output = {
+        dir: options.dest,
+        format: "es",
+        sourcemap: options.sourcemap,
+        chunkFileNames: "chunks/[hash].js"
+      };
+
+      const bundle = await rollup.rollup(input);
+
+      if (options.watch) {
+        const watcher = rollup.watch({
+          ...input,
+          output,
+          watch: { exclude: "node_modules/**" }
+        });
+
+        watcher.on("event", async event => {
+          switch (event.code) {
+            case "START":
+              lastTime = new Date();
+              break;
+            case "END":
+              streamLog(`bundle: ${new Date() - lastTime}ms`);
+              server.reload();
+              break;
+            case "ERROR":
+              streamLog(event.error);
+              break;
+          }
+        });
+
+        watchers.push(watcher);
+      }
+
+      await bundle.write(output);
+    }
+  }
+  try {
+    await readFiles(files).then(server.reload);
+    await watch(options.src, () => {});
+  } catch (e) {
+    console.log(e);
   }
 }
 
 async function formatOptions({ src = [], config, external, ...ignore }) {
-  let pkg = await getPackage();
-
-  let { src: srcPkg, ...pkgConfig } = pkg[config] || {};
-  src = srcPkg || src;
+  const pkg = await getPackage();
 
   src = Array.isArray(src) ? src : src.split(/ *, */g);
 
@@ -1687,20 +1592,7 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
 
   external = [...(external || []), ...Object.keys(pkg.peerDependencies)];
 
-  let [dirMarkdownTemplate, markdownConfigTemplate = {}] = [].concat(
-    pkgConfig.markdownTemplate
-  );
-
-  let markdownTemplate = dirMarkdownTemplate
-    ? requireExternal(dirMarkdownTemplate)
-    : {};
-
-  if (markdownTemplate && markdownTemplate.sources) {
-    src = [
-      ...src,
-      ...markdownTemplate.sources.map(src => dirMarkdownTemplate + "/" + src)
-    ];
-  }
+  const pkgConfig = pkg[config] || {};
 
   return {
     babel: {},
@@ -1708,21 +1600,8 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
     external,
     babel: pkg.babel,
     ...ignore,
-    ...pkgConfig,
-    markdownTemplate,
-    markdownConfigTemplate
+    ...pkgConfig
   };
-}
-
-function streamLog(message) {
-  message = message + "";
-  try {
-    process.stdout.clearLine();
-    process.stdout.cursorTo(0);
-    process.stdout.write(message);
-  } catch (e) {
-    console.log(message);
-  }
 }
 
 sade("bundle [src] [dest]")
@@ -1751,11 +1630,11 @@ sade("bundle [src] [dest]")
   .example("src/*.js dist")
   .example("src/*.html")
   .example("")
-  .action((src, dir = "dist", options) => {
+  .action((src, dest = "dest", options) => {
     createBundle({
       ...options,
       src,
-      dir
+      dest
     }).catch(e => console.log("" + e));
   })
   .parse(process.argv);

@@ -27,11 +27,11 @@ sade("bundle [src] [dest]")
   .example("src/*.js dist")
   .example("src/*.html")
   .example("")
-  .action((src, dir = "dist", options) => {
+  .action((src, dest = "dest", options) => {
     createBundle({
       ...options,
       src,
-      dir
+      dest
     }).catch(e => console.log("" + e));
   })
   .parse(process.argv);

@@ -4,6 +4,7 @@ import rollup from "rollup";
 import { readHtml } from "./read-html";
 import { readCss } from "./read-css";
 import { rollupPlugins } from "./rollup/config-plugins";
+import { createServer } from "./server/create-server";
 
 import {
   asyncFs,
@@ -19,6 +20,7 @@ import {
   streamLog,
   getPackage
 } from "./utils";
+import { watch } from "./watch";
 
 export default async function createBundle(options) {
   options = await formatOptions(options);
@@ -53,6 +55,16 @@ export default async function createBundle(options) {
 
   let lastTime = new Date();
   let watchers = [];
+
+  let server;
+
+  if (options.server) {
+    server = await createServer({
+      dest: options.dest,
+      watch: options.watch,
+      port: options.port
+    });
+  }
 
   async function readFiles(files) {
     let groupHtml = await files
@@ -168,7 +180,7 @@ export default async function createBundle(options) {
               break;
             case "END":
               streamLog(`bundle: ${new Date() - lastTime}ms`);
-              if (server) server.reload();
+              server.reload();
               break;
             case "ERROR":
               streamLog(event.error);
@@ -183,7 +195,8 @@ export default async function createBundle(options) {
     }
   }
   try {
-    await readFiles(files);
+    await readFiles(files).then(server.reload);
+    await watch(options.src, () => {});
   } catch (e) {
     console.log(e);
   }
