@@ -5,7 +5,7 @@ import common from "@rollup/plugin-commonjs";
 import sizes from "@atomico/rollup-plugin-sizes";
 import replace from "@rollup/plugin-replace";
 import { terser } from "rollup-plugin-terser";
-import pluginImportCss from "./plugin-import-css";
+import { pluginImportCss } from "./plugin-import-css";
 import { mergeKeysArray } from "../utils";
 
 let extensions = [".js", ".jsx", ".ts", ".tsx"];
