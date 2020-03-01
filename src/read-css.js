@@ -3,20 +3,21 @@ import postcss from "postcss";
 import postcssPresetEnv from "postcss-preset-env";
 import cssnano from "cssnano";
 import atImport from "postcss-import";
+import { cwd } from "./utils";
 
 export async function readCss({ file, code, addWatchFile, minify, browsers }) {
-  let { dir } = path.parse(file);
+  const { dir } = path.parse(file);
 
-  let plugins = [
+  const plugins = [
     atImport({
       resolve: file => {
-        let id = path.join(
+        file = path.join(
           /^\./.test(file) ? dir : path.join(cwd, "node_modules"),
           file
         );
         // Add an id to bundle.watchFile
-        addWatchFile && addWatchFile(id);
-        return id;
+        addWatchFile && addWatchFile(file);
+        return file;
       }
     }),
     postcssPresetEnv({
