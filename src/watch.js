@@ -1,17 +1,26 @@
-import path from "path";
 import chokidar from "chokidar";
 
-function delay(ms) {
-  return value => new Promise(resolve => setTimeout(resolve, ms, value));
-}
-
 export function watch(glob, listener) {
-  let pipe;
-  let watcher = chokidar
-    .watch(glob)
-    .on("add", file => {})
-    .on("change", file => {})
-    .on("unlink", file => {});
+  let currentGroup;
+
+  const loadGroup = () => {
+    if (!currentGroup) {
+      currentGroup = {};
+      setTimeout(() => {
+        listener(currentGroup);
+        currentGroup = false;
+      }, 200);
+    }
+  };
+
+  const watcher = chokidar.watch(glob);
+
+  ["add", "change", "unlink"].map(type => {
+    watcher.on(type, file => {
+      loadGroup();
+      (currentGroup[type] = currentGroup[type] || []).push(file);
+    });
+  });
 
   return watcher;
 }

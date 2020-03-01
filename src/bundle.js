@@ -4,7 +4,7 @@ import rollup from "rollup";
 import { readHtml } from "./read-html";
 import { readCss } from "./read-css";
 import { rollupPlugins } from "./rollup/config-plugins";
-import { createServer } from "./server/create-server";
+import { createServer } from "./server";
 
 import {
   asyncFs,
@@ -18,7 +18,8 @@ import {
   isFixLink,
   isNotFixLink,
   streamLog,
-  getPackage
+  getPackage,
+  createAwait
 } from "./utils";
 import { watch } from "./watch";
 
@@ -53,6 +54,8 @@ export default async function createBundle(options) {
 
   const getDest = file => path.join(options.dest, file);
 
+  const awaitWatch = createAwait();
+
   let lastTime = new Date();
   let watchers = [];
 
@@ -66,7 +69,9 @@ export default async function createBundle(options) {
     });
   }
 
-  async function readFiles(files) {
+  async function readFiles(files, forceJs) {
+    files = files.map(path.normalize);
+
     let groupHtml = await files
       .filter(isHtml)
       .filter(isNotReady)
@@ -77,7 +82,6 @@ export default async function createBundle(options) {
           code: await readFile(file),
           async addFile(childFile) {
             const findFile = path.join(dir, childFile);
-
             if (!cacheStat.has(findFile)) {
               let exists = true;
               try {
@@ -85,7 +89,12 @@ export default async function createBundle(options) {
               } catch (e) {
                 exists = false;
               }
+
               cacheStat.set(findFile, exists);
+
+              if (options.watch && exists) {
+                awaitWatch.promise.then(({ addFile }) => addFile(findFile));
+              }
             }
 
             if (!cacheStat.get(findFile)) return childFile;
@@ -93,6 +102,7 @@ export default async function createBundle(options) {
             if (!files.includes(findFile)) {
               files.push(findFile);
             }
+
             if (!mapFiles.get(file).imported.includes(findFile)) {
               mapFiles.get(file).imported.push(findFile);
             }
@@ -124,10 +134,20 @@ export default async function createBundle(options) {
           .map(takeFile)
           .map(async file => {
             const code = await readFile(file);
-            const nextCode = await readCss({ file, code });
-            if (nextCode != code) {
-              return writeFile(getDest(getLink(file)), code);
-            }
+            const nextCode = await readCss({
+              file,
+              code,
+              minify: options.minify,
+              browsers: options.browsers,
+              addWatchFile(childFile) {
+                if (options.watch) {
+                  awaitWatch.promise.then(({ addFile }) =>
+                    addFile(childFile, file)
+                  );
+                }
+              }
+            });
+            return writeFile(getDest(getLink(file)), nextCode);
           })
       ),
       asyncGroup(
@@ -141,6 +161,7 @@ export default async function createBundle(options) {
 
     // Rollup only restarts if a new js has been added from external sources
     if (
+      forceJs ||
       files
         .filter(isJs)
         .filter(isNotReady)
@@ -154,7 +175,7 @@ export default async function createBundle(options) {
         input: [...mapFiles].map(([file]) => file).filter(isJs),
         onwarn: streamLog,
         external: options.external,
-        plurgins: rollupPlugins(options)
+        plugins: rollupPlugins(options)
       };
 
       const output = {
@@ -180,7 +201,7 @@ export default async function createBundle(options) {
               break;
             case "END":
               streamLog(`bundle: ${new Date() - lastTime}ms`);
-              server.reload();
+              server && server.reload();
               break;
             case "ERROR":
               streamLog(event.error);
@@ -192,11 +213,83 @@ export default async function createBundle(options) {
       }
 
       await bundle.write(output);
+    } else {
+      streamLog(`bundle: ${new Date() - lastTime}ms`);
+      server && server.reload();
     }
   }
   try {
-    await readFiles(files).then(server.reload);
-    await watch(options.src, () => {});
+    await readFiles(files).then(() => server && server.reload());
+    if (options.watch) {
+      const mapSubWatch = new Map();
+      const isRootWatch = file =>
+        mapSubWatch.has(file) ? !mapSubWatch.get(file).length : true;
+
+      const watcher = watch(options.src, group => {
+        let files = [];
+        let forceJs;
+
+        if (group.add) {
+          let groupFiles = group.add
+            .filter(isRootWatch)
+            .filter(isFixLink)
+            .filter(isNotReady);
+          files = [...files, ...groupFiles];
+        }
+        if (group.change) {
+          let groupChange = group.change;
+          group.change
+            .filter(file => mapSubWatch.has(file))
+            .map(file => mapSubWatch.get(file))
+            .reduce(
+              (groupParent, groupChild) => groupParent.concat(groupChild),
+              []
+            )
+            .forEach(file => {
+              if (!groupChange.includes(file)) groupChange.push(file);
+            });
+
+          let groupFiles = groupChange
+            .filter(file => isRootWatch(file) || isReady(file))
+            .filter(isFixLink)
+            .filter(file => !isJs(file))
+            .map(file => {
+              mapFiles.delete(file);
+              return file;
+            });
+
+          files = [...files, ...groupFiles];
+        }
+        if (group.unlink) {
+          if (
+            group.unlink
+              .filter(isJs)
+              .filter(isReady)
+              .map(file => {
+                mapFiles.delete(file);
+                return file;
+              }).length
+          ) {
+            forceJs = true;
+          }
+        }
+        if (files.length || forceJs) {
+          lastTime = new Date();
+          readFiles(files, forceJs);
+        }
+      });
+      awaitWatch.resolve({
+        addFile(file, parentFile) {
+          if (!mapSubWatch.has(file)) {
+            mapSubWatch.set(file, []);
+            watcher.add(file);
+          }
+          if (parentFile && !mapSubWatch.get(file).includes(parentFile)) {
+            mapSubWatch.get(file).push(parentFile);
+          }
+        }
+      });
+    }
   } catch (e) {
     console.log(e);
   }
