@@ -101,3 +101,17 @@ export function streamLog(message) {
     console.log(message);
   }
 }
+
+export function createAwait() {
+  let resolve;
+  let reject;
+  let promise = new Promise((_resolve, _reject) => {
+    resolve = _resolve;
+    reject = _reject;
+  });
+  return {
+    promise,
+    resolve,
+    reject
+  };
+}
