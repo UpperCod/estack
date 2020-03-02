@@ -13,6 +13,7 @@ sade("bundle [src] [dest]")
   .option("--server", "Create a server, by default localhost:8000", false)
   .option("--port", "define the server port", 8000)
   .option("--browsers", "define the target of the bundle", "> 3%")
+  .option("--template", "define the top template file for html or md")
   .option("--jsx", "pragma jsx", "h")
   .option("--jsxFragment", "pragma fragment jsx", "Fragment")
   .option(
