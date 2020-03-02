@@ -1,1 +1,5 @@
-# i'm Markdown
+---
+title: markdown
+---
+
+# i'm Markdown {{theme.color}}
