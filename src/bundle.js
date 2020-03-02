@@ -122,7 +122,6 @@ export default async function createBundle(options) {
   async function readFiles(files, forceJs) {
     // normalize to avoid duplicates
     files = files.map(path.normalize);
-
     // check if one of the files is a template
     await asyncGroup(
       files
@@ -428,6 +427,9 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
   if (options.template) {
     options.src.unshift((options.template = path.normalize(options.template)));
   }
+
+  // normalize routes for fast-glob
+  options.src = options.src.map(glob => glob.replace(/\\/g, "/"));
 
   return options;
 }
