@@ -3,8 +3,8 @@ import createBundle from "./bundle";
 
 sade("bundle [src] [dest]")
   .version("PKG.VERSION")
-  .option("-w, --watch", "Watch files in bundle and rebuild on changes", false)
-  .option("-e, --external", "Does not include dependencies in the bundle")
+  .option("--watch", "Watch files in bundle and rebuild on changes", false)
+  .option("--external", "Does not include dependencies in the bundle")
   .option(
     "-c, --config",
     "allows you to export a configuration from package.json"
