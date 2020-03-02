@@ -226,7 +226,7 @@ export default async function createBundle(options) {
             {
               theme: template.meta,
               pages,
-              page: { link, meta }
+              page: { ...meta, link }
             },
             {
               content: code
