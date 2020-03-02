@@ -3,9 +3,15 @@ import parse5 from "parse5";
 export function serializeHtml(astHtml) {
   return parse5.serialize(astHtml);
 }
-
-export function analyzeHtml(content, map) {
-  let astHtml = parse5.parse(content);
+/**
+ * parses an html document node to node
+ * @param {string} content
+ * @param {function(Node)} map
+ * @param {boolean} useFragment
+ * @returns {Object} astHtml
+ */
+export function analyzeHtml(content, map, useFragment) {
+  let astHtml = parse5[useFragment ? "parseFragment" : "parse"](content);
   let parallel = [];
 
   function consume(astHtml) {
@@ -38,3 +44,10 @@ export function analyzeHtml(content, map) {
 
   return Promise.all(parallel).then(() => astHtml);
 }
+
+/**
+ * @typedef {Object} Node
+ * @property {string} nodeName
+ * @property {(name:string,value:string)=>void} setAttribute
+ * @property {(name:string)=>string|null} getAttribute
+ */
