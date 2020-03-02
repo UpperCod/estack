@@ -19,20 +19,22 @@ export async function createServer({ dest, watch, port: portStart = 8000 }) {
     if (!/\.[^\.]+$/.test(url)) url += ".html";
 
     if (isHtml(url) && watch) {
-      let file = await asyncFs.readFile(url, "binary");
-      ctx.status = 200;
-      ctx.set("Content-Type", "text/html");
-      ctx.set("Access-Control-Allow-Origin", "*");
-      ctx.set("Cache-Control", "no-cache");
-      ctx.body = file += `
+      try {
+        let file = await asyncFs.readFile(url, "binary");
+        ctx.status = 200;
+        ctx.set("Content-Type", "text/html");
+        ctx.set("Access-Control-Allow-Origin", "*");
+        ctx.set("Cache-Control", "no-cache");
+        ctx.body = file += `
         <script>
           const source = new EventSource('http://localhost:${reloadPort}');
           source.onmessage = e =>  location.reload();
         </script>
-      `;
-    } else {
-      await send(ctx, url);
+        `;
+        return;
+      } catch (e) {}
     }
+    await send(ctx, url);
   });
 
   serverStatic.listen(port);
