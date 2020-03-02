@@ -1,4 +1,7 @@
-@import "./child.css";
+:root {
+  --color: tomato;
+}
+
 body {
-  color: red;
+  background: var(--color);
 }

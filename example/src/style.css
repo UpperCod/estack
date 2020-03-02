@@ -1,4 +1,5 @@
-@import "./child.css";
+@import "./theme.css";
+
 body {
-  color: red;
+  background: var(--color);
 }

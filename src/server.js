@@ -14,7 +14,7 @@ export async function createServer({ dest, watch, port: portStart = 8000 }) {
   const serverStatic = new Koa();
 
   serverStatic.use(async ctx => {
-    const url = path.join(dest, ctx.path == "/" ? "index.html" : ctx.path);
+    let url = path.join(dest, ctx.path == "/" ? "index.html" : ctx.path);
 
     if (!/\.[^\.]+$/.test(url)) url += ".html";
 

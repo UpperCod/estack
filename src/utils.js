@@ -18,6 +18,8 @@ export const asyncGroup = group => Promise.all(group);
 
 export const isHtml = file => /\.(md|html)/.test(file);
 
+export const isMd = file => /\.md$/.test(file);
+
 export const isJs = file => /\.(js|ts|jsx,tsx)$/.test(file);
 
 export const isCss = file => /\.css$/.test(file);
