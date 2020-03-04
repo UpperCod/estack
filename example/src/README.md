@@ -4,6 +4,8 @@ title: markdown
 
 # i'm Markdown {{theme.color}}
 
-```html story
+...
+
+```html
 <h1>hola</h1>
 ```
