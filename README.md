@@ -99,3 +99,8 @@ You can define the `folder` property to associate a destination for your html or
 ## bundle-cli is built thanks to:
 
 bundle-cli is built with Rollup, Chokidar, fast-glob, mustache, postcss and other incredible packages
+
+## Todo
+
+- [ ] Compress the html by using the --minify flag
+- [ ] add test
