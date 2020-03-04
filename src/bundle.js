@@ -105,6 +105,8 @@ export default async function createBundle(options) {
   // store the server, eg: server.reload()
   let server;
 
+  let currentRollupCache;
+
   if (options.server) {
     server = await createServer({
       dest: options.dest,
@@ -286,7 +288,8 @@ export default async function createBundle(options) {
         input: [...mapFiles].map(([file]) => file).filter(isJs),
         onwarn: streamLog,
         external: options.external,
-        plugins: rollupPlugins(options)
+        plugins: rollupPlugins(options),
+        cache: currentRollupCache
       };
 
       const output = {
@@ -297,6 +300,8 @@ export default async function createBundle(options) {
       };
 
       const bundle = await rollup.rollup(input);
+
+      currentRollupCache = bundle.cache;
 
       if (options.watch) {
         const watcher = rollup.watch({
