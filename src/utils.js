@@ -28,6 +28,8 @@ export const isFixLink = file => isHtml(file) || isJs(file) || isCss(file);
 
 export const isNotFixLink = file => !isFixLink(file);
 
+export const promiseErrorToNull = async promise => promise.catch(e => null);
+
 export function readFile(file) {
   return asyncFs.readFile(path.join(cwd, file), "utf8");
 }

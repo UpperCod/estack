@@ -3,7 +3,7 @@ import net from "net";
 import Koa from "koa";
 import send from "koa-send";
 import http from "http";
-import { isHtml, asyncFs } from "./utils";
+import { isHtml, asyncFs, promiseErrorToNull } from "./utils";
 
 export async function createServer({ dest, watch, port: portStart = 8000 }) {
   const [port, reloadPort] = await Promise.all([
@@ -14,9 +14,37 @@ export async function createServer({ dest, watch, port: portStart = 8000 }) {
   const serverStatic = new Koa();
 
   serverStatic.use(async ctx => {
-    let url = path.join(dest, ctx.path == "/" ? "index.html" : ctx.path);
+    let url = path.join(dest, ctx.path);
 
-    if (!/\.[^\.]+$/.test(url)) url += ".html";
+    if (!/\.[^\.]+$/.test(url)) {
+      let { dir, name } = path.parse(url);
+      // Try first to track the path by associating it as html
+      // eg: /every => /evert.html
+      url = path.join(dir, name + ".html");
+
+      if (!(await promiseErrorToNull(asyncFs.stat(url)))) {
+        // Try associating an index.html file to the path
+        // eg: /every => /every/index.html
+        url = path.join(dir, name, "index.html");
+        if (!(await promiseErrorToNull(asyncFs.stat(url)))) {
+          // Point the reading to the root to keep the browsing history
+          let rootIndex = path.join(dest, "index.html");
+          if (rootIndex != url) {
+            url = rootIndex;
+          }
+        }
+      }
+    } else {
+      // If the file is not found, it looks for it in the root
+      // this behavior is for spa
+      if (!(await promiseErrorToNull(asyncFs.stat(url)))) {
+        let { base } = path.parse(url);
+        let rootFile = path.join(dest, base);
+        if (rootFile != url) {
+          url = rootFile;
+        }
+      }
+    }
 
     if (isHtml(url) && watch) {
       try {

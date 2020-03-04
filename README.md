@@ -22,6 +22,8 @@ allows to observe the changes associated with the given expression, bundle-cli i
 
 allows you to create a server that synchronizes with the observer if accompanied by the `--watch` flag
 
+> The server provides a resolution of files for spa-type applications, so by not supporting the html document it will point to index.html, but keeping the url concurrent, in turn it will redirect the download of the files to avoid allowing them to coexist in the current folder
+
 ### --port
 
 allows you to define a port to use or initialize the search if it is already busy.
@@ -50,6 +52,12 @@ allows you to define the type of pragma to work globally, if you want to use rea
 
 allow you to associate an html template to contain html or md files. eg:
 
+```
+bundle src/*.html public --template my-template.html
+```
+
+**my-template example**
+
 ```html
 ---
 color: red
@@ -72,12 +80,13 @@ color: red
 </html>
 ```
 
-the use of `---` allows to open the yaml metadata to be associated with the template, which is grouped as follows, eg:
+> the use of `---` allows to open the yaml metadata to be associated with the template, which is grouped as follows, eg:
 
 ```js
 {
   // template metadata
   site: {
+    color: "red";
   }
   // metadata of the current page
   page: {
