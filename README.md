@@ -2,15 +2,15 @@
 
 Designed to simplify the frontend web development experience with:
 
-1. Search for expressions for the generation of inputs for the bundle eg `example/src/*.{html,md}`.
+1.  Search for expressions for the generation of inputs for the bundle eg `example/src/*.{html,md}`.
 
-2. The analysis on the html files allows the extraction of the files that use the expression by link [href] or [src] attribute.
+2.  The analysis on the html files allows the extraction of the files that use the expression by link [href] or [src] attribute.
 
-3. Optimization of the output through the flag `--minify`.
+3.  Optimization of the output through the flag `--minify`.
 
-4. Livereload optimized only for updates of the files associated with the bundle
+4.  Livereload optimized only for updates of the files associated with the bundle
 
-5. output configuration based on [browserslist](https://github.com/browserslist/browserslist) for css and js, using the flag --browsers
+5.  output configuration based on [browserslist](https://github.com/browserslist/browserslist) for css and js, using the flag --browsers
 
 ## flags
 
@@ -102,5 +102,7 @@ bundle-cli is built with Rollup, Chokidar, fast-glob, mustache, postcss and othe
 
 ## Todo
 
-- [ ] Compress the html by using the --minify flag
-- [ ] add test
+* [ ] Compress the html by using the --minify flag
+* [ ] add test
+* [ ] generate sw for pwa
+* [ ] add support to customize the order of page groups

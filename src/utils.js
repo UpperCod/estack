@@ -30,9 +30,23 @@ export const isNotFixLink = file => !isFixLink(file);
 
 export const promiseErrorToNull = async promise => promise.catch(e => null);
 
-export function readFile(file) {
-  return asyncFs.readFile(path.join(cwd, file), "utf8");
-}
+/**
+ *
+ * @param {string} a - New link destination
+ * @param {string} b - Origin link
+ */
+export const getRelativePath = (a, b) => path.relative(path.parse(a).dir, b);
+
+export const getRelativeDeep = file =>
+  file
+    ? path
+        .normalize(file)
+        .split(path.sep)
+        .map(() => "../")
+        .join("")
+    : "";
+
+export const readFile = file => asyncFs.readFile(path.join(cwd, file), "utf8");
 
 export async function writeFile(file, data) {
   let dir = path.join(cwd, path.parse(file).dir);

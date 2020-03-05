@@ -12,5 +12,22 @@ color: red
   <body>
     <h2>title - {{page.title}}</h2>
     template : {{>content}}
+    <ul>
+      {{#pages}}
+      <li>
+        <strong> {{group}} </strong>
+        <ul>
+          {{#items}}
+          <li>
+            <a href="{{link}}"
+              >pagina : {{#title}} {{title}}
+              {{/title}}{{^title}}{{link}}{{/title}}</a
+            >
+          </li>
+          {{/items}}
+        </ul>
+      </li>
+      {{/pages}}
+    </ul>
   </body>
 </html>
