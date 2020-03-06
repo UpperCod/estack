@@ -25,7 +25,7 @@ export function analyzeHtml(content, map, useFragment) {
             );
           },
           getAttribute(name) {
-            return node.attrs
+            return (node.attrs || [])
               .filter(attr => attr.name == name)
               .reduce((_, { value }) => value, null);
           }
