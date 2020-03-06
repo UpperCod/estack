@@ -13,7 +13,7 @@ export async function readHtml({ code, addFile, useFragment }) {
         if (isHrefImport && href && !isUrl(href)) {
           node.setAttribute("href", await addFile(href));
         }
-      } else if (["script", "img", "video"].includes(node.nodeName)) {
+      } else if (!["iframe"].includes(node.nodeName)) {
         const src = node.getAttribute("src");
         if (src && !isUrl(src)) {
           node.setAttribute("src", await addFile(src));
