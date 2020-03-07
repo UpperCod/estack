@@ -118,6 +118,11 @@ export default async function createBundle(options) {
   async function readFiles(files, forceJs) {
     // normalize to avoid duplicates
     files = files.map(path.normalize);
+
+    const addCurrentFiles = file => {
+      if (!files.includes(file)) files.push(file);
+      return file;
+    };
     // check if one of the files is a template
     await asyncGroup(
       files
@@ -137,9 +142,7 @@ export default async function createBundle(options) {
             .filter(isHtml)
             .filter(isNotTemplate)
             .map(deleteFile)
-            .forEach(file => {
-              if (!files.includes(file)) files.push(file);
-            });
+            .forEach(addCurrentFiles);
         })
     );
 
@@ -159,6 +162,7 @@ export default async function createBundle(options) {
         const link = getLink(file);
         const dest = getDest(link, meta.folder);
         const page = { ...meta, file, dest, link };
+
         if (isMd(file)) {
           code = marked(code);
         }
@@ -193,9 +197,7 @@ export default async function createBundle(options) {
 
             if (state.type == "global") return childFile;
 
-            if (!files.includes(state.file)) {
-              files.push(state.file);
-            }
+            addCurrentFiles(state.file);
 
             if (!mapFiles.get(file).imported.includes(state.file)) {
               mapFiles.get(file).imported.push(state.file);
