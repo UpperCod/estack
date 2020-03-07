@@ -1,2 +1,2 @@
-console.log(document.body);
+console.log(document.body.querySelector("*"));
 //# sourceMappingURL=index.js.map
