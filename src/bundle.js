@@ -31,6 +31,8 @@ import {
 
 import { watch } from "./watch";
 
+const toMarkdown = code => marked(code);
+
 export default async function createBundle(options) {
   options = await formatOptions(options);
 
@@ -164,7 +166,7 @@ export default async function createBundle(options) {
         const page = { ...meta, file, dest, link };
 
         if (isMd(file)) {
-          code = marked(code);
+          code = toMarkdown(code);
         }
 
         const nextCode = await readHtml({
@@ -229,23 +231,26 @@ export default async function createBundle(options) {
         }
 
         if (template) {
-          code = Mustache.render(
-            page.template === false ? code : template.code,
-            {
+          const data = {
+            theme: template.meta,
+            page,
+            pages: getPages(
               page,
-              theme: template.meta,
-              pages: getPages(
-                page,
-                // access all pages
-                [...mapFiles]
-                  .filter(([file]) => !isTemplate(file) && isHtml(file))
-                  .map(([, { page }]) => page)
-              )
-            },
-            {
+              // access all pages
+              [...mapFiles]
+                .filter(([file]) => !isTemplate(file) && isHtml(file))
+                .map(([, { page }]) => page)
+            )
+          };
+          code = Mustache.render(code, data);
+          if (page.template != false) {
+            // The use of Partial generates an error in the printing of
+            // the tabulation, so the content is associated as a variable
+            code = Mustache.render(template.code, {
+              ...data,
               content: code
-            }
-          );
+            });
+          }
         }
 
         writeFile(page.dest, code);

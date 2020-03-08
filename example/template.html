@@ -15,7 +15,9 @@ color: red
   </head>
   <body>
     <h2>title - {{page.title}}</h2>
-    template : {{>content}}
+    <section>
+      {{{content}}}
+    </section>
     <ul>
       {{#pages}}
       <li>

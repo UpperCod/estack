@@ -7,7 +7,7 @@ group:
   - xxx
 ---
 
-# i'm Markdown {{theme.color}}
+# i'm Markdown s {{theme.color}} ... yep
 
 ```html story
 <h1>hola</h1>
@@ -21,4 +21,14 @@ group:
 </picture>
 ```
 
-<script></script>
+```jsx
+const x = () => (
+  <h1>
+    <source media="(min-width: 650px)" srcset="img_pink_flowers.jpg" />
+    <source media="(min-width: 465px)" srcset="img_white_flower.jpg" />
+    <img src="img_orange_flowers.jpg" alt="Flowers" style="width:auto;" />
+  </h1>
+);
+```
+
+<script src="index.js"></script>
