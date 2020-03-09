@@ -4,6 +4,7 @@ import rollup from "rollup";
 import yaml from "js-yaml";
 import marked from "marked";
 import Mustache from "mustache";
+import Entities from "entities";
 
 import { readHtml } from "./read-html";
 import { readCss } from "./read-css";
@@ -30,6 +31,22 @@ import {
 } from "./utils";
 
 import { watch } from "./watch";
+
+const renderer = new marked.Renderer();
+// add an additional container prevent the table from collapsing the page
+renderer.table = (header, body) =>
+  `<div class="markdown -table-container"><table>${header +
+    body}</table></div>`;
+
+//  configure the container to allow language to be highlighted independently of the class
+renderer.code = (code, type) =>
+  `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Entities.escape(
+    code
+  )}</code></pre>`;
+
+marked.setOptions({
+  renderer
+});
 
 const toMarkdown = code => marked(code);
 
