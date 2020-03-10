@@ -3,8 +3,7 @@ title: A
 folder: /group/b/c
 description: componentes especiales
 group:
-  - Componentes
-  - xxx
+  - Components-1
 ---
 
 # i'm Markdown s {{theme.color}} ... yep
