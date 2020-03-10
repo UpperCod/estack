@@ -44,6 +44,8 @@ renderer.code = (code, type) =>
     code
   )}</code></pre>`;
 
+renderer.html = code => `<div class="markdown -html-container">${code}</div>`;
+
 marked.setOptions({
   renderer
 });
