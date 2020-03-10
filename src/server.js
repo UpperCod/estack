@@ -48,7 +48,7 @@ export async function createServer({ dest, watch, port: portStart = 8000 }) {
 
     if (isHtml(url) && watch) {
       try {
-        let file = await asyncFs.readFile(url, "binary");
+        let file = await asyncFs.readFile(url, "utf8");
         ctx.status = 200;
         ctx.set("Content-Type", "text/html");
         ctx.set("Access-Control-Allow-Origin", "*");
