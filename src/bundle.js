@@ -53,6 +53,8 @@ marked.setOptions({
 const toMarkdown = code => marked(code);
 
 export default async function createBundle(options) {
+  streamLog("...loading");
+
   options = await formatOptions(options);
 
   let files = await glob(options.src);
@@ -154,6 +156,7 @@ export default async function createBundle(options) {
           const [code, meta] = getMetaFile(await readFile(file));
 
           meta.groupOrder = meta.groupOrder ? [].concat(meta.groupOrder) : [];
+
           template.meta = meta;
           template.code = code;
 
@@ -251,19 +254,35 @@ export default async function createBundle(options) {
         }
 
         if (template) {
+          const pages = getPages(
+            page,
+            // access all pages
+            [...mapFiles]
+              .filter(([file]) => !isTemplate(file) && isHtml(file))
+              .map(([, { page }]) => page),
+            template.meta.groupOrder
+          );
+
+          const pagination = {};
+
+          pages.some(({ items }) =>
+            items.some((item, i) => {
+              if (item.file == page.file) {
+                pagination.prev = items[i - 1];
+                pagination.next = items[i + 1];
+                return true;
+              }
+            })
+          );
+
           const data = {
             theme: template.meta,
-            page,
-            pages: getPages(
-              page,
-              // access all pages
-              [...mapFiles]
-                .filter(([file]) => !isTemplate(file) && isHtml(file))
-                .map(([, { page }]) => page),
-              template.meta.groupOrder
-            )
+            page: { ...pages, ...pagination },
+            pages
           };
+
           code = Mustache.render(code, data);
+
           if (page.template != false) {
             // The use of Partial generates an error in the printing of
             // the tabulation, so the content is associated as a variable

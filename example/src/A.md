@@ -1,14 +1,13 @@
 ---
-title: Home
-description: i am Home
+title: A
+folder: /markdown
+description: I am A
 group:
-  - Html
+  - Markdown
 ---
-
-<any src="data.json"/>
 
 <link rel="stylesheet" href="style.css" />
 
-<h1>{{page.title}}</h1>
+# {{page.title}}
 
 <script src="index.js"></script>
