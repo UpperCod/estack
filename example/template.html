@@ -1,7 +1,12 @@
 ---
 color: red
 groupOrder:
-  - Markdown
+  - Markdown:
+      - B
+      - A
+      - C
+  - Html
+  - End
 ---
 
 <!DOCTYPE html>
@@ -17,25 +22,31 @@ groupOrder:
   </head>
   <body>
     <h2>title - {{page.title}}</h2>
-    <section>
-      {{{content}}}
-    </section>
+    my-content : {{&page.content}}
+
     <ul>
       {{#pages}}
       <li>
-        <strong> {{group}} </strong>
+        <strong> {{title}} </strong>
         <ul>
-          {{#items}}
+          {{#pages}}
           <li>
-            <a href="{{link}}"
+            <a href="{{{link}}}"
               >pagina : {{#title}} {{title}}
               {{/title}}{{^title}}{{link}}{{/title}}</a
             >
           </li>
-          {{/items}}
+          {{/pages}}
         </ul>
       </li>
       {{/pages}}
     </ul>
+
+    <h1>
+      prev: {{page.prev.title}}
+    </h1>
+    <h1>
+      next: {{page.next.title}}
+    </h1>
   </body>
 </html>

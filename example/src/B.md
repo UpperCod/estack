@@ -8,6 +8,6 @@ group:
 
 <link rel="stylesheet" href="style.css" />
 
-# {{page.title}}
+# s {{page.title}}
 
 <script src="index.js"></script>

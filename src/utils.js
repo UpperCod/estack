@@ -133,3 +133,5 @@ export function createAwait() {
     reject
   };
 }
+
+export const normalizePath = str => str.replace(/(\\)+/g, "/");
