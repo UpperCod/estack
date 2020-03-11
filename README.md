@@ -94,15 +94,15 @@ color: red
 }
 ```
 
-You can define the `folder` property to associate a destination for your html or md file. eg : `gallery/1` the template is processed by Mustache
+You can define the `folder` property to associate a destination for your html or md file. eg : `gallery/1` the template is processed by Handerbars
 
 ## bundle-cli is built thanks to:
 
-bundle-cli is built with Rollup, Chokidar, fast-glob, mustache, postcss and other incredible packages
+bundle-cli is built with Rollup, Chokidar, Fast-glob, Handerbars, Postcss and other incredible packages
 
 ## Todo
 
-* [ ] Compress the html by using the --minify flag
-* [ ] add test
-* [ ] generate sw for pwa
-* [ ] add support to customize the order of page groups
+- [ ] Compress the html by using the --minify flag
+- [ ] add test
+- [ ] generate sw for pwa
+- [ ] add support to customize the order of page groups

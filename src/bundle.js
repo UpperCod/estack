@@ -3,8 +3,7 @@ import glob from "fast-glob";
 import rollup from "rollup";
 import yaml from "js-yaml";
 import marked from "marked";
-import Mustache from "mustache";
-import Entities from "entities";
+import Handlebars from "handlebars";
 
 import { readHtml } from "./read-html";
 import { readCss } from "./read-css";
@@ -43,7 +42,7 @@ renderer.table = (header, body) =>
 
 //  configure the container to allow language to be highlighted independently of the class
 renderer.code = (code, type) =>
-  `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Entities.escape(
+  `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Handlebars.Utils.escapeExpression(
     code
   )}</code></pre>`;
 
@@ -55,8 +54,16 @@ marked.setOptions({
 
 const toMarkdown = code => marked(code);
 
+Handlebars.registerHelper("toJson", data => JSON.stringify(data || ""));
+
 export default async function createBundle(options) {
-  streamLog("...loading");
+  streamLog("loading...");
+  let loadingStep = 3;
+  const loadingInterval = setInterval(() => {
+    if (server) return;
+    loadingStep = loadingStep == 0 ? 3 : loadingStep;
+    streamLog("loading" + ".".repeat(loadingStep--));
+  }, 250);
 
   options = await formatOptions(options);
 
@@ -133,7 +140,11 @@ export default async function createBundle(options) {
       watch: options.watch,
       port: options.port
     });
+    streamLog("");
+    console.log(`\nserver running on http://localhost:${server.port}\n`);
   }
+
+  clearInterval(loadingInterval);
 
   /**
    * regenerate the build
@@ -308,41 +319,14 @@ export default async function createBundle(options) {
           const data = {
             theme: template.meta,
             page: { ...page, ...pagination },
-            pages,
-            get(text) {
-              return text
-                .trim()
-                .split(/\./)
-                .reduce((parent, index) => {
-                  return parent != null && typeof parent == "object"
-                    ? parent[index]
-                    : null;
-                }, this);
-            },
-            toJson() {
-              return text => {
-                let value = this.get(text);
-                return value != null && typeof value == "object"
-                  ? JSON.stringify(value)
-                  : "";
-              };
-            },
-            toJsonEntities() {
-              return text => {
-                let value = this.get(text);
-                return value != null && typeof value == "object"
-                  ? Entities.escape(JSON.stringify(value))
-                  : "";
-              };
-            }
+            pages
           };
-
-          code = Mustache.render(code, data);
+          code = Handlebars.compile(code)(data);
 
           if (page.template != false) {
             // The use of Partial generates an error in the printing of
             // the tabulation, so the content is associated as a variable
-            code = Mustache.render(template.code, {
+            code = Handlebars.compile(template.code)({
               ...data,
               page: { ...data.page, content: code }
             });

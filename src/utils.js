@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import logUpdate from "log-update";
 
 export const asyncFs = fs.promises;
 
@@ -112,9 +113,11 @@ export async function copyFile(src, dest) {
 export function streamLog(message) {
   message = message + "";
   try {
-    process.stdout.clearLine();
-    process.stdout.cursorTo(0);
-    process.stdout.write(message);
+    // process.stdout.clearLine();
+    // process.stdout.cursorTo(0);
+    // process.stdout.write(message);
+
+    message ? logUpdate(message) : logUpdate.clear();
   } catch (e) {
     console.log(message);
   }

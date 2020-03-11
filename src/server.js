@@ -89,9 +89,8 @@ export async function createServer({ dest, watch, port: portStart = 8000 }) {
       .listen(reloadPort);
   }
 
-  console.log(`\nserver running on http://localhost:${port}\n`);
-
   return {
+    port,
     reload() {
       if (watch)
         responses.forEach(res => sendMessage(res, "message", "reloading page"));
