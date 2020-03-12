@@ -56,25 +56,32 @@ const toMarkdown = code => marked(code);
 
 Handlebars.registerHelper("toJson", data => JSON.stringify(data || ""));
 
-Handlebars.registerHelper("when", (a, logic, b) =>
-  logic == "==="
-    ? a === b
-    : logic == "=="
-    ? a == b
-    : logic == ">"
-    ? a > b
-    : logic == "<"
-    ? a < b
-    : logic == ">="
-    ? a >= b
-    : logic == "<="
-    ? a <= b
-    : logic == "!="
-    ? a != b
-    : logic == "!=="
-    ? a !== b
-    : false
-);
+Handlebars.registerHelper("when", function(a, logic, b) {
+  let options = arguments[arguments.length - 1];
+  if (["===", "==", "<", ">", "!=", "!==", "<=", ">="].includes(logic)) {
+    const state =
+      logic == "==="
+        ? a === b
+        : logic == "=="
+        ? a == b
+        : logic == ">"
+        ? a > b
+        : logic == "<"
+        ? a < b
+        : logic == ">="
+        ? a >= b
+        : logic == "<="
+        ? a <= b
+        : logic == "!="
+        ? a != b
+        : logic == "!=="
+        ? a !== b
+        : false;
+    return options.fn ? options[state ? "fn" : "inverse"](this) : state;
+  } else {
+    return a ? logic : b == options ? false : b;
+  }
+});
 
 export default async function createBundle(options) {
   streamLog("loading...");

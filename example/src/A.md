@@ -10,4 +10,12 @@ group:
 
 # {{page.title}}
 
+{{# when page.title "==" "A" }}
+... i am AAAAAAAAAAAAAAAA {{page.folder}}
+{{else}}
+....
+{{/when}}
+
+{{when page.title "with title" "...require title"}}
+
 <script src="index.js"></script>
