@@ -18,4 +18,14 @@ group:
 
 {{when page.title "with title" "...require title"}}
 
+```yaml
+---
+title: A
+folder: /markdown
+description: I am A
+group:
+  - Markdown
+---
+```
+
 <script src="index.js"></script>

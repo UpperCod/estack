@@ -2,7 +2,6 @@ import path from "path";
 import babel from "rollup-plugin-babel";
 import resolve from "@rollup/plugin-node-resolve";
 import common from "@rollup/plugin-commonjs";
-import sizes from "@atomico/rollup-plugin-sizes";
 import replace from "@rollup/plugin-replace";
 import { terser } from "rollup-plugin-terser";
 import { pluginImportCss } from "./plugin-import-css";
@@ -80,10 +79,6 @@ export function rollupPlugins(options) {
     replace({
       "process.env.NODE_ENV": JSON.stringify("production")
     }),
-    ...(options.watch
-      ? []
-      : options.minify
-      ? [terser({ sourcemap: options.sourcemap }), sizes()]
-      : [sizes()])
+    ...(options.minify ? [terser({ sourcemap: options.sourcemap })] : [])
   ];
 }

@@ -115,6 +115,7 @@ export default async function createBundle(options) {
   // delete the file, for new manipulation or
   // regeneration without the given file
   const deleteFile = file => {
+    cacheStat.delete(file);
     mapFiles.delete(file);
     return file;
   };
@@ -344,6 +345,7 @@ export default async function createBundle(options) {
           );
 
           const data = {
+            pkg: options.pkg,
             theme: template.meta,
             page: { ...page, ...pagination },
             pages
@@ -417,43 +419,44 @@ export default async function createBundle(options) {
         cache: currentRollupCache
       };
 
-      const output = {
-        dir: options.dest,
-        format: "es",
-        sourcemap: options.sourcemap,
-        chunkFileNames: "chunks/[hash].js"
-      };
+      if (input.input.length) {
+        const output = {
+          dir: options.dest,
+          format: "es",
+          sourcemap: options.sourcemap,
+          chunkFileNames: "chunks/[hash].js"
+        };
 
-      const bundle = await rollup.rollup(input);
+        const bundle = await rollup.rollup(input);
 
-      currentRollupCache = bundle.cache;
+        currentRollupCache = bundle.cache;
 
-      if (options.watch) {
-        const watcher = rollup.watch({
-          ...input,
-          output,
-          watch: { exclude: "node_modules/**" }
-        });
+        if (options.watch) {
+          const watcher = rollup.watch({
+            ...input,
+            output,
+            watch: { exclude: "node_modules/**" }
+          });
 
-        watcher.on("event", async event => {
-          switch (event.code) {
-            case "START":
-              lastTime = new Date();
-              break;
-            case "END":
-              streamLog(`bundle: ${new Date() - lastTime}ms`);
-              server && server.reload();
-              break;
-            case "ERROR":
-              streamLog(event.error);
-              break;
-          }
-        });
+          watcher.on("event", async event => {
+            switch (event.code) {
+              case "START":
+                lastTime = new Date();
+                break;
+              case "END":
+                streamLog(`bundle: ${new Date() - lastTime}ms`);
+                server && server.reload();
+                break;
+              case "ERROR":
+                streamLog(event.error);
+                break;
+            }
+          });
 
-        watchers.push(watcher);
+          watchers.push(watcher);
+        }
+        await bundle.write(output);
       }
-
-      await bundle.write(output);
     } else {
       streamLog(`bundle: ${new Date() - lastTime}ms`);
       server && server.reload();
@@ -566,13 +569,24 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
 
 export function getMetaFile(code) {
   let meta = {};
-  code = code.replace(/---\s([.\s\S]*)\s---\s/, (all, content, index) => {
-    if (!index) {
-      meta = yaml.safeLoad(content);
-      return "";
+  const metaBlock = "---";
+  const lineBreak = "\n";
+  if (!code.indexOf(metaBlock)) {
+    const data = [];
+    const lines = code.slice(3).split(lineBreak);
+    let body = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (!lines[i].indexOf(metaBlock)) {
+        body = lines.slice(i + 1);
+        break;
+      }
+      data.push(lines[i]);
     }
-    return all;
-  });
+    if (data.length) {
+      meta = yaml.safeLoad(data.join(lineBreak));
+    }
+    code = body.join(lineBreak);
+  }
   return [code, meta];
 }
 /**
