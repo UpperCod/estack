@@ -554,7 +554,8 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
     external,
     babel: pkg.babel,
     ...ignore,
-    ...pkg[config]
+    ...pkg[config],
+    pkg
   };
 
   if (options.template) {
