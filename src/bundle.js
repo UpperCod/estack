@@ -505,9 +505,9 @@ export default async function createBundle(options) {
         if (group.unlink) {
           if (
             group.unlink
+              .map(deleteFile)
               .filter(isJs)
-              .filter(isReady)
-              .map(deleteFile).length
+              .filter(isReady).length
           ) {
             forceJs = true;
           }
