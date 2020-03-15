@@ -177,10 +177,10 @@ export default async function createBundle(options) {
   /**
    * regenerate the build
    * @param {string[]} files
-   * @param {boolean} forceJs
+   * @param {boolean} forceBuild
    * @returns {Promise<void>}
    */
-  async function readFiles(files, forceJs) {
+  async function readFiles(files, forceBuild) {
     // normalize to avoid duplicates
     files = files.map(path.normalize);
 
@@ -401,7 +401,7 @@ export default async function createBundle(options) {
 
     // Rollup only restarts if a new js has been added from external sources
     if (
-      forceJs ||
+      forceBuild ||
       files
         .filter(isJs)
         .filter(isNotReady)
@@ -472,7 +472,7 @@ export default async function createBundle(options) {
 
       const watcher = watch(options.src, group => {
         let files = [];
-        let forceJs;
+        let forceBuild;
 
         if (group.add) {
           let groupFiles = group.add
@@ -503,18 +503,12 @@ export default async function createBundle(options) {
           files = [...files, ...groupFiles];
         }
         if (group.unlink) {
-          if (
-            group.unlink
-              .map(deleteFile)
-              .filter(isJs)
-              .filter(isReady).length
-          ) {
-            forceJs = true;
-          }
+          group.unlink.forEach(deleteFile);
+          forceBuild = true;
         }
-        if (files.length || forceJs) {
+        if (files.length || forceBuild) {
           lastTime = new Date();
-          readFiles(files, forceJs);
+          readFiles(files, forceBuild);
         }
       });
       awaitWatch.resolve({
