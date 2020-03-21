@@ -1,7 +1,7 @@
 import { analyzeHtml, serializeHtml } from "./analize-html";
 import { isUrl } from "./utils";
 
-export async function readHtml({ code, addFile, useFragment }) {
+export async function readHtml({ code, addFile }) {
   const astHtml = await analyzeHtml(
     code,
     async node => {
@@ -23,7 +23,7 @@ export async function readHtml({ code, addFile, useFragment }) {
         }
       }
     },
-    useFragment
+    /^\s*<(!doctype|html)/i.test(code)
   );
   return serializeHtml(astHtml);
 }

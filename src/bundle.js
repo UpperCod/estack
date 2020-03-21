@@ -209,7 +209,6 @@ export default async function createBundle(options) {
 
       const nextCode = await readHtml({
         code,
-        useFragment: options.template ? true : false,
         async addFile(childFile) {
           let findFile = path.join(dir, childFile);
           if (!cacheStat.has(findFile)) {
