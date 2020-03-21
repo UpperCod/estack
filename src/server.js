@@ -46,12 +46,13 @@ export async function createServer({ dest, watch, port: portStart = 8000 }) {
       }
     }
 
+    ctx.set("Access-Control-Allow-Origin", "*");
+
     if (isHtml(url) && watch) {
       try {
         let file = await asyncFs.readFile(url, "utf8");
         ctx.status = 200;
         ctx.set("Content-Type", "text/html");
-        ctx.set("Access-Control-Allow-Origin", "*");
         ctx.set("Cache-Control", "no-cache");
         ctx.body = file += `
         <script>

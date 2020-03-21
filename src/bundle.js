@@ -4,6 +4,8 @@ import rollup from "rollup";
 import yaml from "js-yaml";
 import marked from "marked";
 import Handlebars from "handlebars";
+import Prism from "prismjs";
+import loadLanguages from "prismjs/components/";
 
 import { readHtml } from "./read-html";
 import { readCss } from "./read-css";
@@ -41,10 +43,14 @@ renderer.table = (header, body) =>
     body}</table></div>`;
 
 //  configure the container to allow language to be highlighted independently of the class
-renderer.code = (code, type) =>
-  `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Handlebars.Utils.escapeExpression(
-    code
+renderer.code = (code, type) => {
+  loadLanguages(type);
+  return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Prism.highlight(
+    code,
+    Prism.languages[type],
+    type
   )}</code></pre>`;
+};
 
 renderer.html = code => `<div class="markdown -html-container">${code}</div>`;
 
@@ -188,6 +194,68 @@ export default async function createBundle(options) {
       if (!files.includes(file)) files.push(file);
       return file;
     };
+
+    const readFileHtml = async file => {
+      const { dir } = path.parse(file);
+      let [code, meta] = getMetaFile(await readFile(file));
+      const link = normalizePath(getLink(file));
+      const dest = getDest(link, meta.folder);
+      const group = [].concat(meta.group || defaultGroup);
+      const page = { ...meta, group, file, dest, link };
+
+      if (isMd(file)) {
+        code = toMarkdown(code);
+      }
+
+      const nextCode = await readHtml({
+        code,
+        useFragment: options.template ? true : false,
+        async addFile(childFile) {
+          let findFile = path.join(dir, childFile);
+          if (!cacheStat.has(findFile)) {
+            let type = "local";
+            try {
+              await asyncFs.stat(findFile);
+            } catch (e) {
+              try {
+                // try to resolve the dependency from node_modules
+                findFile = require.resolve(childFile);
+                type = "external";
+              } catch (e) {
+                type = "global";
+              }
+            }
+
+            cacheStat.set(findFile, { type, file: findFile });
+
+            if (options.watch && type == "local") {
+              awaitWatch.promise.then(({ addFile }) => addFile(findFile));
+            }
+          }
+
+          let state = cacheStat.get(findFile);
+
+          if (state.type == "global") return childFile;
+
+          addCurrentFiles(state.file);
+
+          if (!mapFiles.get(file).imported.includes(state.file)) {
+            mapFiles.get(file).imported.push(state.file);
+          }
+
+          return "{{deep}}" + getLink(state.file);
+        }
+      });
+
+      // save the state of the page
+      // to be used by getPages
+      mapFiles.get(file).page = page;
+
+      return {
+        code: nextCode,
+        page
+      };
+    };
     // check if one of the files is a template
     await asyncGroup(
       files
@@ -195,14 +263,17 @@ export default async function createBundle(options) {
         .map(takeFile)
         .map(async file => {
           const template = mapFiles.get(file);
+          const { code, page } = await readFileHtml(file);
+          /*
           const [code, meta] = getMetaFile(await readFile(file));
 
           if (meta.defaultGroup) {
             defaultGroup = meta.defaultGroup;
           }
+            */
 
-          meta.groupOrder = []
-            .concat(meta.groupOrder, defaultGroup)
+          page.groupOrder = []
+            .concat(page.groupOrder, defaultGroup)
             .reduce((map, title, position) => {
               let pages = new Map();
               if (typeof title == "object") {
@@ -225,7 +296,7 @@ export default async function createBundle(options) {
               });
             }, new Map());
 
-          template.meta = meta;
+          template.page = page;
           template.code = code;
 
           // before each file regeneration, the associates are restarted,
@@ -248,68 +319,7 @@ export default async function createBundle(options) {
       .filter(isHtml)
       .filter(isNotReady)
       .map(takeFile)
-      .map(async file => {
-        const { dir } = path.parse(file);
-        let [code, meta] = getMetaFile(await readFile(file));
-        const relativeDeep = getRelativeDeep(meta.folder);
-        const link = normalizePath(getLink(file));
-        const dest = getDest(link, meta.folder);
-        const group = [].concat(meta.group || defaultGroup);
-        const page = { ...meta, group, file, dest, link };
-
-        if (isMd(file)) {
-          code = toMarkdown(code);
-        }
-
-        const nextCode = await readHtml({
-          code,
-          useFragment: options.template ? true : false,
-          async addFile(childFile) {
-            let findFile = path.join(dir, childFile);
-            if (!cacheStat.has(findFile)) {
-              let type = "local";
-              try {
-                await asyncFs.stat(findFile);
-              } catch (e) {
-                try {
-                  // try to resolve the dependency from node_modules
-                  findFile = require.resolve(childFile);
-                  type = "external";
-                } catch (e) {
-                  type = "global";
-                }
-              }
-
-              cacheStat.set(findFile, { type, file: findFile });
-
-              if (options.watch && type == "local") {
-                awaitWatch.promise.then(({ addFile }) => addFile(findFile));
-              }
-            }
-
-            let state = cacheStat.get(findFile);
-
-            if (state.type == "global") return childFile;
-
-            addCurrentFiles(state.file);
-
-            if (!mapFiles.get(file).imported.includes(state.file)) {
-              mapFiles.get(file).imported.push(state.file);
-            }
-
-            return normalizePath(relativeDeep + getLink(state.file));
-          }
-        });
-
-        // save the state of the page
-        // to be used by getPages
-        mapFiles.get(file).page = page;
-
-        return {
-          code: nextCode,
-          page
-        };
-      });
+      .map(readFileHtml);
 
     groupHtml = await asyncGroup(groupHtml);
 
@@ -329,7 +339,7 @@ export default async function createBundle(options) {
             [...mapFiles]
               .filter(([file]) => !isTemplate(file) && isHtml(file))
               .map(([, { page }]) => page),
-            template.meta.groupOrder
+            template.page.groupOrder
           );
 
           const pagination = {};
@@ -346,10 +356,12 @@ export default async function createBundle(options) {
 
           const data = {
             pkg: options.pkg,
-            theme: template.meta,
+            theme: template.page,
             page: { ...page, ...pagination },
-            pages
+            pages,
+            deep: getRelativeDeep(page.folder)
           };
+
           code = Handlebars.compile(code)(data);
 
           if (page.template != false) {
