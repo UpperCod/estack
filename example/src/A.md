@@ -26,6 +26,9 @@ description: I am A
 group:
   - Markdown
 ---
+
 ```
+
+inline code `<h1>hi</h1>`
 
 <script src="index.js"></script>

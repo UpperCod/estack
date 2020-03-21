@@ -15,15 +15,11 @@ groupOrder:
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>title - {{page.title}}</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/prismjs@1.19.0/themes/prism.css"
-    />
+    <link rel="stylesheet" href="./theme-prism.css" />
   </head>
   <body>
     <h2>title - {{page.title}}</h2>
-    my-content : {{&page.content}}
-
+    my-content : {{{page.content}}}
     <ul>
       {{#pages}}
       <li>
