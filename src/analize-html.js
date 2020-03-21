@@ -7,12 +7,13 @@ export function serializeHtml(astHtml) {
  * parses an html document node to node
  * @param {string} content
  * @param {function(Node)} map
- * @param {boolean} useFragment
+ * @param {boolean} isRoot
  * @returns {Object} astHtml
  */
-export function analyzeHtml(content, map, useFragment) {
-  let astHtml = parse5[useFragment ? "parseFragment" : "parse"](content);
-  let parallel = [];
+export function analyzeHtml(content, map) {
+  const isRoot = /^\s*<(!doctype|html)/i.test(content);
+  const astHtml = parse5[isRoot ? "parse" : "parseFragment"](content);
+  const parallel = [];
 
   function consume(astHtml) {
     astHtml.map(node => {
