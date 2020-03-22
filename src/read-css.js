@@ -3,20 +3,29 @@ import postcss from "postcss";
 import postcssPresetEnv from "postcss-preset-env";
 import cssnano from "cssnano";
 import atImport from "postcss-import";
-import { cwd } from "./utils";
+import { cwd, asyncFs, isUrl } from "./utils";
 
 export async function readCss({ file, code, addWatchFile, minify, browsers }) {
   const { dir } = path.parse(file);
 
   const plugins = [
     atImport({
-      resolve: file => {
-        file = path.join(
-          /^\./.test(file) ? dir : path.join(cwd, "node_modules"),
-          file
-        );
-        // Add an id to bundle.watchFile
-        addWatchFile && addWatchFile(file);
+      root: dir, // defines the context for the relative path
+      async resolve(file) {
+        if (isUrl(file)) return file;
+
+        const relativeFile = path.join(dir, file);
+
+        try {
+          // check local existence.
+          await asyncFs.stat(relativeFile);
+          // Add an id to bundle.watchFile
+          addWatchFile && addWatchFile(relativeFile);
+        } catch (e) {
+          // if it does not exist locally, it is resolved as a module
+          file = path.join(cwd, "node_modules", file);
+        }
+
         return file;
       }
     }),
