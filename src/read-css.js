@@ -37,7 +37,11 @@ export async function readCss({ file, code, addWatchFile, minify, browsers }) {
 
   minify && plugins.push(cssnano());
 
-  code = await postcss(plugins).process(code, { from: undefined });
+  try {
+    code = await postcss(plugins).process(code, { from: undefined });
+  } catch (e) {
+    console.log(e + "");
+  }
 
   return code.css;
 }
