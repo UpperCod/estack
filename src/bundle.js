@@ -326,52 +326,48 @@ export default async function createBundle(options) {
     // is to group the pages before writing to metadata
     await asyncGroup(
       groupHtml.map(({ code, page }) => {
-        let template;
-        if (options.template) {
-          template = mapFiles.get(options.template);
-        }
+        let template = mapFiles.get(options.template);
 
-        if (template) {
-          const pages = getPages(
-            page,
-            // access all pages
-            [...mapFiles]
-              .filter(([file]) => !isTemplate(file) && isHtml(file))
-              .map(([, { page }]) => page),
-            template.page.groupOrder
-          );
+        const pages = getPages(
+          page,
+          // access all pages
+          [...mapFiles]
+            .filter(([file]) => !isTemplate(file) && isHtml(file))
+            .map(([, { page }]) => page),
+          template ? template.page.groupOrder : new Map()
+        );
 
-          const pagination = {};
+        const pagination = {};
 
-          pages.some(({ pages }) =>
-            pages.some((item, i) => {
-              if (item.file == page.file) {
-                pagination.prev = pages[i - 1];
-                pagination.next = pages[i + 1];
-                return true;
-              }
-            })
-          );
+        pages.some(({ pages }) =>
+          pages.some((item, i) => {
+            if (item.file == page.file) {
+              pagination.prev = pages[i - 1];
+              pagination.next = pages[i + 1];
+              return true;
+            }
+          })
+        );
 
-          const data = {
-            pkg: options.pkg,
-            theme: template.page,
-            page: { ...page, ...pagination },
-            pages,
-            deep: getRelativeDeep(page.folder)
-          };
+        const data = {
+          pkg: options.pkg,
+          theme: template ? template.page : {},
+          page: { ...page, ...pagination },
+          pages,
+          deep: getRelativeDeep(page.folder)
+        };
 
-          code = Handlebars.compile(code)(data);
+        code = Handlebars.compile(code)(data);
 
-          if (page.template != false) {
-            // The use of Partial generates an error in the printing of
-            // the tabulation, so the content is associated as a variable
-            code = Handlebars.compile(template.code)({
-              ...data,
-              page: { ...data.page, content: code }
-            });
-          }
-        }
+        // The use of Partial generates an error in the printing of
+        // the tabulation, so the content is associated as a variable
+        code =
+          template && page.template != false
+            ? Handlebars.compile(template.code)({
+                ...data,
+                page: { ...data.page, content: code }
+              })
+            : code;
 
         writeFile(page.dest, code);
       })
