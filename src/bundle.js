@@ -29,7 +29,7 @@ import {
   normalizePath,
   streamLog,
   getPackage,
-  createAwait
+  createAwait,
 } from "./utils";
 
 import { watch } from "./watch";
@@ -39,30 +39,39 @@ let defaultGroup = "Others";
 const renderer = new marked.Renderer();
 // add an additional container prevent the table from collapsing the page
 renderer.table = (header, body) =>
-  `<div class="markdown -table-container"><table>${header +
-    body}</table></div>`;
+  `<div class="markdown -table-container"><table>${
+    header + body
+  }</table></div>`;
 
 //  configure the container to allow language to be highlighted independently of the class
 renderer.code = (code, type) => {
-  loadLanguages(type);
-  return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Prism.highlight(
-    code,
-    Prism.languages[type],
-    type
+  try {
+    if (type) {
+      loadLanguages(type);
+      return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Prism.highlight(
+        code,
+        Prism.languages[type],
+        type
+      )}</code></pre>`;
+    }
+  } catch (e) {}
+
+  return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Handlebars.Utils.escapeExpression(
+    code
   )}</code></pre>`;
 };
 
-renderer.html = code => `<div class="markdown -html-container">${code}</div>`;
+renderer.html = (code) => `<div class="markdown -html-container">${code}</div>`;
 
 marked.setOptions({
-  renderer
+  renderer,
 });
 
-const toMarkdown = code => marked(code);
+const toMarkdown = (code) => marked(code);
 
-Handlebars.registerHelper("toJson", data => JSON.stringify(data || ""));
+Handlebars.registerHelper("toJson", (data) => JSON.stringify(data || ""));
 
-Handlebars.registerHelper("when", function(a, logic, b) {
+Handlebars.registerHelper("when", function (a, logic, b) {
   let options = arguments[arguments.length - 1];
   if (["===", "==", "<", ">", "!=", "!==", "<=", ">="].includes(logic)) {
     const state =
@@ -107,20 +116,20 @@ export default async function createBundle(options) {
   const mapFiles = new Map();
 
   // define if a file has already been manipulated
-  const isReady = file => mapFiles.has(file);
+  const isReady = (file) => mapFiles.has(file);
 
   // !isReady
-  const isNotReady = file => !isReady(file);
+  const isNotReady = (file) => !isReady(file);
 
   // define if a file is of type template
-  const isTemplate = file => options.template == file;
+  const isTemplate = (file) => options.template == file;
 
   // !isTempalte
-  const isNotTemplate = file => !isTemplate(file);
+  const isNotTemplate = (file) => !isTemplate(file);
 
   // delete the file, for new manipulation or
   // regeneration without the given file
-  const deleteFile = file => {
+  const deleteFile = (file) => {
     cacheStat.delete(file);
     mapFiles.delete(file);
     return file;
@@ -128,9 +137,9 @@ export default async function createBundle(options) {
 
   // add a file to the registry and prevent a manipulation
   // job on it if it is verified with isReady
-  const takeFile = file => {
+  const takeFile = (file) => {
     mapFiles.set(file, {
-      imported: []
+      imported: [],
     });
     return file;
   };
@@ -140,7 +149,7 @@ export default async function createBundle(options) {
   const cacheStat = new Map();
 
   // get the name of the file at the destination
-  const getLink = file => {
+  const getLink = (file) => {
     let { name, ext } = path.parse(file);
     return isFixLink(ext)
       ? name + (isJs(ext) ? ".js" : isMd(ext) ? ".html" : ext)
@@ -172,7 +181,7 @@ export default async function createBundle(options) {
     server = await createServer({
       dest: options.dest,
       watch: options.watch,
-      port: options.port
+      port: options.port,
     });
     streamLog("");
     console.log(`\nserver running on http://localhost:${server.port}\n`);
@@ -190,12 +199,12 @@ export default async function createBundle(options) {
     // normalize to avoid duplicates
     files = files.map(path.normalize);
 
-    const addCurrentFiles = file => {
+    const addCurrentFiles = (file) => {
       if (!files.includes(file)) files.push(file);
       return file;
     };
 
-    const readFileHtml = async file => {
+    const readFileHtml = async (file) => {
       const { dir } = path.parse(file);
       let [code, meta] = getMetaFile(await readFile(file));
       const link = normalizePath(getLink(file));
@@ -243,7 +252,7 @@ export default async function createBundle(options) {
           }
 
           return "{{deep}}" + getLink(state.file);
-        }
+        },
       });
 
       // save the state of the page
@@ -252,7 +261,7 @@ export default async function createBundle(options) {
 
       return {
         code: nextCode,
-        page
+        page,
       };
     };
     // check if one of the files is a template
@@ -260,7 +269,7 @@ export default async function createBundle(options) {
       files
         .filter(isTemplate)
         .map(takeFile)
-        .map(async file => {
+        .map(async (file) => {
           const template = mapFiles.get(file);
           const { code, page } = await readFileHtml(file);
           /*
@@ -291,7 +300,7 @@ export default async function createBundle(options) {
               return map.set(title, {
                 position,
                 pages,
-                title
+                title,
               });
             }, new Map());
 
@@ -354,7 +363,7 @@ export default async function createBundle(options) {
           theme: template ? template.page : {},
           page: { ...page, ...pagination },
           pages,
-          deep: getRelativeDeep(page.folder)
+          deep: getRelativeDeep(page.folder),
         };
 
         code = Handlebars.compile(code)(data);
@@ -365,7 +374,7 @@ export default async function createBundle(options) {
           template && page.template != false
             ? Handlebars.compile(template.code)({
                 ...data,
-                page: { ...data.page, content: code }
+                page: { ...data.page, content: code },
               })
             : code;
 
@@ -379,7 +388,7 @@ export default async function createBundle(options) {
           .filter(isCss)
           .filter(isNotReady)
           .map(takeFile)
-          .map(async file => {
+          .map(async (file) => {
             const code = await readFile(file);
             const nextCode = await readCss({
               file,
@@ -392,7 +401,7 @@ export default async function createBundle(options) {
                     addFile(childFile, file)
                   );
                 }
-              }
+              },
             });
             return writeFile(getDest(getLink(file)), nextCode);
           })
@@ -402,19 +411,16 @@ export default async function createBundle(options) {
           .filter(isNotFixLink)
           .filter(isNotReady)
           .map(takeFile)
-          .map(async file => copyFile(file, getDest(getLink(file))))
-      )
+          .map(async (file) => copyFile(file, getDest(getLink(file))))
+      ),
     ]);
 
     // Rollup only restarts if a new js has been added from external sources
     if (
       forceBuild ||
-      files
-        .filter(isJs)
-        .filter(isNotReady)
-        .map(takeFile).length
+      files.filter(isJs).filter(isNotReady).map(takeFile).length
     ) {
-      watchers = watchers.filter(watcher => {
+      watchers = watchers.filter((watcher) => {
         watcher.close();
       });
 
@@ -423,7 +429,7 @@ export default async function createBundle(options) {
         onwarn: streamLog,
         external: options.external,
         plugins: rollupPlugins(options),
-        cache: currentRollupCache
+        cache: currentRollupCache,
       };
 
       if (input.input.length) {
@@ -431,7 +437,7 @@ export default async function createBundle(options) {
           dir: options.dest,
           format: "es",
           sourcemap: options.sourcemap,
-          chunkFileNames: "chunks/[hash].js"
+          chunkFileNames: "chunks/[hash].js",
         };
 
         const bundle = await rollup.rollup(input);
@@ -442,10 +448,10 @@ export default async function createBundle(options) {
           const watcher = rollup.watch({
             ...input,
             output,
-            watch: { exclude: "node_modules/**" }
+            watch: { exclude: "node_modules/**" },
           });
 
-          watcher.on("event", async event => {
+          watcher.on("event", async (event) => {
             switch (event.code) {
               case "START":
                 lastTime = new Date();
@@ -474,10 +480,10 @@ export default async function createBundle(options) {
 
     if (options.watch) {
       const mapSubWatch = new Map();
-      const isRootWatch = file =>
+      const isRootWatch = (file) =>
         mapSubWatch.has(file) ? !mapSubWatch.get(file).length : true;
 
-      const watcher = watch(options.src, group => {
+      const watcher = watch(options.src, (group) => {
         let files = [];
         let forceBuild;
 
@@ -491,20 +497,20 @@ export default async function createBundle(options) {
         if (group.change) {
           let groupChange = group.change;
           group.change
-            .filter(file => mapSubWatch.has(file))
-            .map(file => mapSubWatch.get(file))
+            .filter((file) => mapSubWatch.has(file))
+            .map((file) => mapSubWatch.get(file))
             .reduce(
               (groupParent, groupChild) => groupParent.concat(groupChild),
               []
             )
-            .forEach(file => {
+            .forEach((file) => {
               if (!groupChange.includes(file)) groupChange.push(file);
             });
 
           let groupFiles = groupChange
-            .filter(file => isRootWatch(file) || isReady(file))
+            .filter((file) => isRootWatch(file) || isReady(file))
             .filter(isFixLink)
-            .filter(file => !isJs(file))
+            .filter((file) => !isJs(file))
             .map(deleteFile);
 
           files = [...files, ...groupFiles];
@@ -527,7 +533,7 @@ export default async function createBundle(options) {
           if (parentFile && !mapSubWatch.get(file).includes(parentFile)) {
             mapSubWatch.get(file).push(parentFile);
           }
-        }
+        },
       });
     }
   } catch (e) {
@@ -556,7 +562,7 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
     babel: pkg.babel,
     ...ignore,
     ...pkg[config],
-    pkg
+    pkg,
   };
 
   if (options.template) {
@@ -564,7 +570,7 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
   }
 
   // normalize routes for fast-glob
-  options.src = options.src.map(glob => glob.replace(/\\/g, "/"));
+  options.src = options.src.map((glob) => glob.replace(/\\/g, "/"));
 
   return options;
 }
@@ -601,13 +607,13 @@ export function getMetaFile(code) {
 function getPages(page, filesHtml, groupOrder) {
   const link = normalizePath(path.join("./", page.folder || "", page.link));
   const { file } = page;
-  const pages = filesHtml.map(page => ({
+  const pages = filesHtml.map((page) => ({
     ...page,
     active: file == page.file,
     // pages are regenerated by each page since each one can exist in a different directory
     link: normalizePath(
       getRelativePath(link, path.join("./", page.folder || "", page.link))
-    )
+    ),
   }));
 
   const groups = pages.reduce(
@@ -623,7 +629,7 @@ function getPages(page, filesHtml, groupOrder) {
   const formatGroup = ([, data]) => data;
   const formatPage = ([, { pages }]) => pages;
 
-  const splitGroups = groupOrder => (
+  const splitGroups = (groupOrder) => (
     [firstGroup, lastGroup],
     [title, pages]
   ) => {
@@ -638,7 +644,7 @@ function getPages(page, filesHtml, groupOrder) {
 
   const [firstGroup, lastGroup] = [...groups].reduce(splitGroups(groupOrder), [
     new Map(),
-    new Map()
+    new Map(),
   ]);
 
   return [
@@ -649,12 +655,12 @@ function getPages(page, filesHtml, groupOrder) {
         const group = groupOrder.get(title);
         if (group.pages.size) {
           const [firstPages, lastPages] = pages
-            .map(page => [page.title, page])
+            .map((page) => [page.title, page])
             .reduce(splitGroups(group.pages), [new Map(), new Map()]);
 
           pages = [
             ...[...firstPages].sort(sortByPosition).map(formatPage),
-            ...[...lastPages].sort(sortByPosition).map(formatPage)
+            ...[...lastPages].sort(sortByPosition).map(formatPage),
           ];
         }
         return { title, pages };
@@ -664,8 +670,8 @@ function getPages(page, filesHtml, groupOrder) {
       .map(formatGroup)
       .map(({ title, pages }) => ({
         title,
-        pages: pages.sort((a, b) => (a.title > b.title ? 1 : -1))
-      }))
+        pages: pages.sort((a, b) => (a.title > b.title ? 1 : -1)),
+      })),
   ];
 }
 
