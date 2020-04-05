@@ -2,10 +2,6 @@ import path from "path";
 import glob from "fast-glob";
 import rollup from "rollup";
 import yaml from "js-yaml";
-import marked from "marked";
-import Handlebars from "handlebars";
-import Prism from "prismjs";
-import loadLanguages from "prismjs/components/";
 
 import { readHtml } from "./read-html";
 import { readCss } from "./read-css";
@@ -34,69 +30,10 @@ import {
 
 import { watch } from "./watch";
 
+import renderMarkdown from "./markdown";
+import renderHtml from "./template";
+
 let defaultGroup = "Others";
-
-const renderer = new marked.Renderer();
-// add an additional container prevent the table from collapsing the page
-renderer.table = (header, body) =>
-  `<div class="markdown -table-container"><table>${
-    header + body
-  }</table></div>`;
-
-//  configure the container to allow language to be highlighted independently of the class
-renderer.code = (code, type) => {
-  try {
-    if (type) {
-      loadLanguages(type);
-      return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Prism.highlight(
-        code,
-        Prism.languages[type],
-        type
-      )}</code></pre>`;
-    }
-  } catch (e) {}
-
-  return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Handlebars.Utils.escapeExpression(
-    code
-  )}</code></pre>`;
-};
-
-renderer.html = (code) => `<div class="markdown -html-container">${code}</div>`;
-
-marked.setOptions({
-  renderer,
-});
-
-const toMarkdown = (code) => marked(code);
-
-Handlebars.registerHelper("toJson", (data) => JSON.stringify(data || ""));
-
-Handlebars.registerHelper("when", function (a, logic, b) {
-  let options = arguments[arguments.length - 1];
-  if (["===", "==", "<", ">", "!=", "!==", "<=", ">="].includes(logic)) {
-    const state =
-      logic == "==="
-        ? a === b
-        : logic == "=="
-        ? a == b
-        : logic == ">"
-        ? a > b
-        : logic == "<"
-        ? a < b
-        : logic == ">="
-        ? a >= b
-        : logic == "<="
-        ? a <= b
-        : logic == "!="
-        ? a != b
-        : logic == "!=="
-        ? a !== b
-        : false;
-    return options.fn ? options[state ? "fn" : "inverse"](this) : state;
-  } else {
-    return a ? logic : b == options ? false : b;
-  }
-});
 
 export default async function createBundle(options) {
   streamLog("loading...");
@@ -210,10 +147,17 @@ export default async function createBundle(options) {
       const link = normalizePath(getLink(file));
       const dest = getDest(link, meta.folder);
       const group = [].concat(meta.group || defaultGroup);
-      const page = { ...meta, group, file, dest, link };
+      const page = {
+        ...meta,
+        group,
+        dest,
+        link,
+        file: normalizePath(file),
+        dir: normalizePath(dir),
+      };
 
       if (isMd(file)) {
-        code = toMarkdown(code);
+        code = renderMarkdown(code);
       }
 
       const nextCode = await readHtml({
@@ -366,13 +310,13 @@ export default async function createBundle(options) {
           deep: getRelativeDeep(page.folder),
         };
 
-        code = Handlebars.compile(code)(data);
+        code = renderHtml(code, data);
 
         // The use of Partial generates an error in the printing of
         // the tabulation, so the content is associated as a variable
         code =
           template && page.template != false
-            ? Handlebars.compile(template.code)({
+            ? renderHtml(template.code, {
                 ...data,
                 page: { ...data.page, content: code },
               })

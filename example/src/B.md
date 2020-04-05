@@ -6,6 +6,10 @@ group:
   - Markdown
 ---
 
+## {{page.file}}
+
+## {{page.dir}}
+
 <link rel="stylesheet" href="style.css" />
 
 ```html

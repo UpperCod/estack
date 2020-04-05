@@ -1,7 +1,1 @@
-:root {
-  --color: tomato;
-}
-
-body {
-  background: var(--color);
-}
+:root{--color:tomato}body{background:var(--color)}

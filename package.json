@@ -7,8 +7,8 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "build:example:watch": "node cli.js example/src/index.html example/dest --watch  --server --template example/template.html",
-    "build:example": "node cli.js example/src/index.html example/dest --minify --template example/template.html",
+    "build:example:watch": "node cli.js example/src/*.{html,md} example/dest --watch  --server --template example/template.html",
+    "build:example": "node cli.js example/src/*.{html,md} example/dest --minify --template example/template.html",
     "prepare": "npm run build"
   },
   "author": "UpperCod",
