@@ -12,6 +12,11 @@ sade("bundle [src] [dest]")
   .option("--sourcemap", "enable the use of sourcemap", true)
   .option("--server", "Create a server, by default localhost:8000", false)
   .option("--port", "define the server port", 8000)
+  .option(
+    "--sizes",
+    "Displays the sizes of the files associated with rollup",
+    false
+  )
   .option("--browsers", "define the target of the bundle", "> 3%")
   .option("--template", "define the top template file for html or md")
   .option("--jsx", "pragma jsx", "h")
@@ -32,7 +37,7 @@ sade("bundle [src] [dest]")
     createBundle({
       ...options,
       src,
-      dest
-    }).catch(e => console.log("" + e));
+      dest,
+    }).catch((e) => console.log("" + e));
   })
   .parse(process.argv);

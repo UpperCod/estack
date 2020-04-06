@@ -6,11 +6,14 @@ import replace from "@rollup/plugin-replace";
 import { terser } from "rollup-plugin-terser";
 import { pluginImportCss } from "./plugin-import-css";
 import { mergeKeysArray } from "../utils";
+import sizes from "@atomico/rollup-plugin-sizes";
 
 let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
 export function rollupPlugins(options) {
   let babelIncludes = ["node_modules/**"];
+  let optionalPlugins = [];
+
   // transform src into valid path to include in babel
   for (let src of options.src) {
     let { dir } = path.parse(src);
@@ -21,11 +24,19 @@ export function rollupPlugins(options) {
     }
   }
 
+  if (options.minify) {
+    optionalPlugins.push(terser({ sourcemap: options.sourcemap }));
+  }
+
+  if (options.sizes) {
+    optionalPlugins.push(sizes());
+  }
+
   return [
     pluginImportCss(options),
     resolve({
       extensions,
-      dedupe: ["react", "react-dom"]
+      dedupe: ["react", "react-dom"],
     }),
     babel({
       include: babelIncludes,
@@ -39,8 +50,8 @@ export function rollupPlugins(options) {
               options.jsx == "react"
                 ? {}
                 : {
-                    jsxPragma: options.jsx
-                  }
+                    jsxPragma: options.jsx,
+                  },
             ],
             [
               "@babel/preset-env",
@@ -50,10 +61,10 @@ export function rollupPlugins(options) {
                 exclude: [
                   "transform-typeof-symbol",
                   "transform-regenerator",
-                  "transform-async-to-generator"
-                ]
-              }
-            ]
+                  "transform-async-to-generator",
+                ],
+              },
+            ],
           ],
           plugins: [
             [
@@ -64,21 +75,21 @@ export function rollupPlugins(options) {
                 pragmaFrag:
                   options.jsxFragment == "react" || options.jsx == "react"
                     ? "React.Fragment"
-                    : options.jsxFragment
-              }
+                    : options.jsxFragment,
+              },
             ],
             ["@babel/plugin-proposal-optional-chaining"],
             ["@babel/plugin-syntax-nullish-coalescing-operator"],
-            ["@babel/plugin-proposal-class-properties"]
-          ]
+            ["@babel/plugin-proposal-class-properties"],
+          ],
         },
         options.babel
-      )
+      ),
     }),
     common(),
     replace({
-      "process.env.NODE_ENV": JSON.stringify("production")
+      "process.env.NODE_ENV": JSON.stringify("production"),
     }),
-    ...(options.minify ? [terser({ sourcemap: options.sourcemap })] : [])
+    ...optionalPlugins,
   ];
 }
