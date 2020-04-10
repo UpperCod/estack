@@ -12,6 +12,7 @@ sade("bundle [src] [dest]")
   .option("--sourcemap", "enable the use of sourcemap", true)
   .option("--server", "Create a server, by default localhost:8000", false)
   .option("--port", "define the server port", 8000)
+  .option("--proxy", "redirect requests that are not resolved locally", "")
   .option(
     "--sizes",
     "Displays the sizes of the files associated with rollup",

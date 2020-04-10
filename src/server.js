@@ -4,66 +4,81 @@ import Koa from "koa";
 import send from "koa-send";
 import http from "http";
 import { isHtml, asyncFs, promiseErrorToNull } from "./utils";
+import httpProxy from "http-proxy";
 
-export async function createServer({ dest, watch, port: portStart = 8000 }) {
+const serverProxy = httpProxy.createProxyServer({
+  followRedirects: true,
+  secure: false,
+});
+
+export async function createServer({
+  dest,
+  watch,
+  port: portStart = 8000,
+  proxy,
+}) {
   const [port, reloadPort] = await Promise.all([
     findPort(portStart, portStart + 100),
-    findPort(5000, 5080)
+    findPort(5000, 5080),
   ]);
 
   const serverStatic = new Koa();
 
-  serverStatic.use(async ctx => {
+  serverStatic.use(async (ctx) => {
     let url = path.join(dest, ctx.path);
+    let urlInfo = path.parse(url);
 
-    if (!/\.[^\.]+$/.test(url)) {
-      let { dir, name } = path.parse(url);
-      // Try first to track the path by associating it as html
-      // eg: /every => /evert.html
-      url = path.join(dir, name + ".html");
+    let mapStatic = async () => {
+      return (await promiseErrorToNull(asyncFs.stat(url))) && url;
+    };
+    let mapHtml = async () => {
+      let url = path.join(urlInfo.dir, urlInfo.name + ".html");
+      return (await promiseErrorToNull(asyncFs.stat(url))) && url;
+    };
+    let mapHome = async () => {
+      let url = path.join(dest, "index.html");
+      return (await promiseErrorToNull(asyncFs.stat(url))) && url;
+    };
 
-      if (!(await promiseErrorToNull(asyncFs.stat(url)))) {
-        // Try associating an index.html file to the path
-        // eg: /every => /every/index.html
-        url = path.join(dir, name, "index.html");
-        if (!(await promiseErrorToNull(asyncFs.stat(url)))) {
-          // Point the reading to the root to keep the browsing history
-          let rootIndex = path.join(dest, "index.html");
-          if (rootIndex != url) {
-            url = rootIndex;
-          }
-        }
-      }
-    } else {
-      // If the file is not found, it looks for it in the root
-      // this behavior is for spa
-      if (!(await promiseErrorToNull(asyncFs.stat(url)))) {
-        let { base } = path.parse(url);
-        let rootFile = path.join(dest, base);
-        if (rootFile != url) {
-          url = rootFile;
-        }
-      }
-    }
+    let [urlStatic, urlHtml, urlHome] = await Promise.all([
+      urlInfo.ext && mapStatic(),
+      !urlInfo.ext && mapHtml(),
+      !urlInfo.ext && mapHome(),
+    ]);
+
+    url = urlStatic || urlHtml || urlHome || url;
 
     ctx.set("Access-Control-Allow-Origin", "*");
 
-    if (isHtml(url) && watch) {
+    if (proxy && ctx.path != "/" && !urlStatic && !urlHtml) {
+      let target = proxy + ctx.originalUrl;
+      return new Promise((resolve) =>
+        serverProxy.web(
+          ctx.req,
+          ctx.res,
+          {
+            target,
+          },
+          resolve
+        )
+      );
+    } else if (urlStatic || ((urlHtml || urlHome) && !watch)) {
+      await send(ctx, url);
+    } else if ((urlHtml || urlHome) && watch) {
       try {
         let file = await asyncFs.readFile(url, "utf8");
         ctx.status = 200;
         ctx.set("Content-Type", "text/html");
         ctx.set("Cache-Control", "no-cache");
         ctx.body = file += `
-        <script>
-          const source = new EventSource('http://localhost:${reloadPort}');
-          source.onmessage = e =>  location.reload();
-        </script>
-        `;
+          <script>
+            const source = new EventSource('http://localhost:${reloadPort}');
+            source.onmessage = e =>  location.reload();
+          </script>
+          `;
         return;
       } catch (e) {}
     }
-    await send(ctx, url);
   });
 
   serverStatic.listen(port);
@@ -77,7 +92,7 @@ export async function createServer({ dest, watch, port: portStart = 8000 }) {
           Connection: "keep-alive",
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache",
-          "Access-Control-Allow-Origin": "*"
+          "Access-Control-Allow-Origin": "*",
         });
         // Send an initial ack event to stop any network request pending
         sendMessage(res, "connected", "awaiting change");
@@ -94,8 +109,10 @@ export async function createServer({ dest, watch, port: portStart = 8000 }) {
     port,
     reload() {
       if (watch)
-        responses.forEach(res => sendMessage(res, "message", "reloading page"));
-    }
+        responses.forEach((res) =>
+          sendMessage(res, "message", "reloading page")
+        );
+    },
   };
 }
 

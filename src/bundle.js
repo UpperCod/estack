@@ -119,6 +119,7 @@ export default async function createBundle(options) {
       dest: options.dest,
       watch: options.watch,
       port: options.port,
+      proxy: options.proxy,
     });
     streamLog("");
     console.log(`\nserver running on http://localhost:${server.port}\n`);
