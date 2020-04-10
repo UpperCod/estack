@@ -3,12 +3,13 @@ import net from "net";
 import Koa from "koa";
 import send from "koa-send";
 import http from "http";
-import { isHtml, asyncFs, promiseErrorToNull } from "./utils";
+import { asyncFs, promiseErrorToNull } from "./utils";
 import httpProxy from "http-proxy";
 
 const serverProxy = httpProxy.createProxyServer({
   followRedirects: true,
   secure: false,
+  changeOrigin: true,
 });
 
 export async function createServer({
@@ -51,13 +52,12 @@ export async function createServer({
     ctx.set("Access-Control-Allow-Origin", "*");
 
     if (proxy && ctx.path != "/" && !urlStatic && !urlHtml) {
-      let target = proxy + ctx.originalUrl;
       return new Promise((resolve) =>
         serverProxy.web(
           ctx.req,
           ctx.res,
           {
-            target,
+            target: proxy,
           },
           resolve
         )
