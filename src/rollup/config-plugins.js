@@ -34,6 +34,9 @@ export function rollupPlugins(options) {
 
   return [
     pluginImportCss(options),
+    replace({
+      "process.env.NODE_ENV": JSON.stringify("production"),
+    }),
     resolve({
       extensions,
       dedupe: ["react", "react-dom"],
@@ -87,9 +90,6 @@ export function rollupPlugins(options) {
       ),
     }),
     common(),
-    replace({
-      "process.env.NODE_ENV": JSON.stringify("production"),
-    }),
     ...optionalPlugins,
   ];
 }
