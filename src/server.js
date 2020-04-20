@@ -3,7 +3,7 @@ import net from "net";
 import Koa from "koa";
 import send from "koa-send";
 import http from "http";
-import { asyncFs, promiseErrorToNull } from "./utils";
+import { asyncFs, promiseErrorToNull, isHtml } from "./utils";
 import httpProxy from "http-proxy";
 
 const serverProxy = httpProxy.createProxyServer({
@@ -49,9 +49,12 @@ export async function createServer({
 
     url = urlStatic || urlHtml || urlHome || url;
 
+    let reqIsHtml = isHtml(url);
+    let reqIsLocal = urlStatic || urlHtml || ctx.path == "/";
+
     ctx.set("Access-Control-Allow-Origin", "*");
 
-    if (proxy && ctx.path != "/" && !urlStatic && !urlHtml) {
+    if (proxy && !reqIsLocal) {
       return new Promise((resolve) =>
         serverProxy.web(
           ctx.req,
@@ -62,9 +65,9 @@ export async function createServer({
           resolve
         )
       );
-    } else if (urlStatic || ((urlHtml || urlHome) && !watch)) {
+    } else if (watch ? !reqIsHtml : true) {
       await send(ctx, url);
-    } else if ((urlHtml || urlHome) && watch) {
+    } else if (reqIsHtml && watch) {
       try {
         let file = await asyncFs.readFile(url, "utf8");
         ctx.status = 200;
