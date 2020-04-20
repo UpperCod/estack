@@ -1,13 +1,13 @@
 {
   "name": "bundle-cli",
-  "version": "0.23.1",
+  "version": "0.23.2",
   "description": "simple bundle generator",
   "module": "src/cli.js",
   "main": "cli.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "build:example:watch": "node cli.js example/src/*.{html,md} example/dest --watch  --server --template example/template.html --proxy https://jsonplaceholder.typicode.com",
+    "build:example:watch": "node cli.js example/src/*.{html,md} example/dest  --server --template example/template.html --proxy https://jsonplaceholder.typicode.com",
     "build:example": "node cli.js example/src/*.{html,md} example/dest --minify --template example/template.html --sizes",
     "prepare": "npm run build"
   },
