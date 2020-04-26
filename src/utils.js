@@ -10,26 +10,26 @@ const pkgDefault = {
   dependencies: {},
   devDependencies: {},
   peerDependencies: {},
-  babel: {}
+  babel: {},
 };
 
-export const isUrl = file => /^(http(s){0,1}:){0,1}\/\//.test(file);
+export const isUrl = (file) => /^(http(s){0,1}:){0,1}\/\//.test(file);
 
-export const asyncGroup = group => Promise.all(group);
+export const asyncGroup = (group) => Promise.all(group);
 
-export const isHtml = file => /\.(md|html)/.test(file);
+export const isHtml = (file) => /\.(md|html)/.test(file);
 
-export const isMd = file => /\.md$/.test(file);
+export const isMd = (file) => /\.md$/.test(file);
 
-export const isJs = file => /\.(js|ts|jsx|tsx)$/.test(file);
+export const isJs = (file) => /\.(js|ts|jsx|tsx)$/.test(file);
 
-export const isCss = file => /\.css$/.test(file);
+export const isCss = (file) => /\.css$/.test(file);
 
-export const isFixLink = file => isHtml(file) || isJs(file) || isCss(file);
+export const isFixLink = (file) => isHtml(file) || isJs(file) || isCss(file);
 
-export const isNotFixLink = file => !isFixLink(file);
+export const isNotFixLink = (file) => !isFixLink(file);
 
-export const promiseErrorToNull = async promise => promise.catch(e => null);
+export const promiseErrorToNull = async (promise) => promise.catch((e) => null);
 
 /**
  *
@@ -38,7 +38,7 @@ export const promiseErrorToNull = async promise => promise.catch(e => null);
  */
 export const getRelativePath = (a, b) => path.relative(path.parse(a).dir, b);
 
-export const getRelativeDeep = file =>
+export const getRelativeDeep = (file) =>
   file
     ? path
         .normalize(file)
@@ -47,7 +47,8 @@ export const getRelativeDeep = file =>
         .join("")
     : "";
 
-export const readFile = file => asyncFs.readFile(path.join(cwd, file), "utf8");
+export const readFile = (file) =>
+  asyncFs.readFile(path.join(cwd, file), "utf8");
 
 export async function writeFile(file, data) {
   let dir = path.join(cwd, path.parse(file).dir);
@@ -55,7 +56,7 @@ export async function writeFile(file, data) {
     await asyncFs.stat(dir);
   } catch (e) {
     await asyncFs.mkdir(dir, {
-      recursive: true
+      recursive: true,
     });
   }
 
@@ -63,13 +64,13 @@ export async function writeFile(file, data) {
 }
 
 export function mergeKeysArray(keys, ...config) {
-  keys.forEach(index => {
+  keys.forEach((index) => {
     config[0][index] = Array.from(
       new Map(
         config.reduce(
           (nextConfig, config) =>
             nextConfig.concat(
-              (config[index] || []).map(value =>
+              (config[index] || []).map((value) =>
                 Array.isArray(value) ? value : [value]
               )
             ),
@@ -86,7 +87,7 @@ export async function getPackage() {
   try {
     return {
       ...pkgDefault,
-      ...JSON.parse(await readFile("package.json"))
+      ...JSON.parse(await readFile("package.json")),
     };
   } catch (e) {
     return { ...pkgDefault };
@@ -98,12 +99,12 @@ export async function copyFile(src, dest) {
   dest = path.join(cwd, dest);
   let [statSrc, statDest] = await Promise.all([
     asyncFs.stat(src).catch(() => null),
-    asyncFs.stat(dest).catch(() => null)
+    asyncFs.stat(dest).catch(() => null),
   ]);
   if (statSrc && (!statDest || statSrc.ctimeMs != statDest.ctimeMs)) {
     if (!statDest) {
       await asyncFs.mkdir(path.parse(dest).dir, {
-        recursive: true
+        recursive: true,
       });
     }
     await asyncFs.copyFile(src, dest);
@@ -133,8 +134,8 @@ export function createAwait() {
   return {
     promise,
     resolve,
-    reject
+    reject,
   };
 }
 
-export const normalizePath = str => str.replace(/(\\)+/g, "/");
+export const normalizePath = (str) => str.replace(/(\\)+/g, "/");
