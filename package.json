@@ -1,10 +1,12 @@
 {
   "name": "bundle-cli",
-  "version": "0.23.3",
+  "version": "0.24.0",
   "description": "simple bundle generator",
   "module": "src/cli.js",
   "main": "cli.js",
   "scripts": {
+    "clear": "rm -rf ./test/basic/dest && rm -rf ./test/basic/public",
+    "test": "npm run clear && ava",
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "build:example:watch": "node cli.js example/src/*.{html,md} example/dest --server --watch",
@@ -54,5 +56,14 @@
   },
   "bin": {
     "bundle": "./cli.js"
+  },
+  "devDependencies": {
+    "ava": "^3.8.1",
+    "puppeteer": "^3.0.2"
+  },
+  "ava": {
+    "files": [
+      "test/**/*.test.js"
+    ]
   }
 }

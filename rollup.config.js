@@ -6,11 +6,11 @@ export default {
   output: {
     file: "cli.js",
     format: "cjs",
-    banner: "#!/usr/bin/env node"
+    banner: "#!/usr/bin/env node",
   },
   plugins: [
     replace({
-      "PKG.VERSION": pkg.version
-    })
-  ]
+      "PKG.VERSION": pkg.version,
+    }),
+  ],
 };
