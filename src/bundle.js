@@ -37,7 +37,9 @@ let defaultGroup = "Others";
 
 export default async function createBundle(options) {
   streamLog("loading...");
+
   let loadingStep = 3;
+
   const loadingInterval = setInterval(() => {
     if (server) return;
     loadingStep = loadingStep == 0 ? 3 : loadingStep;
@@ -484,6 +486,8 @@ export default async function createBundle(options) {
   } catch (e) {
     console.log(e);
   }
+
+  return options;
 }
 
 async function formatOptions({ src = [], config, external, ...ignore }) {

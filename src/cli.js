@@ -1,5 +1,6 @@
 import sade from "sade";
 import createBundle from "./bundle";
+export { default as createBundle } from "./bundle";
 
 sade("bundle [src] [dest]")
   .version("PKG.VERSION")
