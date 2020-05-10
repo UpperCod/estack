@@ -310,7 +310,7 @@ export default async function createBundle(options) {
           theme: template ? template.page : {},
           page: { ...page, ...pagination },
           pages,
-          deep: getRelativeDeep(page.folder),
+          deep: getRelativeDeep(page.folder) || "./",
         };
 
         code = renderHtml(code, data);

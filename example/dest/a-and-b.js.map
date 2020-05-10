@@ -1,1 +1,1 @@
-{"version":3,"file":"a-and-b.js","sources":["../src/folder/a-and-b.js"],"sourcesContent":["import \"./a/a.js\";\r\nimport \"./b/b.js\";\r\n\r\nconsole.log(\"a.js and b.js\");\r\n"],"names":["console","log"],"mappings":"8BAGAA,QAAQC,IAAI"}
+{"version":3,"file":"a-and-b.js","sources":["../src/folder/a-and-b.js"],"sourcesContent":["import \"./a/a.js\";\r\nimport \"./b/b.js\";\r\n\r\nconsole.log(\"a.js and b.js\");\r\n"],"names":["console","log"],"mappings":";;;AAGAA,OAAO,CAACC,GAAR,CAAY,eAAZ"}
