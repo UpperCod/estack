@@ -3,7 +3,7 @@ import chokidar from "chokidar";
 export function watch(glob, listener) {
   let currentGroup;
 
-  const loadGroup = () => {
+  let loadGroup = () => {
     if (!currentGroup) {
       currentGroup = {};
       setTimeout(() => {
@@ -13,10 +13,10 @@ export function watch(glob, listener) {
     }
   };
 
-  const watcher = chokidar.watch(glob);
+  let watcher = chokidar.watch(glob, { ignoreInitial: true });
 
-  ["add", "change", "unlink"].map(type => {
-    watcher.on(type, file => {
+  ["add", "change", "unlink"].map((type) => {
+    watcher.on(type, (file) => {
       loadGroup();
       (currentGroup[type] = currentGroup[type] || []).push(file);
     });

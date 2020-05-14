@@ -5,7 +5,7 @@ Handlebars.registerHelper("toJson", (data) => JSON.stringify(data || ""));
 Handlebars.registerHelper("when", function (a, logic, b) {
   let options = arguments[arguments.length - 1];
   if (["===", "==", "<", ">", "!=", "!==", "<=", ">="].includes(logic)) {
-    const state =
+    let state =
       logic == "==="
         ? a === b
         : logic == "=="
@@ -29,6 +29,6 @@ Handlebars.registerHelper("when", function (a, logic, b) {
   }
 });
 
-export default function renderHtml(code, data) {
+export function renderHtml(code, data) {
   return Handlebars.compile(code)(data);
 }

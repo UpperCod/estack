@@ -1,44 +1,46 @@
 import fs from "fs";
 import path from "path";
 import logUpdate from "log-update";
+import yaml from "js-yaml";
 
-export const asyncFs = fs.promises;
+export let asyncFs = fs.promises;
 
-export const cwd = process.cwd();
+export let cwd = process.cwd();
 
-const pkgDefault = {
+let pkgDefault = {
   dependencies: {},
   devDependencies: {},
   peerDependencies: {},
   babel: {},
 };
 
-export const isUrl = (file) => /^(http(s){0,1}:){0,1}\/\//.test(file);
+export let isUrl = (file) => /^(http(s){0,1}:){0,1}\/\//.test(file);
 
-export const asyncGroup = (group) => Promise.all(group);
+export let asyncGroup = (group) => Promise.all(group);
 
-export const isHtml = (file) => /\.(md|html)/.test(file);
+export let isHtml = (file) => /\.(md|html)/.test(file);
 
-export const isMd = (file) => /\.md$/.test(file);
+export let isMd = (file) => /\.md$/.test(file);
 
-export const isJs = (file) => /\.(js|ts|jsx|tsx)$/.test(file);
+export let isJs = (file) => /\.(js|ts|jsx|tsx)$/.test(file);
 
-export const isCss = (file) => /\.css$/.test(file);
+export let isCss = (file) => /\.css$/.test(file);
 
-export const isFixLink = (file) => isHtml(file) || isJs(file) || isCss(file);
+export let isFixLink = (file) => isHtml(file) || isJs(file) || isCss(file);
 
-export const isNotFixLink = (file) => !isFixLink(file);
+export let isNotFixLink = (file) => !isFixLink(file);
 
-export const promiseErrorToNull = async (promise) => promise.catch((e) => null);
+export let promiseErrorToNull = async (promise) => promise.catch((e) => null);
 
 /**
  *
  * @param {string} a - New link destination
  * @param {string} b - Origin link
  */
-export const getRelativePath = (a, b) => path.relative(path.parse(a).dir, b);
+export let getRelativePath = (a, b) =>
+  normalizePath(path.relative(path.parse(a).dir, b));
 
-export const getRelativeDeep = (file) =>
+export let getRelativeDeep = (file) =>
   file
     ? path
         .normalize(file)
@@ -47,8 +49,7 @@ export const getRelativeDeep = (file) =>
         .join("")
     : "";
 
-export const readFile = (file) =>
-  asyncFs.readFile(path.join(cwd, file), "utf8");
+export let readFile = (file) => asyncFs.readFile(path.join(cwd, file), "utf8");
 
 export async function writeFile(file, data) {
   let dir = path.join(cwd, path.parse(file).dir);
@@ -138,4 +139,38 @@ export function createAwait() {
   };
 }
 
-export const normalizePath = (str) => str.replace(/(\\)+/g, "/");
+export let normalizePath = (str) => str.replace(/(\\)+/g, "/");
+
+export function getMetaFile(code) {
+  let meta = {};
+  let metaBlock = "---";
+  let lineBreak = "\n";
+  if (!code.indexOf(metaBlock)) {
+    let data = [];
+    let lines = code.slice(3).split(lineBreak);
+    let body = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (!lines[i].indexOf(metaBlock)) {
+        body = lines.slice(i + 1);
+        break;
+      }
+      data.push(lines[i]);
+    }
+    if (data.length) {
+      meta = yaml.safeLoad(data.join(lineBreak));
+    }
+    code = body.join(lineBreak);
+  }
+  return [code, meta];
+}
+
+export function getFileName(file) {
+  let { name, ext } = path.parse(file);
+  return normalizePath(
+    isFixLink(ext)
+      ? name + (isJs(ext) ? ".js" : isMd(ext) ? ".html" : ext)
+      : "file-" +
+          file.split("").reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
+          ext
+  );
+}

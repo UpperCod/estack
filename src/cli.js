@@ -1,6 +1,6 @@
 import sade from "sade";
-import createBundle from "./bundle";
-export { default as createBundle } from "./bundle";
+import { createBundle } from "./create-bundle";
+export { createBundle } from "./create-bundle";
 
 sade("bundle [src] [dest]")
   .version("PKG.VERSION")
@@ -20,7 +20,6 @@ sade("bundle [src] [dest]")
     false
   )
   .option("--browsers", "define the target of the bundle", "> 3%")
-  .option("--template", "define the top template file for html or md")
   .option("--jsx", "pragma jsx", "h")
   .option("--jsxFragment", "pragma fragment jsx", "Fragment")
   .option(

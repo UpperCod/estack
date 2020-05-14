@@ -1,7 +1,7 @@
 import glob from "fast-glob";
 import path from "path";
 import rollup from "rollup";
-import servor from "servor";
+import builtins from "builtin-modules";
 import {
   isJs,
   isMd,
@@ -20,6 +20,7 @@ import {
   getRelativePath,
   getRelativeDeep,
 } from "./utils";
+import { createServer } from "./create-server";
 import { rollupPlugins } from "./rollup/config-plugins";
 import { readHtml } from "./read-html";
 import { readCss } from "./read-css";
@@ -28,23 +29,39 @@ import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
 
 export async function createBundle(options) {
-  // formatea las opciones
+  streamLog("loading...");
+
+  let loadingStep = 3;
+
+  const loadingInterval = setInterval(() => {
+    if (server) return;
+    loadingStep = loadingStep == 0 ? 3 : loadingStep;
+    streamLog("loading" + ".".repeat(loadingStep--));
+  }, 250);
+  // format options
   options = await formatOptions(options);
 
-  // optiene la lista a base de la exprecion de entrada
+  // get list based on input expression
   let files = await glob(options.src);
-  // alamcena el estado de los archivos procesados
+  // stores the status of processed files
   let inputs = {};
 
   let deleteInput = (file) => {
     delete inputs[file];
     return file;
   };
-  // optiene el destino del fichero a escribir
+  /**
+   * returns the write destination of the file
+   * @param {string} file - file name
+   * @param {string} [folder] - If defined, add the folder to the destination
+   */
   let getDest = (file, folder = "") =>
     normalizePath(path.join(options.dest, folder, file));
 
-  // evita que el archivo se procese mas de 2 veces
+  /**
+   * prevents the file from working more than once
+   * @param {string} file
+   */
   let prevenLoad = (file) => {
     if (file in inputs) {
       return false;
@@ -52,9 +69,17 @@ export async function createBundle(options) {
       return (inputs[file] = true);
     }
   };
-
+  /**
+   * Check if the file is locked
+   * @param {string} file
+   * @returns {boolean}
+   */
   let isPreventLoad = (file) => file in inputs;
-
+  /**
+   * check if the file can be processed
+   * @param {stirng} file
+   * @return {boolean}
+   */
   let isNotPreventLoad = (file) => !isPreventLoad(file);
 
   // date of last build
@@ -66,8 +91,30 @@ export async function createBundle(options) {
 
   let fileWatcher;
 
+  let server;
+
+  if (options.server) {
+    server = await createServer({
+      root: options.dest,
+      fallback: "index.html",
+      port: options.port,
+      reload: options.watch,
+      proxy: options.proxy,
+    });
+    streamLog("");
+    console.log(`\nserver running on http://localhost:${server.serverPort}\n`);
+  }
+  clearInterval(loadingInterval);
+
+  /**
+   * initialize the processing queue on related files
+   * @param {string[]} files - list of files to process
+   * @param {*} forceBuild
+   */
   async function load(files, forceBuild) {
+    // reset build start time
     lastTime = new Date();
+
     files = files.map(path.normalize);
 
     let rebuildHtml = [];
@@ -94,6 +141,7 @@ export async function createBundle(options) {
               try {
                 await asyncFs.stat(findFile);
                 nestedFiles.push(findFile);
+                fileWatcher && fileWatcher(findFile, file);
                 return "{{deep}}" + getFileName(findFile);
               } catch (e) {
                 return childFile;
@@ -130,7 +178,7 @@ export async function createBundle(options) {
           file,
           addWatchFile(childFile) {
             if (options.watch) {
-              fileWatcher(childFile, file);
+              fileWatcher && fileWatcher(childFile, file);
             }
           },
         });
@@ -184,10 +232,10 @@ export async function createBundle(options) {
 
       groupAsync = [...groupAsync, ...groupAsyncHtml];
     }
-
+    // parallel queue of asynchronous processes
     await Promise.all([
-      ...groupAsync, // Proceso asincrono de css + html
-      ...files // Copia los archivos estaticos
+      ...groupAsync,
+      ...files // copy of static files
         .filter(isNotFixLink)
         .filter(prevenLoad)
         .map(async (file) => copyFile(file, getDest(getLink(file)))),
@@ -197,6 +245,8 @@ export async function createBundle(options) {
     ]);
 
     streamLog(`bundle: ${new Date() - lastTime}ms`);
+
+    server && server.reload(new Date());
   }
 
   async function loadRollup() {
@@ -237,6 +287,7 @@ export async function createBundle(options) {
               break;
             case "END":
               streamLog(`bundle: ${new Date() - lastTime}ms`);
+              server && server.reload(new Date());
               break;
             case "ERROR":
               streamLog(event.error);
@@ -252,7 +303,12 @@ export async function createBundle(options) {
   }
 
   if (options.watch) {
+    // map defining the cross dependencies between child and parents
     let mapSubWatch = {};
+    /**
+     * defines if the file is a parent
+     * @param {string} file
+     */
     let isRootWatch = (file) =>
       mapSubWatch[file] ? !Object.keys(mapSubWatch).length : true;
 
@@ -284,7 +340,13 @@ export async function createBundle(options) {
           .filter((file) => !isJs(file))
           .map(deleteInput);
 
-        files = [...files, ...groupFiles];
+        files = [...files, ...groupFiles]
+          .map((file) =>
+            mapSubWatch[file]
+              ? Object.keys(mapSubWatch[file]).map(deleteInput)
+              : file
+          )
+          .flat();
       }
       if (group.unlink) {
         group.unlink.forEach(deleteInput);
@@ -306,17 +368,6 @@ export async function createBundle(options) {
     };
   }
 
-  if (options.server) {
-    let instance = await servor({
-      root: options.dest,
-      fallback: "index.html",
-      port: options.port,
-      reload: true,
-      inject: "",
-    });
-    console.log(instance);
-  }
-
   return load(files);
 }
 
@@ -333,7 +384,11 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
       : external.split(/ *, */);
   }
 
-  external = [...(external || []), ...Object.keys(pkg.peerDependencies)];
+  external = [
+    ...builtins,
+    ...(external || []),
+    ...Object.keys(pkg.peerDependencies),
+  ];
 
   let options = {
     src,

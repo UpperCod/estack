@@ -3,7 +3,7 @@ import Handlebars from "handlebars";
 import Prism from "prismjs";
 import loadLanguages from "prismjs/components/";
 
-const renderer = new marked.Renderer();
+let renderer = new marked.Renderer();
 // add an additional container prevent the table from collapsing the page
 renderer.table = (header, body) =>
   `<div class="markdown -table-container"><table>${
@@ -34,4 +34,4 @@ marked.setOptions({
   renderer,
 });
 
-export default (code) => marked(code);
+export let renderMarkdown = (code) => marked(code);

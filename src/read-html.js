@@ -2,12 +2,12 @@ import { analyzeHtml, serializeHtml } from "./analize-html";
 import { isUrl } from "./utils";
 
 export async function readHtml({ code, addFile }) {
-  const astHtml = await analyzeHtml(code, async node => {
+  let astHtml = await analyzeHtml(code, async (node) => {
     if (node.nodeName == "link") {
-      const isHrefImport = ["stylesheet", "manifest", "preload"].includes(
+      let isHrefImport = ["stylesheet", "manifest", "preload"].includes(
         node.getAttribute("rel")
       );
-      const href = node.getAttribute("href");
+      let href = node.getAttribute("href");
       if (isHrefImport && href && !isUrl(href)) {
         node.setAttribute("href", await addFile(href));
       }
@@ -15,7 +15,7 @@ export async function readHtml({ code, addFile }) {
       !["iframe"].includes(node.nodeName) &&
       node.getAttribute("src")
     ) {
-      const src = node.getAttribute("src");
+      let src = node.getAttribute("src");
       if (src && !isUrl(src)) {
         node.setAttribute("src", await addFile(src));
       }

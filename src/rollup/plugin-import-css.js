@@ -1,4 +1,4 @@
-import { isCss, cwd } from "../utils";
+import { isCss } from "../utils";
 import { readCss } from "../read-css";
 
 export function pluginImportCss(options = {}) {
@@ -11,14 +11,12 @@ export function pluginImportCss(options = {}) {
             await readCss({
               file: id,
               code,
-              minify: options.minify,
-              browsers: options.browsers,
-              addWatchFile: id => this.addWatchFile(id)
+              addWatchFile: (id) => this.addWatchFile(id),
             })
           )}`,
-          map: { mappings: "" }
+          map: { mappings: "" },
         };
       }
-    }
+    },
   };
 }
