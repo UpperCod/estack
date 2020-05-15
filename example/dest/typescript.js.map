@@ -1,1 +1,0 @@
-{"version":3,"file":"typescript.js","sources":["../src/folder/typescript.ts"],"sourcesContent":["function log(value: string): void {\r\n  console.log(value);\r\n}\r\n\r\nlog(\"normalizemos\");\r\n"],"names":[],"mappings":"AAAA;AACA;AACA;AACA;AACA"}

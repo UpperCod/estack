@@ -1,1 +1,0 @@
-{"version":3,"file":"b.js","sources":["../src/folder/b/b.js"],"sourcesContent":["import style from \"../a/a.css\";\r\nconsole.log(() => {\r\n  return {\r\n    style,\r\n    jsx: <div>hola mundo</div>,\r\n  };\r\n});\r\n"],"names":[],"mappings":";;AACA;AACA;AACA;AACA;AACA;AACA"}
