@@ -6,6 +6,7 @@ const utils = require("./utils");
 let src = "./test/basic/index.html";
 let dest = "./test/basic/public";
 let port = 8000;
+
 test.before(async () => {
   await createBundle({
     src,
