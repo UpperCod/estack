@@ -34,8 +34,8 @@ export function rollupPlugins(options) {
     sucrase({
       exclude: ["node_modules/**"],
       transforms: ["jsx", "typescript"],
-      jsxPragma: "h",
-      jsxFragmentPragma: "Fragment",
+      jsxPragma: options.jsx,
+      jsxFragmentPragma: options.jsxFragment,
       production: true,
     }),
     common(),

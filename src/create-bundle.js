@@ -84,7 +84,7 @@ export async function createBundle(options) {
 
   // date of last build
   let lastTime = new Date();
-  // historial de observadores
+
   let rollupWatchers = [];
   // cache de rollup
   let rollupCache;
@@ -241,7 +241,7 @@ export async function createBundle(options) {
         .map(async (file) => copyFile(file, getDest(getLink(file)))),
       ...(files.filter(isJs).filter(prevenLoad).length || forceBuild
         ? [loadRollup()]
-        : []), // añade rollup a la cola solo cuando es necesario
+        : []), // add rollup to queue only when needed
     ]);
 
     streamLog(`bundle: ${new Date() - lastTime}ms`);
@@ -250,6 +250,7 @@ export async function createBundle(options) {
   }
 
   async function loadRollup() {
+    // clean the old watcher
     rollupWatchers.filter((watcher) => watcher.close());
     rollupWatchers = [];
 
@@ -397,6 +398,9 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
     ...ignore,
     ...pkg[config],
     pkg,
+    jsx: options.jsx == "react" ? "React.createElement" : options.jsx,
+    jsxFragment:
+      options.jsx == "react" ? "React.Fragment" : options.jsxFragment,
   };
 
   // normalize routes for fast-glob

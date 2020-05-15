@@ -76,27 +76,6 @@ export async function createServer({ root, port, reload, proxy }) {
     })
     .listen(serverPort);
 
-  /*
-  if (reload) {
-    polka()
-      .use((req, res) => {
-        res.writeHead(200, {
-          Connection: "keep-alive",
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          "Access-Control-Allow-Origin": "*",
-        });
-        // Send an initial ack event to stop any network request pending
-        sendMessage(res, "connected", "awaiting change");
-        // Send a ping event every minute to prevent console errors
-        setInterval(sendMessage, 60000, res, "ping", "still waiting");
-        // Watch the target directory for changes and trigger reload
-
-        responses.push(res);
-      })
-      .listen(reloadPort);
-  }
-  */
   return {
     serverPort,
     reload() {
