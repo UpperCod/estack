@@ -4,6 +4,7 @@ import resolve from "@rollup/plugin-node-resolve";
 import json from "@rollup/plugin-json";
 import builtins from "builtin-modules";
 import pkg from "./package.json";
+import conditionalFsEventsImport from "./build-plugins/conditional-fsevents-import/conditional-fsevents-import";
 
 export default {
   input: "src/cli.js",
@@ -19,6 +20,7 @@ export default {
     }),
     resolve({}),
     json(),
+    conditionalFsEventsImport(),
     common(),
   ],
 };
