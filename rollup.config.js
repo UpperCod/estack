@@ -14,6 +14,11 @@ export default {
     banner: "#!/usr/bin/env node",
   },
   external: [...builtins, ...Object.keys(pkg.dependencies)],
+  treeshake: {
+    moduleSideEffects: false,
+    propertyReadSideEffects: false,
+    tryCatchDeoptimization: false,
+  },
   plugins: [
     replace({
       "PKG.VERSION": pkg.version,

@@ -33,6 +33,20 @@ export async function createBundle(options) {
 
   let loadingStep = 3;
 
+  let server;
+
+  // date of last build
+  let lastTime = new Date();
+
+  let rollupWatchers = [];
+  // cache de rollup
+  let rollupCache;
+
+  let fileWatcher;
+
+  // stores the status of processed files
+  let inputs = {};
+
   const loadingInterval = setInterval(() => {
     if (server) return;
     loadingStep = loadingStep == 0 ? 3 : loadingStep;
@@ -43,8 +57,6 @@ export async function createBundle(options) {
 
   // get list based on input expression
   let files = await glob(options.src);
-  // stores the status of processed files
-  let inputs = {};
 
   let deleteInput = (file) => {
     delete inputs[file];
@@ -82,17 +94,6 @@ export async function createBundle(options) {
    */
   let isNotPreventLoad = (file) => !isPreventLoad(file);
 
-  // date of last build
-  let lastTime = new Date();
-
-  let rollupWatchers = [];
-  // cache de rollup
-  let rollupCache;
-
-  let fileWatcher;
-
-  let server;
-
   if (options.server) {
     server = await createServer({
       root: options.dest,
@@ -101,9 +102,11 @@ export async function createBundle(options) {
       reload: options.watch,
       proxy: options.proxy,
     });
+
     streamLog("");
     console.log(`\nserver running on http://localhost:${server.serverPort}\n`);
   }
+
   clearInterval(loadingInterval);
 
   /**
@@ -372,7 +375,14 @@ export async function createBundle(options) {
   return load(files);
 }
 
-async function formatOptions({ src = [], config, external, ...ignore }) {
+async function formatOptions({
+  src = [],
+  config,
+  external,
+  jsx,
+  jsxFragment,
+  ...ignore
+}) {
   let pkg = await getPackage();
 
   src = Array.isArray(src) ? src : src.split(/ *; */g);
@@ -398,9 +408,8 @@ async function formatOptions({ src = [], config, external, ...ignore }) {
     ...ignore,
     ...pkg[config],
     pkg,
-    jsx: options.jsx == "react" ? "React.createElement" : options.jsx,
-    jsxFragment:
-      options.jsx == "react" ? "React.Fragment" : options.jsxFragment,
+    jsx: jsx == "react" ? "React.createElement" : jsx,
+    jsxFragment: jsx == "react" ? "React.Fragment" : jsxFragment,
   };
 
   // normalize routes for fast-glob

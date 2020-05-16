@@ -71,7 +71,6 @@ export async function createServer({ root, port, reload, proxy }) {
       // Send a ping event every minute to prevent console errors
       setInterval(sendMessage, 60000, res, "ping", "still waiting");
       // Watch the target directory for changes and trigger reload
-
       responses.push(res);
     })
     .listen(serverPort);
