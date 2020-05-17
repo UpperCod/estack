@@ -1,6 +1,7 @@
 /example
 node_modules
 /cli.js
+/cli.js.map
 /demo
 /dist
 /test/basic/dest
