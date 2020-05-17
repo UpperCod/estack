@@ -2,7 +2,7 @@ import sade from "sade";
 import { createBundle } from "./create-bundle";
 export { createBundle } from "./create-bundle";
 
-sade("bundle src [dest]")
+sade("bundle [src] [dest]")
   .version("PKG.VERSION")
   .option("--watch", "Watch files in bundle and rebuild on changes", false)
   .option("--external", "Does not include dependencies in the bundle")
@@ -32,7 +32,6 @@ sade("bundle src [dest]")
   .example("src/index.js dist --watch")
   .example("src/*.js dist")
   .example("src/*.html")
-  .example("")
   .action((src, dest = "dest", options) => {
     createBundle({
       ...options,
