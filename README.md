@@ -1,12 +1,12 @@
 # bundle-cli
 
-bundle-cli se creo para minimizar el impacto del desarrollo en en el uso de dissco(Una estrategia inpirada en Stenci), su node_module solo contendra los packages rollup y bundle-cli tras la instalacion , **Bundle-cli posee como objetivo ser un entorno de desarrollo dinamico y amigable para webcomponents, con este CLI ud podra:**
+bundle-cli is created to minimize the impact of development on disk usage, its node_module will only contain rollup and bundle-cli packages after installation, **Bundle-cli aims to be a dynamic and friendly development environment for webcomponents, with this CLI you can:**
 
-1. Exportar assets desde ficheros html y markdown creados sobre la marcha, un efecto similar a ParselJs.
-2. Añadir html, markdowns y assets que se sincronizan de forma dinamica en modo watch para la regeneracion del bundle o reload del navegador.
-3. Exportaciones mediante expreciones.0
-4. Servidor con livereload, sincronizado a la regeneracion del bundle.
-5. Minificacion y más
+1. Export assets from html and markdown files created on the fly, an effect similar to ParselJs, but without the limitation of only one index.html, bundle-cli parses based on an expression so you can add files on the mark and automatically bundle-cli processes them.
+2. Add html, markdowns and assets that are dynamically synchronized in watch mode for the regeneration of the bundle or browser reload.
+3. Exports using expressions.
+4. Server with livereload, synchronized to the regeneration of the bundle.
+5. Minification and more.
 
 ### npx bundle --help
 
@@ -39,9 +39,9 @@ bundle-cli se creo para minimizar el impacto del desarrollo en en el uso de diss
     $ bundle
 ```
 
-## Ejemplo de uso
+## Recommended use
 
-Se recomienda el uso de bundle-cli definiendo los scripts en su package.json, eg:
+We recommend using bundle-cli by defining the scripts in your package.json, eg:
 
 ```json
 {
