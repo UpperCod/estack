@@ -3,3 +3,5 @@ node_modules
 /cli.js
 /demo
 /dist
+/test/basic/dest
+/test/basic/public
