@@ -1,74 +1,42 @@
-import Handlebars from "handlebars";
+import { Liquid } from "liquidjs";
 
-Handlebars.registerHelper("set", function (index, data, context) {
-  let options = arguments[arguments.length - 1];
-  if (context || options) {
-    (options != context && context != null && typeof context == "object"
-      ? context
-      : options.data.root)[index] = data;
-  }
+let engine = new Liquid({
+  cache: false,
+  dynamicPartials: false,
+});
+
+engine.registerFilter("order", (data, by, manual = []) => {
+  manual = typeof manual == "string" ? manual.split(/\s*,\s*/g) : manual;
+  return data
+    .map((data) => {
+      let selector = getProp(data, by);
+      let position = manual.length ? manual.indexOf(selector) >>> 0 : selector;
+      return { data, position };
+    })
+    .sort((a, b) => (a.position > b.position ? 1 : -1))
+    .map(({ data }) => data);
+});
+
+engine.registerFilter("group", (data, by) => {
+  let groups = {};
+
+  data.forEach((data) => {
+    let value = getProp(data, by);
+    if (!groups[value]) {
+      groups[value] = [];
+    }
+    groups[value].push(data);
+  });
+
+  return Object.keys(groups)
+    .sort()
+    .map((prop) => ({ group: prop, items: groups[prop] }));
+});
+
+engine.registerFilter("log", (data) => {
+  console.log(data);
   return "";
 });
-
-Handlebars.registerHelper("toJson", (data) => JSON.stringify(data || ""));
-
-Handlebars.registerHelper("when", function (a, logic, b, options) {
-  if (["===", "==", "<", ">", "!=", "!==", "<=", ">="].includes(logic)) {
-    let state =
-      logic == "==="
-        ? a === b
-        : logic == "=="
-        ? a == b
-        : logic == ">"
-        ? a > b
-        : logic == "<"
-        ? a < b
-        : logic == ">="
-        ? a >= b
-        : logic == "<="
-        ? a <= b
-        : logic == "!="
-        ? a != b
-        : logic == "!=="
-        ? a !== b
-        : false;
-    return options.fn ? options[state ? "fn" : "inverse"](this) : state;
-  }
-});
-
-Handlebars.registerHelper("query", function (data, steps, options) {
-  return option.fn(
-    steps.reduce((data, step) => queryTypes[step.type](data, step), data)
-  );
-});
-
-let queryTypes = {
-  group(data, { by }) {
-    let groups = {};
-
-    data.forEach((data) => {
-      let value = getProp(data, by);
-      if (!groups[value]) {
-        groups[value] = [];
-      }
-      groups[value].push(data);
-    });
-
-    return Object.keys(groups)
-      .sort()
-      .map((prop) => [prop, groups[prop]]);
-  },
-  order(data, { by, manual }) {
-    return data
-      .map((data) => {
-        let selector = getProp(data, by);
-        let position = manual.indexOf(selector) >>> 0;
-        return { data, selector, position };
-      })
-      .sort((a, b) => (a.position > b.position ? 1 : -1))
-      .map(({ data }) => data);
-  },
-};
 
 function getProp(value, prop, option) {
   value = value || {};
@@ -84,5 +52,5 @@ function getProp(value, prop, option) {
 }
 
 export function renderHtml(code, data) {
-  return Handlebars.compile(code)(data);
+  return engine.parseAndRender(code, data);
 }

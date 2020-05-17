@@ -97,7 +97,6 @@ export async function createBundle(options) {
   if (options.server) {
     server = await createServer({
       root: options.dest,
-      fallback: "index.html",
       port: options.port,
       reload: options.watch,
       proxy: options.proxy,
@@ -130,7 +129,17 @@ export async function createBundle(options) {
           rebuildHtml.push(file);
 
           let { dir } = path.parse(file);
-          let [code, meta] = getMetaFile(await readFile(file));
+          let html = await readFile(file);
+          let data = [html, {}];
+
+          try {
+            data = getMetaFile(html);
+          } catch (e) {
+            streamLog(
+              `SyntaxError: Error transforming ${file}:${e.mark.line}:${e.mark.position}`
+            );
+          }
+          let [code, meta] = data;
 
           let name = getFileName(file);
           let dest = getDest(name, meta.folder);
@@ -202,11 +211,11 @@ export async function createBundle(options) {
         })
         .filter((value) => value);
 
-      let groupAsyncHtml = filesHtml.map((page) => {
+      let groupAsyncHtml = filesHtml.map(async (page) => {
         let layout = templates[page.layout];
 
         let pages = filesHtml.map((subPage) => ({
-          ...page,
+          ...subPage,
           link: getRelativePath(page.link, subPage.link),
         }));
 
@@ -218,10 +227,10 @@ export async function createBundle(options) {
           deep: getRelativeDeep(page.folder) || "./",
         };
 
-        let content = renderHtml(page.content, data);
+        let content = await renderHtml(page.content, data);
 
         if (layout) {
-          content = renderHtml(layout.content, {
+          content = await renderHtml(layout.content, {
             ...data,
             page: {
               ...page,
@@ -249,9 +258,8 @@ export async function createBundle(options) {
 
     streamLog(`bundle: ${new Date() - lastTime}ms`);
 
-    server && server.reload(new Date());
+    server && server.reload();
   }
-
   async function loadRollup() {
     // clean the old watcher
     rollupWatchers.filter((watcher) => watcher.close());
@@ -291,7 +299,7 @@ export async function createBundle(options) {
               break;
             case "END":
               streamLog(`bundle: ${new Date() - lastTime}ms`);
-              server && server.reload(new Date());
+              server && server.reload();
               break;
             case "ERROR":
               streamLog(event.error);

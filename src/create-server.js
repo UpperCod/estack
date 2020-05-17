@@ -5,6 +5,14 @@ import sirv from "sirv";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { asyncFs, promiseErrorToNull, isHtml } from "./utils";
 
+/**
+ * @param {Object} options
+ * @param {string} options.root
+ * @param {number} options.port
+ * @param {boolean} options.reload
+ * @param {string} options.proxy
+ * @returns {{reload:Function,serverPort:number}}
+ */
 export async function createServer({ root, port, reload, proxy }) {
   let nextAssets = sirv(root, {
     dev: true,
@@ -30,9 +38,13 @@ export async function createServer({ root, port, reload, proxy }) {
       let optUrl = /\.[\w]+$/.test(url) ? url : url + ".html";
 
       let [stateHtml, stateStatic, stateFallback] = await Promise.all([
+        // check if the file exists as html
         isHtml(optUrl) && fileExists(optUrl),
+        // check if the file exists as static
         fileExists(url),
-        isHtml(optUrl) && !proxy && fileExists(fallbackUrl),
+        // it is verified in each request of the html type,
+        // to ensure the existence in a dynamic environment
+        isHtml(optUrl) && !proxy && fileExists(fallbackUrl), //
       ]);
 
       res.setHeader("Access-Control-Allow-Origin", "*");
@@ -60,6 +72,7 @@ export async function createServer({ root, port, reload, proxy }) {
       }
     })
     .use((req, res) => {
+      // livereload
       res.writeHead(200, {
         Connection: "keep-alive",
         "Content-Type": "text/event-stream",
@@ -82,7 +95,14 @@ export async function createServer({ root, port, reload, proxy }) {
     },
   };
 }
-
+/**
+ * this function searches if the available port is free,
+ * if it is not it will search for the next one until
+ * the limit is completed
+ * @param {number} port - search start port
+ * @param {number} limit - port search limit
+ * @param {object} pending - allows terminating execution from an internal recursive process
+ */
 async function findPort(port, limit, pending) {
   if (!pending) {
     pending = {};

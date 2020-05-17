@@ -1,5 +1,5 @@
 import marked from "marked";
-import Handlebars from "handlebars";
+import { escape } from "entities";
 import Prism from "prismjs";
 import loadLanguages from "prismjs/components/";
 
@@ -23,7 +23,7 @@ renderer.code = (code, type) => {
     }
   } catch (e) {}
 
-  return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Handlebars.Utils.escapeExpression(
+  return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${escape(
     code
   )}</code></pre>`;
 };

@@ -9,7 +9,7 @@
     "test": "npm run clear && ava",
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "build:example:watch": "node cli.js example/src/*.{html,md} example/dest --server --watch",
+    "build:example:watch": "node cli.js example/src/**/*.{html,md} example/dest --server --watch",
     "build:example": "node cli.js example/src/*.{html,md} example/dest --minify --sizes",
     "prepare": "npm run build && npm run test"
   },
@@ -38,10 +38,11 @@
     "ava": "^3.8.1",
     "builtin-modules": "^3.1.0",
     "chokidar": "^3.3.1",
+    "entities": "^2.0.2",
     "fast-glob": "^3.2.2",
-    "handlebars": "^4.7.6",
     "http-proxy-middleware": "^1.0.3",
     "js-yaml": "^3.13.1",
+    "liquidjs": "^9.12.0",
     "log-update": "^4.0.0",
     "magic-string": "^0.25.7",
     "marked": "^0.8.1",
@@ -49,11 +50,11 @@
     "polka": "^0.5.2",
     "prismjs": "^1.19.0",
     "puppeteer": "^3.0.2",
-    "rollup-plugin-terser": "^5.3.0",
+    "resolve": "^1.17.0",
     "sade": "^1.7.3",
-    "servor": "^3.3.1",
     "sirv": "^0.4.2",
-    "stylis": "^4.0.0"
+    "stylis": "^4.0.0",
+    "terser": "^4.6.13"
   },
   "optionalDependencies": {
     "fsevents": "~2.1.2"

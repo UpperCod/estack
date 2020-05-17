@@ -114,15 +114,17 @@ export async function copyFile(src, dest) {
 
 export function streamLog(message) {
   message = message + "";
-  try {
-    // process.stdout.clearLine();
-    // process.stdout.cursorTo(0);
-    // process.stdout.write(message);
+  if (!/SyntaxError/.test(message)) {
+    try {
+      // process.stdout.clearLine();
+      // process.stdout.cursorTo(0);
+      // process.stdout.write(message);
 
-    message ? logUpdate(message) : logUpdate.clear();
-  } catch (e) {
-    console.log(message);
+      message ? logUpdate(message) : logUpdate.clear();
+      return;
+    } catch (e) {}
   }
+  console.log(message);
 }
 
 export function createAwait() {
