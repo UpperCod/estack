@@ -39,6 +39,77 @@ bundle-cli is created to minimize the impact of development on disk usage, its n
     $ bundle
 ```
 
+## html and markdown document management
+
+Bundle-cli scans html and markdown files only if they are declared as part of its example expression `src/**/*.{html,md}`.
+
+```html
+<my-component></my-component>
+<script type="module" src="./components/my-component/my-component.js"></script>
+```
+
+These documents can declare a header fragment to define data to share for the generation of the html, eg:
+
+```html
+---
+title: My component
+---
+
+<h1>{{page.title}}</h1>
+<my-component></my-component>
+<script type="module" src="./components/my-component/my-component.js"></script>
+```
+
+the template syntax supported by bundle-cli is [liquidjs](https://liquidjs.com/).
+
+### template and layout properties
+
+The `template` property allows you to define a parent template for another that declares its use using the `layout` property., eg:
+
+**master.html**
+
+```html
+---
+template: master
+title: template master!
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{page.title}}</title>
+  </head>
+  <body>
+    {{page.content}}
+  </body>
+</html>
+```
+
+**any.html**
+
+```html
+---
+layout: master
+title: any file
+---
+
+<h1>template ? {{layout.title}}</h1>
+<h1>page title ? {{page.title}}</h1>
+```
+
+> The template that declares the layout, will inherit the data of the superior template through the `layout` property.
+
+### The context
+
+The data that is shared with the tempate seeks to facilitate the construction of static sites. this context consists of:
+
+- **pkg** : allows access to the given package.json, eg `{{pkg.name}}`.
+- **pages** : Pages extracted by expression, eg `{{pages[0].title}}`
+- **page** : Current page, eg`{{page.title}}`
+- **layout** : Data inherited from the template page, eg `{{layout.color}}`.
+
 ## Recommended use
 
 We recommend using bundle-cli by defining the scripts in your package.json, eg:
