@@ -116,15 +116,12 @@ export function streamLog(message) {
   message = message + "";
   if (!/SyntaxError/.test(message)) {
     try {
-      // process.stdout.clearLine();
-      // process.stdout.cursorTo(0);
-      // process.stdout.write(message);
-
       message ? logUpdate(message) : logUpdate.clear();
       return;
     } catch (e) {}
   }
-  console.log(message);
+  logUpdate.clear();
+  console.log(message + "\n");
 }
 
 export function createAwait() {
@@ -144,6 +141,7 @@ export function createAwait() {
 export let normalizePath = (str) => str.replace(/(\\)+/g, "/");
 
 export function getMetaFile(code) {
+  let metaFragment = { start: 0, end: 0 };
   let meta = {};
   let metaBlock = "---";
   let lineBreak = "\n";
@@ -159,7 +157,9 @@ export function getMetaFile(code) {
       data.push(lines[i]);
     }
     if (data.length) {
+      metaFragment.end = data.length;
       meta = yaml.safeLoad(data.join(lineBreak));
+      meta.metaFragment = metaFragment;
     }
     code = body.join(lineBreak);
   }

@@ -28,6 +28,8 @@ import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
 
+let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
+
 export async function createBundle(options) {
   streamLog("loading...");
 
@@ -95,15 +97,19 @@ export async function createBundle(options) {
   let isNotPreventLoad = (file) => !isPreventLoad(file);
 
   if (options.server) {
-    server = await createServer({
-      root: options.dest,
-      port: options.port,
-      reload: options.watch,
-      proxy: options.proxy,
-    });
+    try {
+      server = await createServer({
+        root: options.dest,
+        port: options.port,
+        reload: options.watch,
+        proxy: options.proxy,
+      });
+    } catch (e) {
+      console.log(e);
+    }
 
     streamLog("");
-    console.log(`\nserver running on http://localhost:${server.serverPort}\n`);
+    console.log(`\nserver running on http://localhost:${server.port}\n`);
   }
 
   clearInterval(loadingInterval);
@@ -136,7 +142,7 @@ export async function createBundle(options) {
             data = getMetaFile(html);
           } catch (e) {
             streamLog(
-              `SyntaxError: Error transforming ${file}:${e.mark.line}:${e.mark.position}`
+              `${SyntaxErrorTransforming} ${file}:${e.mark.line}:${e.mark.position}`
             );
           }
           let [code, meta] = data;
@@ -167,6 +173,7 @@ export async function createBundle(options) {
 
           inputs[file] = {
             ...meta,
+            file,
             name,
             content,
             link,
@@ -226,20 +233,29 @@ export async function createBundle(options) {
           layout: layout || {},
           deep: getRelativeDeep(page.folder) || "./",
         };
-
-        let content = await renderHtml(page.content, data);
-
+        let content;
+        try {
+          content = await renderHtml(page.content, data);
+        } catch (e) {
+          streamLog(`${SyntaxErrorTransforming} : ${page.file}`);
+        }
         if (layout) {
-          content = await renderHtml(layout.content, {
-            ...data,
-            page: {
-              ...page,
-              content,
-            },
-          });
+          try {
+            content = await renderHtml(layout.content, {
+              ...data,
+              page: {
+                ...page,
+                content,
+              },
+            });
+          } catch (e) {
+            streamLog(`${SyntaxErrorTransforming} : ${layout.file}`);
+          }
         }
 
-        return writeFile(page.dest, content);
+        if (content != null) {
+          return writeFile(page.dest, content);
+        }
       });
 
       groupAsync = [...groupAsync, ...groupAsyncHtml];

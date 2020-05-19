@@ -18,7 +18,7 @@ export async function createServer({ root, port, reload, proxy }) {
     dev: true,
   });
 
-  let serverPort = await findPort(port, 100);
+  port = await findPort(port, port + 100);
 
   let nextProxy =
     proxy && createProxyMiddleware({ target: proxy, changeOrigin: true });
@@ -56,7 +56,7 @@ export async function createServer({ root, port, reload, proxy }) {
           if (reload) {
             file += `
             <script>{
-              let source = new EventSource('http://localhost:${serverPort}/livereload');
+              let source = new EventSource('http://localhost:${port}/livereload');
               source.onmessage = e =>  setTimeout(()=>location.reload(),250);
             }</script>
           `;
@@ -86,10 +86,10 @@ export async function createServer({ root, port, reload, proxy }) {
       // Watch the target directory for changes and trigger reload
       responses.push(res);
     })
-    .listen(serverPort);
+    .listen(port);
 
   return {
-    serverPort,
+    port,
     reload() {
       responses.forEach((res) => sendMessage(res, "message", "reloading page"));
     },

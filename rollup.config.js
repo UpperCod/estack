@@ -28,10 +28,14 @@ export default {
     replace({
       "PKG.VERSION": pkg.version,
     }),
-    resolve({}),
-    json(),
-    conditionalFsEventsImport(),
-    common(),
-    pluginTerser({ sourcemap: true }),
+    ...(process.env.ROLLUP_WATCH
+      ? []
+      : [
+          resolve({}),
+          json(),
+          conditionalFsEventsImport(),
+          common(),
+          pluginTerser({ sourcemap: true }),
+        ]),
   ],
 };
