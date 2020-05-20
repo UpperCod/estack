@@ -27,6 +27,12 @@ import { readCss } from "./read-css";
 import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
+/**
+ * @todo search how to incorporate the automatic generation of minimum pwa
+ * next block, line:290
+ *
+ * // import { createSw } from "./create-sw";
+ */
 
 let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
 
@@ -268,6 +274,7 @@ export async function createBundle(options) {
         ),
       ];
     }
+
     // parallel queue of asynchronous processes
     await Promise.all([
       ...groupAsync,
@@ -279,6 +286,18 @@ export async function createBundle(options) {
         ? [loadRollup()]
         : []), // add rollup to queue only when needed
     ]);
+    /**
+     * @todo search how to incorporate the automatic generation of minimum pwa
+     * //if (options.pwa && !options.watch) {
+     * //  let normalDest = normalizePath(options.dest);
+     * //  let filesDest = await glob(normalizePath(path.join(options.dest, "**")));
+     * //  let sw = createSw(options.pkg.name, [
+     * //    "/",
+     * //    ...filesDest.map((file) => file.replace(normalDest, ".")),
+     * //  ]);
+     * //  await writeFile(path.join(options.dest, "sw.js"), sw);
+     * //}
+     */
 
     streamLog(`bundle: ${new Date() - lastTime}ms`);
 

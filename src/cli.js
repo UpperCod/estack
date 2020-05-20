@@ -8,22 +8,22 @@ sade("bundle [src] [dest]")
   .option("--external", "Does not include dependencies in the bundle")
   .option(
     "-c, --config",
-    "allows you to export a configuration from package.json"
+    "Allows you to export a configuration from package.json"
   )
-  .option("--sourcemap", "enable the use of sourcemap", true)
+  .option("--sourcemap", "Enable the use of sourcemap", true)
   .option("--server", "Create a server, by default localhost:8000", false)
-  .option("--port", "define the server port", 8000)
-  .option("--proxy", "redirect requests that are not resolved locally", "")
+  .option("--port", "Define the server port", 8000)
+  .option("--proxy", "Redirect requests that are not resolved locally", "")
   .option(
     "--sizes",
     "Displays the sizes of the files associated with rollup",
     false
   )
-  .option("--jsx", "pragma jsx", "h")
-  .option("--jsxFragment", "pragma fragment jsx", "Fragment")
+  .option("--jsx", "Pragma jsx", "h")
+  .option("--jsxFragment", "Pragma fragment jsx", "Fragment")
   .option(
     "--minify",
-    "minify the code only if the flag --watch is not used",
+    "Minify the code only if the flag --watch is not used",
     false
   )
   .example("src/index.html public --watch --server")
