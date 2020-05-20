@@ -219,46 +219,54 @@ export async function createBundle(options) {
         .filter((value) => value);
 
       let groupAsyncHtml = filesHtml.map(async (page) => {
-        let layout = templates[page.layout];
-
-        let pages = filesHtml.map((subPage) => ({
-          ...subPage,
-          link: getRelativePath(page.link, subPage.link),
-        }));
+        let layout = templates[page.layout == null ? "default" : page.layout];
 
         let data = {
           pkg: options.pkg,
           page,
-          pages,
-          layout: layout || {},
+          layout,
           deep: getRelativeDeep(page.folder) || "./",
         };
-        let content;
+
         try {
-          content = await renderHtml(page.content, data);
+          let content = await renderHtml(page.content, data);
+          return { ...data, page: { ...page, content } };
         } catch (e) {
           streamLog(`${SyntaxErrorTransforming} : ${page.file}`);
         }
-        if (layout) {
-          try {
-            content = await renderHtml(layout.content, {
-              ...data,
-              page: {
-                ...page,
-                content,
-              },
-            });
-          } catch (e) {
-            streamLog(`${SyntaxErrorTransforming} : ${layout.file}`);
-          }
-        }
-
-        if (content != null) {
-          return writeFile(page.dest, content);
-        }
       });
 
-      groupAsync = [...groupAsync, ...groupAsyncHtml];
+      groupAsync = [
+        ...groupAsync,
+        // Improve the execution of parallel tasks, to speed up the build
+        Promise.all(groupAsyncHtml).then((pages) =>
+          Promise.all(
+            // Write the files once all have generated render of their
+            // individual content, this in order to create pages that
+            // group the content of other pages already processed
+            pages.map(async (data) => {
+              let content = data.page.content;
+              if (data.layout) {
+                try {
+                  content = await renderHtml(data.layout.content, {
+                    ...data,
+                    pages: pages.map(({ page: subPage }) => ({
+                      ...subPage,
+                      link: getRelativePath(data.page.link, subPage.link),
+                    })),
+                  });
+                } catch (e) {
+                  streamLog(`${SyntaxErrorTransforming} : ${layout.file}`);
+                }
+              }
+
+              if (content != null) {
+                return writeFile(data.page.dest, content);
+              }
+            })
+          )
+        ),
+      ];
     }
     // parallel queue of asynchronous processes
     await Promise.all([
