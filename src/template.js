@@ -38,6 +38,10 @@ engine.registerFilter("log", (data) => {
   return "";
 });
 
+engine.registerFilter("find", (data, by, equal) =>
+  data.find((data) => getProp(data, by) === equal)
+);
+
 function getProp(value, prop, option) {
   value = value || {};
   prop = Array.isArray(prop) ? prop : prop.match(/([^\[\]\.]+)/g);

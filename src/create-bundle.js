@@ -232,6 +232,11 @@ export async function createBundle(options) {
           page,
           layout,
           deep: getRelativeDeep(page.folder) || "./",
+          pages: pages.map(({ page: subPage }) => ({
+            ...subPage,
+            content: null,
+            link: getRelativePath(data.page.link, subPage.link),
+          })),
         };
 
         try {
