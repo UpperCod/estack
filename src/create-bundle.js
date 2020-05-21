@@ -6,7 +6,9 @@ import { get } from "httpie";
 import {
   isJs,
   isMd,
+  isUrl,
   isCss,
+  isYaml,
   isHtml,
   isFixLink,
   isNotFixLink,
@@ -14,6 +16,7 @@ import {
   asyncFs,
   streamLog,
   writeFile,
+  yamlParse,
   normalizePath,
   getPackage,
   getMetaFile,
@@ -28,12 +31,6 @@ import { readCss } from "./read-css";
 import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
-/**
- * @todo search how to incorporate the automatic generation of minimum pwa
- * next block, line:290
- *
- * // import { createSw } from "./create-sw";
- */
 
 let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
 
@@ -55,6 +52,8 @@ export async function createBundle(options) {
 
   // stores the status of processed files
   let inputs = {};
+
+  let cacheFetch = {};
 
   const loadingInterval = setInterval(() => {
     if (server) return;
@@ -178,10 +177,31 @@ export async function createBundle(options) {
             }),
             meta.fetch
               ? Promise.all(
-                  Object.keys(meta.fetch).map(async (prop) => ({
-                    prop,
-                    value: (await get(meta.fetch[prop])).data,
-                  }))
+                  Object.keys(meta.fetch).map(async (prop) => {
+                    let value = meta.fetch[prop];
+                    if (isUrl(value)) {
+                      value = cacheFetch[prop] = cacheFetch[prop] || get(value);
+                      value = (await value).data;
+                    } else {
+                      let findFile = path.join(dir, value);
+
+                      fileWatcher && fileWatcher(findFile, file);
+
+                      try {
+                        value = await readFile(findFile);
+                      } catch (e) {
+                        console.log(e + "\n");
+                      }
+
+                      value = (isYaml(findFile) ? yamlParse : JSON.parse)(
+                        value
+                      );
+                    }
+                    return {
+                      prop,
+                      value,
+                    };
+                  })
                 ).then((data) =>
                   data.reduce((fetch, { prop, value }) => {
                     fetch[prop] = value;
@@ -313,18 +333,6 @@ export async function createBundle(options) {
         ? [loadRollup()]
         : []), // add rollup to queue only when needed
     ]);
-    /**
-     * @todo search how to incorporate the automatic generation of minimum pwa
-     * //if (options.pwa && !options.watch) {
-     * //  let normalDest = normalizePath(options.dest);
-     * //  let filesDest = await glob(normalizePath(path.join(options.dest, "**")));
-     * //  let sw = createSw(options.pkg.name, [
-     * //    "/",
-     * //    ...filesDest.map((file) => file.replace(normalDest, ".")),
-     * //  ]);
-     * //  await writeFile(path.join(options.dest, "sw.js"), sw);
-     * //}
-     */
 
     streamLog(`bundle: ${new Date() - lastTime}ms`);
 
