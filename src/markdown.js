@@ -1,7 +1,20 @@
 import marked from "marked";
 import { escape } from "entities";
 import Prism from "prismjs";
-import loadLanguages from "prismjs/components/";
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-css";
+import "prismjs/components/prism-jsx";
+import "prismjs/components/prism-markdown";
+import "prismjs/components/prism-twig";
+import "prismjs/components/prism-yaml";
+import "prismjs/components/prism-ruby";
+import "prismjs/components/prism-scss";
+import "prismjs/components/prism-sass";
+import "prismjs/components/prism-sql";
+import "prismjs/components/prism-liquid";
+import "prismjs/components/prism-json";
+import "prismjs/components/prism-python";
 
 let renderer = new marked.Renderer();
 // add an additional container prevent the table from collapsing the page
@@ -14,7 +27,6 @@ renderer.table = (header, body) =>
 renderer.code = (code, type) => {
   try {
     if (type) {
-      loadLanguages(type);
       return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Prism.highlight(
         code,
         Prism.languages[type],
