@@ -255,26 +255,28 @@ export async function createBundle(options) {
             // Write the files once all have generated render of their
             // individual content, this in order to create pages that
             // group the content of other pages already processed
-            pages.map(async (data) => {
-              let content = data.page.content;
-              if (data.layout) {
-                try {
-                  content = await renderHtml(data.layout.content, {
-                    ...data,
-                    pages: pages.map(({ page: subPage }) => ({
-                      ...subPage,
-                      link: getRelativePath(data.page.link, subPage.link),
-                    })),
-                  });
-                } catch (e) {
-                  streamLog(`${SyntaxErrorTransforming} : ${layout.file}`);
+            pages
+              .filter((data) => data)
+              .map(async (data) => {
+                let content = data.page.content;
+                if (data.layout) {
+                  try {
+                    content = await renderHtml(data.layout.content, {
+                      ...data,
+                      pages: pages.map(({ page: subPage }) => ({
+                        ...subPage,
+                        link: getRelativePath(data.page.link, subPage.link),
+                      })),
+                    });
+                  } catch (e) {
+                    streamLog(`${SyntaxErrorTransforming} : ${layout.file}`);
+                  }
                 }
-              }
 
-              if (content != null) {
-                return writeFile(data.page.dest, content);
-              }
-            })
+                if (content != null) {
+                  return writeFile(data.page.dest, content);
+                }
+              })
           )
         ),
       ];
