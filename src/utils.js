@@ -14,9 +14,9 @@ let pkgDefault = {
   babel: {},
 };
 
-export let isUrl = (file) => /^(http(s){0,1}:){0,1}\/\//.test(file);
+export let isYaml = (file) => /\.yaml$/.test(file);
 
-export let asyncGroup = (group) => Promise.all(group);
+export let isUrl = (file) => /^(http(s){0,1}:){0,1}\/\//.test(file);
 
 export let isHtml = (file) => /\.(md|html)/.test(file);
 
@@ -64,26 +64,6 @@ export async function writeFile(file, data) {
   return asyncFs.writeFile(path.join(cwd, file), data, "utf8");
 }
 
-export function mergeKeysArray(keys, ...config) {
-  keys.forEach((index) => {
-    config[0][index] = Array.from(
-      new Map(
-        config.reduce(
-          (nextConfig, config) =>
-            nextConfig.concat(
-              (config[index] || []).map((value) =>
-                Array.isArray(value) ? value : [value]
-              )
-            ),
-          []
-        )
-      )
-    );
-  });
-
-  return config[0];
-}
-
 export async function getPackage() {
   try {
     return {
@@ -124,24 +104,11 @@ export function streamLog(message) {
   console.log(message + "\n");
 }
 
-export function createAwait() {
-  let resolve;
-  let reject;
-  let promise = new Promise((_resolve, _reject) => {
-    resolve = _resolve;
-    reject = _reject;
-  });
-  return {
-    promise,
-    resolve,
-    reject,
-  };
-}
-
 export let normalizePath = (str) => str.replace(/(\\)+/g, "/");
 
+export let yamlParse = (string) => yaml.safeLoad(string);
+
 export function getMetaFile(code) {
-  let metaFragment = { start: 0, end: 0 };
   let meta = {};
   let metaBlock = "---";
   let lineBreak = "\n";
@@ -157,9 +124,7 @@ export function getMetaFile(code) {
       data.push(lines[i]);
     }
     if (data.length) {
-      metaFragment.end = data.length;
-      meta = yaml.safeLoad(data.join(lineBreak));
-      meta.metaFragment = metaFragment;
+      meta = yamlParse(data.join(lineBreak));
     }
     code = body.join(lineBreak);
   }
