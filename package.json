@@ -10,7 +10,7 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "build:example:watch": "node cli.js example/src/**/*.{html,md} example/dest --server --watch",
-    "build:example": "node cli.js example/src/*.{html,md} example/dest --minify --sizes --server",
+    "build:example": "node cli.js example/src/*.{html,md} example/dest --minify --sizes",
     "prepare": "npm run build && npm run test"
   },
   "author": "UpperCod",
@@ -23,6 +23,7 @@
     "url": "https://github.com/atomicojs/bundle-cli"
   },
   "dependencies": {
+    "httpie": "^1.1.2",
     "rollup": "^2.10.0"
   },
   "bin": {

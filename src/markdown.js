@@ -16,6 +16,8 @@ import "prismjs/components/prism-liquid";
 import "prismjs/components/prism-json";
 import "prismjs/components/prism-python";
 
+let cache = {};
+
 let renderer = new marked.Renderer();
 // add an additional container prevent the table from collapsing the page
 renderer.table = (header, body) =>
@@ -26,22 +28,20 @@ renderer.table = (header, body) =>
 //  configure the container to allow language to be highlighted independently of the class
 renderer.code = (code, type) => {
   try {
-    if (type) {
-      return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${Prism.highlight(
-        code,
-        Prism.languages[type],
-        type
-      )}</code></pre>`;
-    }
+    return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${
+      Prism.languages[type]
+        ? Prism.highlight(code, Prism.languages[type], type)
+        : escape(code)
+    }</code></pre>`;
   } catch (e) {}
-
-  return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${escape(
-    code
-  )}</code></pre>`;
 };
+
+renderer.image = (href, title, text) =>
+  `<img src="${href}" alt="${text}" title="${title}">`;
 
 marked.setOptions({
   renderer,
 });
 
-export let renderMarkdown = (code) => marked(code);
+export let renderMarkdown = (code) =>
+  (cache[code] = cache[code] || marked(code));

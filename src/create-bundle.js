@@ -2,6 +2,7 @@ import glob from "fast-glob";
 import path from "path";
 import rollup from "rollup";
 import builtins from "builtin-modules";
+import { get } from "httpie";
 import {
   isJs,
   isMd,
@@ -158,20 +159,38 @@ export async function createBundle(options) {
           let link = path.join("./", meta.folder || "", name);
           let nestedFiles = [];
 
-          let content = await readHtml({
-            code,
-            async addFile(childFile) {
-              let findFile = path.join(dir, childFile);
-              try {
-                await asyncFs.stat(findFile);
-                nestedFiles.push(findFile);
-                fileWatcher && fileWatcher(findFile, file);
-                return "{{deep}}" + getFileName(findFile);
-              } catch (e) {
-                return childFile;
-              }
-            },
-          });
+          async function addFile(childFile) {
+            let findFile = path.join(dir, childFile);
+            try {
+              await asyncFs.stat(findFile);
+              nestedFiles.push(findFile);
+              fileWatcher && fileWatcher(findFile, file);
+              return "{{deep}}" + getFileName(findFile);
+            } catch (e) {
+              return childFile;
+            }
+          }
+
+          let [content, fetch, cover] = await Promise.all([
+            readHtml({
+              code,
+              addFile,
+            }),
+            meta.fetch
+              ? Promise.all(
+                  Object.keys(meta.fetch).map(async (prop) => ({
+                    prop,
+                    value: (await get(meta.fetch[prop])).data,
+                  }))
+                ).then((data) =>
+                  data.reduce((fetch, { prop, value }) => {
+                    fetch[prop] = value;
+                    return fetch;
+                  }, {})
+                )
+              : null,
+            meta.cover ? addFile(meta.cover) : null,
+          ]);
 
           if (isMd(file)) {
             content = renderMarkdown(content);
@@ -179,6 +198,8 @@ export async function createBundle(options) {
 
           inputs[file] = {
             ...meta,
+            fetch,
+            cover,
             file,
             name,
             content,
@@ -256,6 +277,7 @@ export async function createBundle(options) {
             // individual content, this in order to create pages that
             // group the content of other pages already processed
             pages.map(async (data) => {
+              if (!data) return;
               let content = data.page.content;
               if (data.layout) {
                 try {
