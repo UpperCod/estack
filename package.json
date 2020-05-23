@@ -1,6 +1,6 @@
 {
   "name": "bundle-cli",
-  "version": "0.26.2",
+  "version": "0.27.0",
   "description": "simple bundle generator",
   "module": "src/cli.js",
   "main": "cli.js",
@@ -54,7 +54,7 @@
     "resolve": "^1.17.0",
     "sade": "^1.7.3",
     "sirv": "^0.4.2",
-    "stylis": "^4.0.0",
+    "stylis": "^4.0.1",
     "terser": "^4.6.13"
   },
   "optionalDependencies": {

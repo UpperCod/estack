@@ -14,6 +14,7 @@ import {
   isNotFixLink,
   readFile,
   asyncFs,
+  copyFile,
   streamLog,
   writeFile,
   yamlParse,
@@ -157,20 +158,21 @@ export async function createBundle(options) {
           let dest = getDest(name, meta.folder);
           let link = path.join("./", meta.folder || "", name);
           let nestedFiles = [];
+          let localScan = {}; // prevents a second check if the file is added again from the html
 
           async function addFile(childFile) {
             let findFile = path.join(dir, childFile);
+            if (localScan[findFile]) return localScan[findFile];
             try {
               await asyncFs.stat(findFile);
               nestedFiles.push(findFile);
               fileWatcher && fileWatcher(findFile, file);
-              return "{{deep}}" + getFileName(findFile);
+              return (localScan[findFile] = "{{deep}}" + getFileName(findFile));
             } catch (e) {
-              return childFile;
+              return (localScan[findFile] = childFile);
             }
           }
-
-          let [content, fetch, cover] = await Promise.all([
+          let [content, fetch, aliasFiles] = await Promise.all([
             readHtml({
               code,
               addFile,
@@ -209,7 +211,19 @@ export async function createBundle(options) {
                   }, {})
                 )
               : null,
-            meta.cover ? addFile(meta.cover) : null,
+            meta.files
+              ? Promise.all(
+                  Object.keys(meta.files).map(async (prop) => ({
+                    prop,
+                    value: await addFile(meta.files[prop]),
+                  }))
+                ).then((files) =>
+                  files.reduce((aliasFiles, { prop, value }) => {
+                    aliasFiles[prop] = value;
+                    return aliasFiles;
+                  }, {})
+                )
+              : null,
           ]);
 
           if (isMd(file)) {
@@ -219,7 +233,7 @@ export async function createBundle(options) {
           inputs[file] = {
             ...meta,
             fetch,
-            cover,
+            files: aliasFiles,
             file,
             name,
             content,
@@ -314,7 +328,10 @@ export async function createBundle(options) {
               }
 
               if (content != null) {
-                return writeFile(data.page.dest, content);
+                return writeFile(
+                  data.page.dest,
+                  content.replace(/\{\{deep\}\}/g, data.deep) // ensures the relative use of all files declared before writing
+                );
               }
             })
           )
@@ -328,7 +345,7 @@ export async function createBundle(options) {
       ...files // copy of static files
         .filter(isNotFixLink)
         .filter(prevenLoad)
-        .map(async (file) => copyFile(file, getDest(getLink(file)))),
+        .map(async (file) => copyFile(file, getDest(getFileName(file)))),
       ...(files.filter(isJs).filter(prevenLoad).length || forceBuild
         ? [loadRollup()]
         : []), // add rollup to queue only when needed

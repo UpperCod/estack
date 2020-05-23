@@ -11,7 +11,7 @@ export async function readCss(
 
   let rules = await Promise.all(
     compile(code).map(async (child) => {
-      if (child.type.trim() == "@import") {
+      if (child.type == "@import") {
         let value = child.value
           .trim()
           .replace(/@import\s*(?:|\"|\')([^\"\']+)(?:|\"|\');/, "$1");
