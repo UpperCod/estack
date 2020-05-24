@@ -284,6 +284,7 @@ export async function createBundle(options) {
 
         let data = {
           pkg: options.pkg,
+          build: !options.watch,
           page,
           layout,
           deep: getRelativeDeep(page.folder) || "./",

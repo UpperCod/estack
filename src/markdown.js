@@ -21,14 +21,12 @@ let cache = {};
 let renderer = new marked.Renderer();
 // add an additional container prevent the table from collapsing the page
 renderer.table = (header, body) =>
-  `<div class="markdown -table-container"><table>${
-    header + body
-  }</table></div>`;
+  `<div class="markdown-table-container"><table>${header + body}</table></div>`;
 
 //  configure the container to allow language to be highlighted independently of the class
 renderer.code = (code, type) => {
   try {
-    return `<pre class="markdown -code-container" data-code="${type}"><code class="language-${type}">${
+    return `<pre class="markdown-code-container" data-code="${type}"><code class="language-${type}">${
       Prism.languages[type]
         ? Prism.highlight(code, Prism.languages[type], type)
         : escape(code)
