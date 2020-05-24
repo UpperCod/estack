@@ -172,6 +172,11 @@ export async function createBundle(options) {
               return (localScan[findFile] = childFile);
             }
           }
+
+          if (isMd(file)) {
+            code = renderMarkdown(code);
+          }
+
           let [content, fetch, aliasFiles] = await Promise.all([
             readHtml({
               code,
@@ -225,10 +230,6 @@ export async function createBundle(options) {
                 )
               : null,
           ]);
-
-          if (isMd(file)) {
-            content = renderMarkdown(content);
-          }
 
           inputs[file] = {
             ...meta,

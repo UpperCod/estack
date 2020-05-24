@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "httpie": "^1.1.2",
+    "parse": "^2.13.0",
     "rollup": "^2.10.0"
   },
   "bin": {
