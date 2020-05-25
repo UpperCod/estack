@@ -41,8 +41,5 @@ export async function readCss(
   if (returnRules) {
     return rules;
   }
-  return serialize(rules, stringify)
-    .replace(/[\n\r\t]+/g, "")
-    .replace(/[\s]+/g, " ")
-    .replace(/\{\s+/g, "{");
+  return serialize(rules, stringify);
 }

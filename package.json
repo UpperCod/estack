@@ -1,6 +1,6 @@
 {
   "name": "bundle-cli",
-  "version": "0.28.1",
+  "version": "0.28.2",
   "description": "simple bundle generator",
   "module": "src/cli.js",
   "main": "cli.js",
@@ -23,8 +23,6 @@
     "url": "https://github.com/atomicojs/bundle-cli"
   },
   "dependencies": {
-    "httpie": "^1.1.2",
-    "parse": "^2.13.0",
     "rollup": "^2.10.0"
   },
   "bin": {
@@ -43,6 +41,7 @@
     "entities": "^2.0.2",
     "fast-glob": "^3.2.2",
     "http-proxy-middleware": "^1.0.3",
+    "httpie": "^1.1.2",
     "js-yaml": "^3.13.1",
     "liquidjs": "^9.12.0",
     "log-update": "^4.0.0",
