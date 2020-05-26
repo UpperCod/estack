@@ -141,7 +141,7 @@ export async function createBundle(options) {
         .map(async (file) => {
           rebuildHtml.push(file);
 
-          let { dir } = path.parse(file);
+          let { dir, name } = path.parse(file);
           let html = await readFile(file);
           let data = [html, {}];
 
@@ -154,9 +154,9 @@ export async function createBundle(options) {
           }
           let [code, meta] = data;
 
-          let name = getFileName(file);
-          let dest = getDest(name, meta.folder);
-          let link = path.join("./", meta.folder || "", name);
+          let fileName = getFileName(file);
+          let dest = getDest(fileName, meta.folder);
+          let link = path.join("./", meta.folder || "", fileName);
           let nestedFiles = [];
           let localScan = {}; // prevents a second check if the file is added again from the html
 
@@ -237,6 +237,7 @@ export async function createBundle(options) {
             files: aliasFiles,
             file,
             name,
+            fileName,
             content,
             link,
             dest,
@@ -330,6 +331,19 @@ export async function createBundle(options) {
               }
 
               if (content != null) {
+                /**
+                 * If the layout used by the page has the singlePage configuration,
+                 * it will only generate the page that this property of fine based on its name
+                 * @example
+                 * singlePage : index
+                 */
+                if (
+                  data.layout &&
+                  data.layout.singlePage &&
+                  data.layout.singlePage !== data.page.name
+                ) {
+                  return;
+                }
                 return writeFile(
                   data.page.dest,
                   content.replace(/\{\{deep\}\}/g, data.deep) // ensures the relative use of all files declared before writing
