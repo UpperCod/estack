@@ -1,306 +1,124 @@
 # bundle-cli
 
-Bundle-cli busca mejorar la experiencia de desarrollo para webcomponents, ofreciendo un entorno dinámico para desarrollar y empaquetar JavaScript, Css y Html, inspirado en [Parceljs](https://parceljs.org/).
+bundle-cli is created to minimize the impact of development on disk usage, its node_module will only contain rollup and bundle-cli packages after installation, **Bundle-cli aims to be a dynamic and friendly development environment for webcomponents, with this CLI you can:**
 
-## Con este CLI ud podrá:
+1. Export assets from html and markdown files created on the fly, an effect similar to ParselJs, but without the limitation of only one index.html, bundle-cli parses based on an expression so you can add files on the mark and automatically bundle-cli processes them.
+2. Add html, markdowns and assets that are dynamically synchronized in watch mode for the regeneration of the bundle or browser reload.
+3. Exports using expressions.
+4. Server with livereload, synchronized to the regeneration of the bundle.
+5. Minification and more.
 
-### Múltiples tipos de inputs de entrada.
+### npx bundle --help
 
-Bundle-cli es capas de analizar distintos tipo de fichero a base de expreciones, estos pueden ser del tipo `html`,`markdown`, `javascript`,`typescript` y `css`.
+```
+  Usage
+    $ bundle [src] [dest] [options]
 
-Si su origen es del tipo html o markdown, bundle exportara los assets de proyecto, si estos cumplen con el selector `[href]` o `[src]`, eg: `<script src="my-js.js"></script>` o `<img src="my-image.jpg">`
+  Options
+    --watch          Watch files in bundle and rebuild on changes  (default false)
+    --external       Does not include dependencies in the bundle
+    -c, --config     allows you to export a configuration from package.json
+    --sourcemap      enable the use of sourcemap  (default true)
+    --server         Create a server, by default localhost:8000  (default false)
+    --port           define the server port  (default 8000)
+    --proxy          redirect requests that are not resolved locally  (default false)
+    --sizes          Displays the sizes of the files associated with rollup  (default false)
+    --jsx            pragma jsx  (default h)
+    --jsxFragment    pragma fragment jsx  (default Fragment)
+    --minify         minify the code only if the flag --watch is not used  (default false)
+    -v, --version    Displays current version
+    -h, --help       Displays this message
 
-### Observador de cambios inteligente y rapido.
+  Examples
+    $ bundle src/index.html public --watch --server
+    $ bundle src/index.html public --external
+    $ bundle src/index.html public --external react,react-dom
+    $ bundle src/index.js dist --watch
+    $ bundle src/*.js dist
+    $ bundle src/*.{html,md}
+    $ bundle
+```
 
-EL modo de desarrollo(`--watch`) de bundle-cli es rápido, ya que solo resuelve los ficheros que realmente han cambiado a base de sus relaciones y demanda, esto con el objetivo de minimizar los tiempos de escritura al usar el flag `--watch`.
+## html and markdown document management
 
-### Trabajar Javascript y Typescript gracias a [Rollup](http://rollupjs.org/) + [Sucrase](https://sucrase.io/)
+Bundle-cli scans html and markdown files only if they are declared as part of its example expression `src/**/*.{html,md}`.
 
-### Sistema de plantilla minimalista basado en metadata
+```html
+<my-component></my-component>
+<script type="module" src="./components/my-component/my-component.js"></script>
+```
 
-Bundle-cli usa liquidjs y permite que cada fichero sea html o markdwon peudan declarar fragmentos de metadata ,ej:
+These documents can declare a header fragment to define data to share for the generation of the html, eg:
 
 ```html
 ---
-title: my page
+title: My component
 ---
 
-<html>
+<h1>{{page.title}}</h1>
+<my-component></my-component>
+<script type="module" src="./components/my-component/my-component.js"></script>
+```
+
+the template syntax supported by bundle-cli is [liquidjs](https://liquidjs.com/).
+
+### template and layout properties
+
+The `template` property allows you to define a parent template for another that declares its use using the `layout` property., eg:
+
+**master.html**
+
+```html
+---
+template: master
+title: template master!
+---
+
+<!DOCTYPE html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{page.title}}</title>
   </head>
+  <body>
+    {{page.content}}
+  </body>
 </html>
 ```
 
-## El sistema de plantillas para Html y Markdown
-
-El sistema de plantillas permite el uso de Markdown, [Liquidjs](https://liquidjs.com/) y metadata en formato yaml.
-
-### Ejemplo de pagina
-
-```markdown
----
-title: my page
----
-
-## {{page.title}}
-
-More content...
-
-<my-element></my-element>
-
-<script type="module" src="my-element.js"></script>.
-```
-
-### Regla de escritura
-
-**Los inputs no agrupados sea html o markdow y los assets tipo javascript deben poseer nombre único**, ej:
-
-```bash
-/src
-  /components
-    /my-componet-1
-      my-component-1.js
-      my-component-1.md
-    /my-componet-2
-      my-component-2.js
-      my-component-2.md
-```
-
-La escritura de estos archivos no conserva la ruta de origen, ej:
-
-```bash
-/dest
-  my-component-1.js
-  my-component-2.js
-  my-component-1.html
-  my-component-2.html
-```
-
-Para modificar el destino existe las propiedades especiales de metadata `folder` y `name`.
-
-### Propiedades especiales de metadata
-
-#### folder
-
-Esta propiedad permite definir la carpeta de destino para el documento que la declara
-
-```yaml
-folder: gallery
-```
-
-Si su fichero se llama `cat.html`, este se escribirá en el destino como `gallery/cat.html`.
-
-#### template
-
-Permite definir el documento como plantilla maestra, por lo que no será escrito. ej:
-
-**template.html**
+**any.html**
 
 ```html
 ---
-title: i am layout
-template: default
+layout: master
+title: any file
 ---
 
-<h1>{{layout.title}}</h1>
-<h1>{{page.title}}</h1>
-
-<div>
-  {{page.content}}
-</div>
+<h1>template ? {{layout.title}}</h1>
+<h1>page title ? {{page.title}}</h1>
 ```
 
-> La propiedad default define este template como por defecto para todas las paginas que no declaren su layout.
+> The template that declares the layout, will inherit the data of the superior template through the `layout` property.
 
-**page.html**
+### The context
 
-```html
----
-title: i am page
----
+The data that is shared with the tempate seeks to facilitate the construction of static sites. this context consists of:
 
-<p>lorem...</p>
-```
+- **pkg** : allows access to the given package.json, eg `{{pkg.name}}`.
+- **pages** : Pages extracted by expression, eg `{{pages[0].title}}`
+- **page** : Current page, eg`{{page.title}}`
+- **layout** : Data inherited from the template page, eg `{{layout.color}}`.
 
-**dest/page.html**
+## Recommended use
 
-```html
-<h1>i am layout</h1>
-<h1>i am page</h1>
-<div>
-  <p>lorem...</p>
-</div>
-```
+We recommend using bundle-cli by defining the scripts in your package.json, eg:
 
-**Nota:** La propiedad template pude ser un alias distinto de default, eg:
-
-```yaml
-layout: template-users
-```
-
-#### pages
-
-**Esta propiedad solo puede ser accedida por los template** y permite acceder a todas las paginas procesadas, sea metadata y contenido, eg:
-
-```html
----
-template: default
-singlePage: index
----
-
-<h1>links de pagina</h1>
-
-{% for item in pages %}
-<a href="{{item.link}}">
-  {{item.title}}
-</a>
-{% endfor %}
-```
-
-##### pkg
-
-Permite acceder a toda la data contenida en el package.json, ej:
-
-**my-element.md**
-
-````markdown
-## Usage
-
-​```js
-import "{{pkg.name}}/my-element.js";
-
-```
-
-```
-````
-
-**dest/my-element.html**
-
-​```html
-
-<h1>
-  Usage
-</h1>
-<pre><code>import "my-package/my-element.js";</code></pre>
-```
-
-### files
-
-Permite generar un alias de importación como variable de la pagina, ej:
-
-```markdown
----
-files:
-  cover: ./my-image.jpg
----
-
-## image
-
-![my image]({{files.cover}})
-```
-
-**La ventaja de esto es que el assets queda almacenado en la metadata para que pueda ser para ser usado**
-
-### fetch
-
-Permite generar un request al momento al momento de la build, eg:
-
-```html
----
-fetch:
-  config: ./config.yaml
-  todos: https://jsonplaceholder.typicode.com/todos
----
-
-<h1>{{fetch.config.title}}</h1>
-
-{% for todo in todos %}
-<div>
-  <h3>{{todo.title}}</h3>
-</div>
-{% endfor %}
-```
-
-**Fetch** crea una relación de dependencia con los ficheros locales, por lo que cualquier cambio genera una rescritura del documento que lo utiliza.
-
-## Assets tipo CSS
-
-Los fichero css pueden ser usados como módulos dentro de Rollup o como Assets de fichero Html o Markdow, estos son procesados gracias a [Stylis](https://stylis.js.org/).
-
-### @import
-
-la configuración permite importar módulos locales o desde node_modules, la resolución de este debe ser apuntado hacia el fichero ej:
-
-```css
-@import "./my-css.css"; /**local**/
-@import "my-package/my-css.css"; /**node_module**/
-```
-
-### @use
-
-Este permite aplicar una selección sobre los selectores y keyframes importados por el css, ej:
-
-```css
-@use ".button-circle";
-@import "my-package-1/my-buttons";
-@import "my-package-2/my-buttons";
-
-.button-circle {
-  color: black;
+```json
+{
+  "scripts": {
+    "start": "bundle example/src/**/*.{html,md} public --server --watch",
+    "build": "bundle example/src/*.{html,md} public --minify bundle"
+  }
 }
 ```
-
-Todo selector distinto de `.button-circle` será ignorado en la exportación desde `my-package-1/my-buttons` y `my-package-2/my-buttons`.
-
-**la utilidad de @use** es eliminar el css que no cumpla con la expresión.
-
-Tipos de expresiones para @use:
-
-- `@use ".button"` : Todo selector que inicie con `.button`
-- `@use ".button-"` : Todo selector que inicie con `.button-`, ej: `.button-circle` y `button-alert`
-- `@use "button$"` : Solo el selector `button`
-
-### Módulos css
-
-Ud podrá exportar el css como texto plano para ser usado dentro de javacsript, eg:
-
-```js
-import style from "./my-css.css";
-```
-
-**Util para trabajar con webcomponents**, ya que el css se entrega mitificado, ideal para su uso dentro del shadowDom
-
-## Cli
-
-Conozca toda la documentación del cli mediante `npx bundle --help`, a continuación se detallan las mas importantes:
-
-### --server
-
-Activa un servidor, por default la busqueda de puerto inicializa desde le numero `8000`, ud puede cambiar este comportamiento mediante el flag `--port`
-
-#### --proxy
-
-Habilita el uso de proxy sobre el servidor, esto gracias a [http-proxy-middleware](#http-proxy-middleware)
-Este flag solo trabaja al momento de usar el flag `--server`
-Permite direcionar toda request que no se resuelva de forma local a una externa, eg:
-
-```
---proxy https://jsonplaceholder.typicode.com
-```
-
-```js
-fetch("/todos")
-  .then((res) => res.json())
-  .then((data) => {
-    console.log(data); //[...]
-  });
-```
-
-#### --watch
-
-Habilita el modo desarrollo, al usar junto con el flag `--server` se inicializa el modo livereload
-
-#### --minify
-
-Habilita el uso de Terser para los archivos salientes de Rollup, esto minificara el código JS
