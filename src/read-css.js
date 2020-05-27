@@ -18,8 +18,8 @@ export async function readCss(
        * @example
        * @use "a";
        * @use ".my-class";
-       * @use ".my-class--*"; .my-class--any
-       * @use ".my-class**"; .my-class-b:not(c)
+       * @use ".my-class-*"; .my-class--any
+       * @use ".my-class-*"; .my-class-b:not(c)
        */
       if (child.type == "@use") {
         let value = RegExp(
@@ -28,8 +28,6 @@ export async function readCss(
               .replace(/@use\s*(?:|\"|\')([^\"\']+)(?:|\"|\');/, "$1")
               .replace(/^keyframes *(.+)/, "keyframes:$1")
               .replace(/([\.\]\[\)\(\:])/g, "\\$1")
-              .replace(/\*\*/g, `[^\\s]`)
-              .replace(/\*/g, `[\\w]+`)
         );
 
         if (!useRules.includes(value)) {
