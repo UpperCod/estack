@@ -35,11 +35,35 @@ renderer.code = (code, type) => {
 };
 
 renderer.image = (href, title, text) =>
-  `<img src="${href}" alt="${text}" title="${title}">`;
+  `<img src="${safeLink(href)}" alt="${text}" title="${title}">`;
 
 marked.setOptions({
   renderer,
 });
+/**
+ * Maintains the use of brackets to normalize the work of liquidjs
+ * @param {string} value
+ */
+let createReplace = (value) => {
+  let regValue = RegExp(value, "g");
+  let alias = (Math.random() + "").replace("0.", "__");
+  let regAlias = RegExp(alias, "g");
+  return {
+    replace: (str) => str.replace(regValue, alias),
+    recover: (str) => str.replace(regAlias, value),
+  };
+};
+
+let bracketsStart = createReplace("{{");
+let bracketsEnd = createReplace("}}");
+
+let safeLink = (link) => {
+  link = bracketsStart.replace(link);
+  link = bracketsEnd.replace(link);
+  link = escape(link);
+  link = bracketsStart.recover(link);
+  return bracketsEnd.recover(link);
+};
 
 export let renderMarkdown = (code) =>
   (cache[code] = cache[code] || marked(code));
