@@ -10,15 +10,17 @@ Bundle-cli es capas de analizar distintos tipo de fichero a base de expreciones,
 
 Si su origen es del tipo html o markdown, bundle exportara los assets de proyecto, si estos cumplen con el selector `[href]` o `[src]`, eg: `<script src="my-js.js"></script>` o `<img src="my-image.jpg">`
 
-### Observador de cambios inteligente y rapido.
+### Observador de cambios inteligente y rápido.
 
 EL modo de desarrollo(`--watch`) de bundle-cli es rápido, ya que solo resuelve los ficheros que realmente han cambiado a base de sus relaciones y demanda, esto con el objetivo de minimizar los tiempos de escritura al usar el flag `--watch`.
 
-### Trabajar Javascript y Typescript gracias a [Rollup](http://rollupjs.org/) + [Sucrase](https://sucrase.io/)
+### Entorno moderno
 
-### Sistema de plantilla minimalista basado en metadata
+Bundle-cli no busca ser compatible con navegadores antiguos, esta pensado para un desarrollo moderno a base de ESM, optimizado gracias a [Rollup](http://rollupjs.org/), [Sucrase](https://sucrase.io/) y otros espectaculares packages.
 
-Bundle-cli usa liquidjs y permite que cada fichero sea html o markdwon peudan declarar fragmentos de metadata ,ej:
+### Documentos dinámicos html y markdown
+
+Cree sitios o aplicaciones escalables, mantenerle con un sistema de plantillas a base de liquidjs y permite que cada fichero sea html o markdwon puedan declarar fragmentos de metadata ,ej:
 
 ```html
 ---
@@ -32,7 +34,9 @@ title: my page
 </html>
 ```
 
-## El sistema de plantillas para Html y Markdown
+> la propiedad `page` permite el acceso a todo lo declarado en el fragmento de metadatos.
+
+## Procesamiento de documentos html y markdown
 
 El sistema de plantillas permite el uso de Markdown, [Liquidjs](https://liquidjs.com/) y metadata en formato yaml.
 
@@ -177,8 +181,7 @@ import "{{pkg.name}}/my-element.js";
 
 **dest/my-element.html**
 
-​```html
-
+```html
 <h1>
   Usage
 </h1>
@@ -189,16 +192,18 @@ import "{{pkg.name}}/my-element.js";
 
 Permite generar un alias de importación como variable de la pagina, ej:
 
-```markdown
----
+## ​```markdown
+
 files:
-  cover: ./my-image.jpg
+cover: ./my-image.jpg
+
 ---
 
 ## image
 
 ![my image]({{files.cover}})
-```
+
+````
 
 **La ventaja de esto es que el assets queda almacenado en la metadata para que pueda ser para ser usado**
 
@@ -220,7 +225,7 @@ fetch:
   <h3>{{todo.title}}</h3>
 </div>
 {% endfor %}
-```
+````
 
 **Fetch** crea una relación de dependencia con los ficheros locales, por lo que cualquier cambio genera una rescritura del documento que lo utiliza.
 
@@ -291,8 +296,8 @@ Permite direcionar toda request que no se resuelva de forma local a una externa,
 
 ```js
 fetch("/todos")
-  .then((res) => res.json())
-  .then((data) => {
+  .then(res => res.json())
+  .then(data => {
     console.log(data); //[...]
   });
 ```
