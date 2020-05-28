@@ -2,15 +2,29 @@ import path from "path";
 import { compile, serialize, stringify } from "stylis";
 import { readFile } from "./utils";
 
+let createCaptureMetaCss = (type) =>
+  RegExp(String.raw`@${type}\s*(?:|\"|\')([^\"\']+)(?:|\"|\');`);
+
+let regValueUse = createCaptureMetaCss("use");
+let regValueImport = createCaptureMetaCss("import");
+let regValueNamespace = createCaptureMetaCss("namespace");
+
 export async function readCss(
   { file, code, addWatchFile },
   imports = {},
   returnRules,
-  useRules = []
+  useRules = [],
+  namespace = ""
 ) {
   let { dir } = path.parse(file);
+
+  code = code.replace(regValueNamespace, (nm, value) => {
+    namespace += (namespace ? " " : "") + value;
+    return "";
+  });
+
   let rules = await Promise.all(
-    compile(code).map(async (child) => {
+    compile(namespace ? `${namespace}{${code}}` : code).map(async (child) => {
       /**
        * the @use type allows defining a search regular
        * expression to only include the rules that apply
@@ -24,8 +38,9 @@ export async function readCss(
       if (child.type == "@use") {
         let value = RegExp(
           "^" +
+            (namespace ? namespace + "\\s+" : "") +
             child.value
-              .replace(/@use\s*(?:|\"|\')([^\"\']+)(?:|\"|\');/, "$1")
+              .replace(regValueUse, "$1")
               .replace(/^keyframes *(.+)/, "keyframes:$1")
               .replace(/([\.\]\[\)\(\:])/g, "\\$1")
         );
@@ -35,9 +50,7 @@ export async function readCss(
         }
       }
       if (child.type == "@import") {
-        let value = child.value
-          .trim()
-          .replace(/@import\s*(?:|\"|\')([^\"\']+)(?:|\"|\');/, "$1");
+        let value = child.value.replace(regValueImport, "$1");
         let file = path.join(dir, value);
         if (!imports[file]) {
           imports[file] = true;
@@ -48,13 +61,20 @@ export async function readCss(
               { file, code, addWatchFile },
               imports,
               true,
-              useRules
+              useRules,
+              namespace
             );
           } catch (e) {
             let file = path.join("node_modules", value);
             try {
               let code = await readFile(file);
-              return readCss({ file, code }, imports, true, useRules);
+              return readCss(
+                { file, code },
+                imports,
+                true,
+                useRules,
+                namespace
+              );
             } catch (e) {}
           }
         }
