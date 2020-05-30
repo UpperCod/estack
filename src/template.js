@@ -10,7 +10,11 @@ engine.registerFilter("order", (data, by, manual = []) => {
   return data
     .map((data) => {
       let selector = getProp(data, by);
-      let position = manual.length ? manual.indexOf(selector) >>> 0 : selector;
+      let position = manual.length
+        ? manual.indexOf(selector) >>> 0 // 4294967295
+        : selector == null
+        ? -1 >>> 0 // 4294967295
+        : selector;
       return { data, position };
     })
     .sort((a, b) => (a.position > b.position ? 1 : -1))
