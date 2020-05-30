@@ -1,6 +1,38 @@
-# Estack
+# EStack
 
-Estack busca mejorar la experiencia de desarrollo para webcomponents, ofreciendo un entorno dinámico para desarrollar y empaquetar JavaScript, Css y Html, inspirado en [Parceljs](https://parceljs.org/).
+EStack simplifica desarrollo de sitios web estaticos y distribucion de modulos ES, con EStack ud podra:
+
+1. **Crear sitios estatico**: EStack procesara sus archivos Html y Markdown para la extraccion y procesamiento de assets.
+2. **Empaquetador de css**: EStack usa [Stylis] una alternativa moderna, ligera y rapida a Postcss, Estack esta configurado para procesar archivos css y agruparlos.
+3. **Empaquetador de modulos ES**: EStack, procesa los ficheros tipo javascript y Typescript gracias a Rollup preconfigurado y optimizado para un desarrollo rapido y ligero.
+4. **Servidor de desarrollo**: EStack, crea un servidor de desarrollo al momento de trabajar con el flag `--server`, que convinado con el flag `--watch`, activaran el modo livereload sincronziado a EStack.
+5. **Condicionales de exportacion**: EStack, cuenta con diversos flag que permiten una exportacion condicional, sea incluir archivos externos de NPM o Minificar.
+6. **Exportar usando expreciones**: EStack es capas de leer ficheros mediante expreciones, eg : `src/**/*.{html,markdow}` procesara y observara todos los ficheros html y markdown existentes en directorio `src/`.
+
+## CLI
+
+### Configuracion
+
+```
+estack [src] [dest]
+```
+
+Where :
+
+- `src` : Directorio de origen de assets, ud peude apunntar a uno o multiples ficheros, sea de forma directa o mediant expreciones.
+- `dest` : Destino de los archivos procesados.
+
+### Flags
+
+`--watch` : Reinicia el proceso de build solo a los archivos afectados, este peude convinarce con `--server`, para activar el modo livereload del servidor creado por `EStack`.
+
+`--server` : Crea un servidor local que apunta a `dest`.
+
+`--port <number>` : `Default 8000`, define el puerto de busqueda para el servidor.
+
+`--proxy <url>` : Todo request no resuelto de forma local sera enviado a la url definida.
+
+EStack Inspirado en [Parceljs](https://parceljs.org/) y [Eleventy](https://www.11ty.dev/).
 
 ## Con este CLI ud podrá:
 
@@ -296,8 +328,8 @@ Permite direcionar toda request que no se resuelva de forma local a una externa,
 
 ```js
 fetch("/todos")
-  .then((res) => res.json())
-  .then((data) => {
+  .then(res => res.json())
+  .then(data => {
     console.log(data); //[...]
   });
 ```

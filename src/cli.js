@@ -10,7 +10,7 @@ sade("estack [src] [dest]")
     "-c, --config",
     "Allows you to export a configuration from package.json"
   )
-  .option("--sourcemap", "Enable the use of sourcemap", true)
+  .option("--sourcemap", "Enable the use of sourcemap", false)
   .option("--server", "Create a server, by default localhost:8000", false)
   .option("--port", "Define the server port", 8000)
   .option("--proxy", "Redirect requests that are not resolved locally", "")
