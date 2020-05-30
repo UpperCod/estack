@@ -154,9 +154,13 @@ export async function createBundle(options) {
           }
           let [code, meta] = data;
 
-          let fileName = getFileName(file);
+          name = meta.name || name;
+
+          let fileName = name + ".html";
           let dest = getDest(fileName, meta.folder);
-          let link = path.join("./", meta.folder || "", fileName);
+          let link = normalizePath(
+            path.join("./", meta.folder || "", fileName)
+          );
           let nestedFiles = [];
           let localScan = {}; // prevents a second check if the file is added again from the html
 
@@ -372,6 +376,7 @@ export async function createBundle(options) {
     server && server.reload();
   }
   async function loadRollup() {
+    let countBuild = 0; // Ignore the first build since it synchronizes the reload from root
     // clean the old watcher
     rollupWatchers.filter((watcher) => watcher.close());
     rollupWatchers = [];
@@ -410,7 +415,7 @@ export async function createBundle(options) {
               break;
             case "END":
               streamLog(`bundle: ${new Date() - lastTime}ms`);
-              server && server.reload();
+              countBuild++ && server && server.reload();
               break;
             case "ERROR":
               streamLog(event.error);
