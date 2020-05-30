@@ -1,22 +1,22 @@
-# bundle-cli
+# Estack
 
-Bundle-cli busca mejorar la experiencia de desarrollo para webcomponents, ofreciendo un entorno dinámico para desarrollar y empaquetar JavaScript, Css y Html, inspirado en [Parceljs](https://parceljs.org/).
+Estack busca mejorar la experiencia de desarrollo para webcomponents, ofreciendo un entorno dinámico para desarrollar y empaquetar JavaScript, Css y Html, inspirado en [Parceljs](https://parceljs.org/).
 
 ## Con este CLI ud podrá:
 
 ### Múltiples tipos de inputs de entrada.
 
-Bundle-cli es capas de analizar distintos tipo de fichero a base de expreciones, estos pueden ser del tipo `html`,`markdown`, `javascript`,`typescript` y `css`.
+Estack es capas de analizar distintos tipo de fichero a base de expreciones, estos pueden ser del tipo `html`,`markdown`, `javascript`,`typescript` y `css`.
 
 Si su origen es del tipo html o markdown, bundle exportara los assets de proyecto, si estos cumplen con el selector `[href]` o `[src]`, eg: `<script src="my-js.js"></script>` o `<img src="my-image.jpg">`
 
 ### Observador de cambios inteligente y rápido.
 
-EL modo de desarrollo(`--watch`) de bundle-cli es rápido, ya que solo resuelve los ficheros que realmente han cambiado a base de sus relaciones y demanda, esto con el objetivo de minimizar los tiempos de escritura al usar el flag `--watch`.
+EL modo de desarrollo(`--watch`) de Estack es rápido, ya que solo resuelve los ficheros que realmente han cambiado a base de sus relaciones y demanda, esto con el objetivo de minimizar los tiempos de escritura al usar el flag `--watch`.
 
 ### Entorno moderno
 
-Bundle-cli no busca ser compatible con navegadores antiguos, esta pensado para un desarrollo moderno a base de ESM, optimizado gracias a [Rollup](http://rollupjs.org/), [Sucrase](https://sucrase.io/) y otros espectaculares packages.
+Estack no busca ser compatible con navegadores antiguos, esta pensado para un desarrollo moderno a base de ESM, optimizado gracias a [Rollup](http://rollupjs.org/), [Sucrase](https://sucrase.io/) y otros espectaculares packages.
 
 ### Documentos dinámicos html y markdown
 
@@ -296,8 +296,8 @@ Permite direcionar toda request que no se resuelva de forma local a una externa,
 
 ```js
 fetch("/todos")
-  .then(res => res.json())
-  .then(data => {
+  .then((res) => res.json())
+  .then((data) => {
     console.log(data); //[...]
   });
 ```

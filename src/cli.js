@@ -2,7 +2,7 @@ import sade from "sade";
 import { createBundle } from "./create-bundle";
 export { createBundle } from "./create-bundle";
 
-sade("bundle [src] [dest]")
+sade("estack [src] [dest]")
   .version("PKG.VERSION")
   .option("--watch", "Watch files in bundle and rebuild on changes", false)
   .option("--external", "Does not include dependencies in the bundle")

@@ -1,22 +1,22 @@
-# bundle-cli
+# Estack
 
-Bundle-cli offers a dynamic environment for developing and packaging JavaScript, Css and Html, inspired by [Parceljs](https://parceljs.org/).
+Estack offers a dynamic environment for developing and packaging JavaScript, Css and Html, inspired by [Parceljs](https://parceljs.org/).
 
 ## With this CLI you can:
 
 ### Define multiple types of input inputs based on expressions.
 
-Bundle-cli is capable of parsing different types of files based on expressions, such as `html`,`markdown`, `javascript`,`typescript` and `css` files.
+Estack is capable of parsing different types of files based on expressions, such as `html`,`markdown`, `javascript`,`typescript` and `css` files.
 
 If its source is of the html or markdown type, bundle will export the assets of these files, based on the `[href]` or `[src]` selector, eg: `<script src =" my-js.js "> < / script>`or`<img src = "my-image.jpg">`
 
 ### Efficient file watcher
 
-The bundle-cli development mode(`--watch`) detects changes based on the creation, modification and deletion of files.
+The Estack development mode(`--watch`) detects changes based on the creation, modification and deletion of files.
 
 ### Modern environment
 
-Bundle-cli does not seek to be compatible with older browsers, it is intended for modern ESM-based development, optimized thanks to [Rollup](http://rollupjs.org/), [Sucrase](https://sucrase.io/) and other spectacular packages.
+Estack does not seek to be compatible with older browsers, it is intended for modern ESM-based development, optimized thanks to [Rollup](http://rollupjs.org/), [Sucrase](https://sucrase.io/) and other spectacular packages.
 
 ### Dynamic html and markdown documents
 
@@ -293,8 +293,8 @@ This flag only works when using the `--server` flag. It allows directing all req
 
 ```js
 fetch("/todos")
-  .then(res => res.json())
-  .then(data => {
+  .then((res) => res.json())
+  .then((data) => {
     console.log(data); //[...]
   });
 ```

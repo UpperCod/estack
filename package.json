@@ -1,6 +1,6 @@
 {
-  "name": "bundle-cli",
-  "version": "0.32.1",
+  "name": "estack",
+  "version": "0.0.0",
   "description": "simple bundle generator",
   "module": "src/cli.js",
   "main": "cli.js",
@@ -20,13 +20,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/atomicojs/bundle-cli"
+    "url": "https://github.com/atomicojs/estack"
   },
   "dependencies": {
     "rollup": "^2.10.0"
   },
   "bin": {
-    "bundle": "./cli.js"
+    "estack": "./cli.js"
   },
   "devDependencies": {
     "@atomico/rollup-plugin-sizes": "^1.1.3",
