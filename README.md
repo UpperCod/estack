@@ -1,4 +1,4 @@
-# EStack
+![EStack](./brand/header.svg)
 
 EStack simplifies development of static websites and distribution of ES modules, with EStack you can:
 
