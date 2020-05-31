@@ -1,26 +1,94 @@
-# Estack
+# EStack
 
-Estack offers a dynamic environment for developing and packaging JavaScript, Css and Html, inspired by [Parceljs](https://parceljs.org/).
+EStack simplifies development of static websites and distribution of ES modules, with EStack you can:
 
-## With this CLI you can:
+1. **Create static sites**: EStack will process your Html and Markdown files for extraction for asset detection and template management.
+2. **Create css bundles**: EStack processes css files with [Stylis](https://stylis.js.org/) a modern, light and fast alternative to Postcss.
+3. **Create ES module bundles**: EStack processes JavaScript and TypeScript files thanks to Rollup.
+4. **Use development server**: EStack creates a development server when working with the `--server` flag, which combined with the`--watch` flag, will activate the livereload mode.
+5. **Condition exports**: EStack has several flags that allow a conditional export, such as including external NPM files or Minify.
+6. **Export using expressions**: EStack will read the files using expressions, for example the expression `src/**/*.{html,markdown}` will configure EStack to process all existing html and markdown files in the `src/` directory.
 
-### Define multiple types of input inputs based on expressions.
+## CLI
 
-Estack is capable of parsing different types of files based on expressions, such as `html`,`markdown`, `javascript`,`typescript` and `css` files.
+### Console boot
 
-If its source is of the html or markdown type, bundle will export the assets of these files, based on the `[href]` or `[src]` selector, eg: `<script src =" my-js.js "> < / script>`or`<img src = "my-image.jpg">`
+```
+estack [src] [dest]
+```
 
-### Efficient file watcher
+Where:
 
-The Estack development mode(`--watch`) detects changes based on the creation, modification and deletion of files.
+- `src` : Asset source directory, you can point to one or multiple files, either directly or using expressions.
+- `dest` : Destination of the processed files.
 
-### Modern environment
+### Flags
 
-Estack does not seek to be compatible with older browsers, it is intended for modern ESM-based development, optimized thanks to [Rollup](http://rollupjs.org/), [Sucrase](https://sucrase.io/) and other spectacular packages.
+`--watch` : Restart the build process only to the affected files, this can be combined with `--server`, to activate livereload mode.
 
-### Dynamic html and markdown documents
+`--server` : Create a local server that points to `dest`.
 
-Create scalable sites or applications, maintain with a template system with [Liquidjs](https://liquidjs.com/) and allow each file to be html or markdwon can declare metadata fragments, eg:
+`--port <number>` : `Default 8000`, defines the search port for the server.
+
+`--proxy <url>` : All requests not resolved locally will be sent to the proxy.
+
+`--sourcemap` : Enables the generation of the `js.map` files of JavaScript-type assets.
+
+`--minify` : Minify JavaScript files.
+
+`--jsx <string> --jsxFragment <string>` : Default `h` y `Fragment`, allows customizing support for JSX.
+
+`--sizes` : It shows by console the size of the total files, Gzip and Brotli type JavaScript.
+
+## How to create static sites?
+
+Static site management is enabled by defining in the input expression (`src`),`html` or `md` extension files, eg:
+
+```bash
+estack src/**/*.html public # processes only .html files and
+                            # all the assets that they demand
+                            # the processed files are stored in public
+
+estack src/**/*.{html,md} public # processes files with extension
+                                 # html and md, with all the assets that they demand
+                                 # processed files are stored in public
+```
+
+### Asset resolution
+
+Collecting assets from the Html and Markdown files is done using the CSS selector expression `[src]` or `[href]`, eg:
+
+**index.html**
+
+```html
+<link rel="stylesheet" href="my-css.css" />
+
+<h1>my html document</h1>
+
+<img src="my-image.jpg" />
+
+<script type="module" src="my-page.js"></script>
+```
+
+**dest/index.html**: Html output example.
+
+```html
+<link rel="stylesheet" href="./my-css.css" />
+
+<h1>my html document</h1>
+
+<img src="file-72123.jpg" />
+
+<script type="module" src="./my-page.js"></script>
+```
+
+> If the origin of the local assets is not resolved, the url will keep the original value.
+
+### Template system
+
+EStack allows you to have a simple and scalable template system based on Markdown, [Liquidjs](https://liquidjs.com/) and header metadata snippets in YAML format, ej:
+
+**index.html**
 
 ```html
 ---
@@ -34,11 +102,7 @@ title: my page
 </html>
 ```
 
-## Processing of html and markdown documents
-
-The template system allows the use of Markdown, [Liquids](https://liquidjs.com/) and metadata in yaml format.
-
-### Example of page
+**index.md**
 
 ```markdown
 ---
@@ -46,19 +110,15 @@ title: my page
 ---
 
 ## {{page.title}}
-
-More content...
-
-<my-element></my-element>
-
-<script type="module" src="my-element.js"></script>.
 ```
 
-> the `page` property allows access to everything declared in the metadata fragment.
+> The `page` property allows access to everything declared in the metadata fragment.
 
 ### Writing rule
 
-**Ungrouped inputs are html or markdow and javascript assets must have a unique name**, ej:
+**Exported assets must have a unique name**, eg:
+
+**Input directory**.
 
 ```bash
 /src
@@ -69,9 +129,11 @@ More content...
     /my-componet-2
       my-component-2.js
       my-component-2.md
+  index.html
+  blog.html
 ```
 
-Writing these files does not preserve the source path, eg:
+If you run the command `npm stack src/**/*.{html,md} dest`, it gives an approximate result of:
 
 ```bash
 /dest
@@ -79,25 +141,28 @@ Writing these files does not preserve the source path, eg:
   my-component-2.js
   my-component-1.html
   my-component-2.html
+  index.html
+  blog.html
 ```
 
-To modify the destination there are special metadata properties `folder` and`name`.
+> To customize the destination directory name or directory there are special metadata properties `folder` and`name`.
 
 ### Special metadata properties
 
-#### folder
+#### folder y name
 
-This property allows defining the destination folder for the document that declares it.
+The `folder` property allows you to define the destination folder for the document that declares it and the`name` property allows you to define the name of the document, eg:
 
 ```yaml
-folder: gallery
+folder: animals
+name: cat
 ```
 
-If your file is called `cat.html`, it will be written to the destination as `gallery/cat.html`.
+If your file is named `my-cat.html`, it will be written to the destination as`animals/cat.html`, **The `name` property can be used for cross-page referencing**
 
 #### template
 
-It allows defining the document as a master template, so it will not be written. eg:
+It allows defining the document as a master template, so it will not be written. ej:
 
 **template.html**
 
@@ -137,7 +202,7 @@ title: i am page
 </div>
 ```
 
-**Note:** The template property can be an alias other than `default`, eg:
+**Nota:** The template property can be an alias other than `default`, ej:
 
 ```yaml
 layout: template-users
@@ -153,55 +218,34 @@ template: default
 singlePage: index
 ---
 
-<h1>links de pagina</h1>
+<h1>page links</h1>
 
-{% for item in pages %}
-<a href="{{item.link}}">
-  {{item.title}}
-</a>
-{% endfor %}
+<nav>
+  {% for item in pages %}
+  <a href="{{item.link}}">
+    {{item.title}}
+  </a>
+  {% endfor %}
+</nav>
 ```
 
-##### pkg
+#### pkg
 
-It allows access to all the data contained in the package.json, ex:
-
-**my-element.md**
-
-````markdown
-## Usage
-
-​```js
-import "{{pkg.name}}/my-element.js";
-
-```
-
-```
-````
-
-**dest/my-element.html**
-
-​```html
-
-<h1>
-  Usage
-</h1>
-<pre><code>import "my-package/my-element.js";</code></pre>
-```
+It allows access to all the data contained in the package.json.
 
 ### files
 
-It allows to generate an import alias as a page variable, eg:
+It allows generating an import alias as a page variable, eg:
 
 ```markdown
 ---
 files:
-  cover: ./my-image.jpg
+cover: ./my-image.jpg
 ---
 
 ## image
 
-![my image]({{files.cover}})
+![image]({{files.cover}})
 ```
 
 **The advantage of this is that the assets are stored in the metadata so that it can be used**
@@ -228,13 +272,13 @@ fetch:
 
 **Fetch** creates a dependency relationship with local files, so any change generates a rewriting of the document that uses it.
 
-## CSS type Assets
+## Css con Stylis
 
-The css files can be used as modules within Rollup or as Html or Markdow file Assets, these are processed thanks to the power of [Stylis](https://stylis.js.org/).
+The css files can be used as modules within Rollup or as Html or Markdow file Assets, these are processed thanks to [Stylis](https://stylis.js.org/).
 
 ### @import
 
-the configuration allows importing local modules or from node_modules, the resolution of this must be pointed to the file eg:
+the configuration allows importing local modules or from `node_modules`, the resolution of this must be pointed to the file eg:
 
 ```css
 @import "./my-css.css"; /**local**/
@@ -247,7 +291,6 @@ This allows applying a selection on the selectors and keyframes imported by the 
 
 ```css
 @use ".button-circle";
-@use "keyframe mi-animation";
 @import "my-package-1/my-buttons";
 @import "my-package-2/my-buttons";
 
@@ -256,53 +299,20 @@ This allows applying a selection on the selectors and keyframes imported by the 
 }
 ```
 
-Any selector other than `.button-circle` will be ignored in the export from `my-package-1/my-buttons` and `my-package-2/my-buttons`.
+Any selector other than `.button-circle` will be ignored but only from imports, in this case `my-package-1/my-buttons` and `my-package-2/my-buttons`.
 
-Example of expressions:
+Types of expressions for @use:
 
 - `@use ".button"` : Any selector that starts with `.button`.
-- `@use ".button-"` : Any selector that starts with `.button-`, eg: `.button-circle` and`button-alert`.
-- `@use "button$"` : Only the `button` selector
+- `@use ".button-"` : Any selector that starts with `.button-`, eg: `.button-circle` y `button-alert`.
+- `@use "button$"` : Selector only `button`
 
 ### CSS modules
 
-You can export the css as plain text to be used within javacsript, eg:
+You can export the css as **plain text** to be used within javacsript, eg:
 
 ```js
 import style from "./my-css.css";
 ```
 
-**Useful to work with webcomponents**, since the css is delivered mythified, ideal for use within the shadowDom
-
-## Cli
-
-Know all the documentation of the cli using `npx bundle --help`, detailed information on this cli is detailed below.
-
-### --server
-
-create a server, by default the port search initializes from the number `8000`, you can change this behavior using the`--port` flag.
-
-#### --proxy
-
-Enable the use of proxy on the server, this thanks to [http-proxy-middleware] (# http-proxy-middleware)
-This flag only works when using the `--server` flag. It allows directing all requests that are not resolved locally to an external one, eg:
-
-```
---proxy https://jsonplaceholder.typicode.com
-```
-
-```js
-fetch("/todos")
-  .then((res) => res.json())
-  .then((data) => {
-    console.log(data); //[...]
-  });
-```
-
-#### --watch
-
-Enables development mode, using in conjunction with the `--server` flag initializes livereload mode
-
-#### --minify
-
-Enable the use of Terser for Rollup outgoing files, this will minify the JS code, `in the future it is planned to compress html`.
+Ideal to be used inside the shadowDom

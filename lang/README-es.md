@@ -1,58 +1,94 @@
 # EStack
 
-EStack simplifica desarrollo de sitios web estaticos y distribucion de modulos ES, con EStack ud podra:
+EStack simplifica desarrollo de sitios web estáticos y distribución de módulos ES, con EStack tu podrás:
 
-1. **Crear sitios estatico**: EStack procesara sus archivos Html y Markdown para la extraccion y procesamiento de assets.
-2. **Empaquetador de css**: EStack usa [Stylis] una alternativa moderna, ligera y rapida a Postcss, Estack esta configurado para procesar archivos css y agruparlos.
-3. **Empaquetador de modulos ES**: EStack, procesa los ficheros tipo javascript y Typescript gracias a Rollup preconfigurado y optimizado para un desarrollo rapido y ligero.
-4. **Servidor de desarrollo**: EStack, crea un servidor de desarrollo al momento de trabajar con el flag `--server`, que convinado con el flag `--watch`, activaran el modo livereload sincronziado a EStack.
-5. **Condicionales de exportacion**: EStack, cuenta con diversos flag que permiten una exportacion condicional, sea incluir archivos externos de NPM o Minificar.
-6. **Exportar usando expreciones**: EStack es capas de leer ficheros mediante expreciones, eg : `src/**/*.{html,markdow}` procesara y observara todos los ficheros html y markdown existentes en directorio `src/`.
+1. **Crear sitios estático**: EStack procesara sus archivos Html y Markdown para la extracción para la detección de assets y manejo de plantilla.
+2. **Empaquetador de css**: EStack procesa los ficheros css con [Stylis](https://stylis.js.org/) una alternativa moderna, ligera y rápida a Postcss.
+3. **Empaquetador de módulos ES**: EStack procesa los ficheros tipo JavaScript y TypeScript gracias a Rollup.
+4. **Servidor de desarrollo**: EStack crea un servidor de desarrollo al momento de trabajar con el flag `--server`, que combinado con el flag `--watch`, activaran el modo livereload.
+5. **Condicionar exportaciones**: EStack cuenta con diversos flag que permiten una exportación condicional, sea incluir archivos externos de NPM , minificar y más.
+6. **Exportar usando expresiones**: EStack leerá los ficheros mediante expresiones, ejemplo la expresión `src/**/*.{html,markdown}` configurara a EStack para procesar todos los ficheros html y markdown existentes en el directorio `src/`.
 
 ## CLI
 
-### Configuracion
+### Configuración
 
 ```
 estack [src] [dest]
 ```
 
-Where :
+Donde:
 
-- `src` : Directorio de origen de assets, ud peude apunntar a uno o multiples ficheros, sea de forma directa o mediant expreciones.
+- `src` : Directorio de origen de assets, tu puede apuntar a uno o múltiples ficheros, sea de forma directa o mediante expresiones.
 - `dest` : Destino de los archivos procesados.
 
 ### Flags
 
-`--watch` : Reinicia el proceso de build solo a los archivos afectados, este peude convinarce con `--server`, para activar el modo livereload del servidor creado por `EStack`.
+`--watch` : Reinicia el proceso de build solo a los archivos afectados, este puede combinarse con `--server`, para activar el modo livereload del servidor creado por `EStack`.
 
 `--server` : Crea un servidor local que apunta a `dest`.
 
-`--port <number>` : `Default 8000`, define el puerto de busqueda para el servidor.
+`--port <number>` : `Default 8000`, define el puerto de búsqueda para el servidor.
 
-`--proxy <url>` : Todo request no resuelto de forma local sera enviado a la url definida.
+`--proxy <url>` : Todo request no resuelto de forma local será enviado al proxy.
 
-EStack Inspirado en [Parceljs](https://parceljs.org/) y [Eleventy](https://www.11ty.dev/).
+`--sourcemap` : Habilita la generación los archivos `js.map` de los assets tipo JavaScript.
 
-## Con este CLI ud podrá:
+`--minify` : Minifica los archivos JavaScript.
 
-### Múltiples tipos de inputs de entrada.
+`--jsx <string> --jsxFragment <string>` : Default `h` y `Fragment`, permite customizar el soporte a JSX.
 
-Estack es capas de analizar distintos tipo de fichero a base de expreciones, estos pueden ser del tipo `html`,`markdown`, `javascript`,`typescript` y `css`.
+`--sizes` : Enseña por consola el tamaño de los archivos total, Gzip y Brotli tipo JavaScript.
 
-Si su origen es del tipo html o markdown, bundle exportara los assets de proyecto, si estos cumplen con el selector `[href]` o `[src]`, eg: `<script src="my-js.js"></script>` o `<img src="my-image.jpg">`
+## ¿Como crear sitios estáticos?
 
-### Observador de cambios inteligente y rápido.
+la gestión de sitios estáticos se activa al definir en la expresión de entrada(`src`), archivos de extensión `html` o `md`, ej:
 
-EL modo de desarrollo(`--watch`) de Estack es rápido, ya que solo resuelve los ficheros que realmente han cambiado a base de sus relaciones y demanda, esto con el objetivo de minimizar los tiempos de escritura al usar el flag `--watch`.
+```bash
+estack src/**/*.html public # procesa solo los archivos .html y
+                            # todos los assets que estos demanden
+                            # los archivos procesados se almacenan en public
 
-### Entorno moderno
+estack src/**/*.{html,md} public # procesa los archivos con extension
+                                 # html y md , con todos los assets que estos demanden
+                                 # los archivos procesados se almacenan en public
+```
 
-Estack no busca ser compatible con navegadores antiguos, esta pensado para un desarrollo moderno a base de ESM, optimizado gracias a [Rollup](http://rollupjs.org/), [Sucrase](https://sucrase.io/) y otros espectaculares packages.
+### Resolución de assets
 
-### Documentos dinámicos html y markdown
+La recolección de assets de los ficheros Html y Markdown se realiza mediante la expresión de CSS `[src]` o `[href]`, ej:
 
-Cree sitios o aplicaciones escalables, mantenerle con un sistema de plantillas a base de liquidjs y permite que cada fichero sea html o markdwon puedan declarar fragmentos de metadata ,ej:
+**index.html**
+
+```html
+<link rel="stylesheet" href="mi-css.css" />
+
+<h1>mi documento html</h1>
+
+<img src="mi-imagen.jpg" />
+
+<script type="module" src="mi-pagina.js"></script>
+```
+
+**dest/index.html**: Esta salida del Html es un aproximado a lo real.
+
+```html
+<link rel="stylesheet" href="./mi-css.css" />
+
+<h1>mi documento html</h1>
+
+<img src="file-72123.jpg" />
+
+<script type="module" src="./mi-pagina.js"></script>
+```
+
+> De no resolverse un asset de forma local, se mantendrá la URL de origen.
+
+### Sistema de plantilla
+
+EStack permite poseer un sistema de plantillas simple y escalable basado en Markdown, [Liquidjs](https://liquidjs.com/) y fragmentos de metadata de cabecera en formato YAML, eg:
+
+**index.html**
 
 ```html
 ---
@@ -66,13 +102,7 @@ title: my page
 </html>
 ```
 
-> la propiedad `page` permite el acceso a todo lo declarado en el fragmento de metadatos.
-
-## Procesamiento de documentos html y markdown
-
-El sistema de plantillas permite el uso de Markdown, [Liquidjs](https://liquidjs.com/) y metadata en formato yaml.
-
-### Ejemplo de pagina
+**index.md**
 
 ```markdown
 ---
@@ -80,17 +110,15 @@ title: my page
 ---
 
 ## {{page.title}}
-
-More content...
-
-<my-element></my-element>
-
-<script type="module" src="my-element.js"></script>.
 ```
+
+> la propiedad `page` permite el acceso a todo lo declarado en el fragmento de metadatos.
 
 ### Regla de escritura
 
-**Los inputs no agrupados sea html o markdow y los assets tipo javascript deben poseer nombre único**, ej:
+**Los assets exportados deben poseer nombre único**, ej:
+
+**Directorio de entrada**.
 
 ```bash
 /src
@@ -101,9 +129,11 @@ More content...
     /my-componet-2
       my-component-2.js
       my-component-2.md
+  index.html
+  blog.html
 ```
 
-La escritura de estos archivos no conserva la ruta de origen, ej:
+Si ud ejecuta el comando `npx estack src/**/*.{html,md} dest`, data un resultado aproximado de:
 
 ```bash
 /dest
@@ -111,21 +141,24 @@ La escritura de estos archivos no conserva la ruta de origen, ej:
   my-component-2.js
   my-component-1.html
   my-component-2.html
+  index.html
+  blog.html
 ```
 
-Para modificar el destino existe las propiedades especiales de metadata `folder` y `name`.
+> Para personalizar el nombre o directorio de destino del directorio existe las propiedades especiales de metadata `folder` y `name`.
 
 ### Propiedades especiales de metadata
 
-#### folder
+#### folder y name
 
-Esta propiedad permite definir la carpeta de destino para el documento que la declara
+La propiedad `folder` permite definir la carpeta de destino para el documento que la declara y la propiedad `name` permite definir el nombre del documento, ej:
 
 ```yaml
-folder: gallery
+folder: animales
+name: gato
 ```
 
-Si su fichero se llama `cat.html`, este se escribirá en el destino como `gallery/cat.html`.
+Si su fichero se llama `my-cat.html`, este se escribirá en el destino como `animales/gato.html`, **La propiedad `name` se puede usar para referenciar entre paginas**
 
 #### template
 
@@ -194,48 +227,24 @@ singlePage: index
 {% endfor %}
 ```
 
-##### pkg
+#### pkg
 
 Permite acceder a toda la data contenida en el package.json, ej:
-
-**my-element.md**
-
-````markdown
-## Usage
-
-​```js
-import "{{pkg.name}}/my-element.js";
-
-```
-
-```
-````
-
-**dest/my-element.html**
-
-```html
-<h1>
-  Usage
-</h1>
-<pre><code>import "my-package/my-element.js";</code></pre>
-```
 
 ### files
 
 Permite generar un alias de importación como variable de la pagina, ej:
 
-## ​```markdown
-
+```markdown
+---
 files:
 cover: ./my-image.jpg
-
 ---
 
 ## image
 
-![my image]({{files.cover}})
-
-````
+![image]({{files.cover}})
+```
 
 **La ventaja de esto es que el assets queda almacenado en la metadata para que pueda ser para ser usado**
 
@@ -246,18 +255,19 @@ Permite generar un request al momento al momento de la build, eg:
 ```html
 ---
 fetch:
-  config: ./config.yaml
-  todos: https://jsonplaceholder.typicode.com/todos
+config: ./config.yaml
+todos: https://jsonplaceholder.typicode.com/todos
 ---
 
 <h1>{{fetch.config.title}}</h1>
 
 {% for todo in todos %}
+
 <div>
   <h3>{{todo.title}}</h3>
 </div>
 {% endfor %}
-````
+```
 
 **Fetch** crea una relación de dependencia con los ficheros locales, por lo que cualquier cambio genera una rescritura del documento que lo utiliza.
 
@@ -306,38 +316,4 @@ Ud podrá exportar el css como texto plano para ser usado dentro de javacsript, 
 import style from "./my-css.css";
 ```
 
-**Util para trabajar con webcomponents**, ya que el css se entrega mitificado, ideal para su uso dentro del shadowDom
-
-## Cli
-
-Conozca toda la documentación del cli mediante `npx bundle --help`, a continuación se detallan las mas importantes:
-
-### --server
-
-Activa un servidor, por default la busqueda de puerto inicializa desde le numero `8000`, ud puede cambiar este comportamiento mediante el flag `--port`
-
-#### --proxy
-
-Habilita el uso de proxy sobre el servidor, esto gracias a [http-proxy-middleware](#http-proxy-middleware)
-Este flag solo trabaja al momento de usar el flag `--server`
-Permite direcionar toda request que no se resuelva de forma local a una externa, eg:
-
-```
---proxy https://jsonplaceholder.typicode.com
-```
-
-```js
-fetch("/todos")
-  .then(res => res.json())
-  .then(data => {
-    console.log(data); //[...]
-  });
-```
-
-#### --watch
-
-Habilita el modo desarrollo, al usar junto con el flag `--server` se inicializa el modo livereload
-
-#### --minify
-
-Habilita el uso de Terser para los archivos salientes de Rollup, esto minificara el código JS
+Útil para trabajar con webcomponents, ya que el css se entrega mitificado, ideal para su uso dentro del shadowDom.
