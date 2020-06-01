@@ -35,7 +35,7 @@ export default {
           json(),
           conditionalFsEventsImport(),
           common(),
-          pluginTerser({ sourcemap: true }),
+          // pluginTerser({ sourcemap: true }),
         ]),
   ],
 };

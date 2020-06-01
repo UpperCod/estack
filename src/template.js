@@ -1,4 +1,5 @@
 import { Liquid } from "liquidjs";
+import { renderMarkdown } from "./markdown";
 
 let engine = new Liquid({
   cache: false,
@@ -41,6 +42,33 @@ engine.registerFilter("log", (data) => {
   console.log(data);
   return "";
 });
+
+engine.registerFilter("markdown", (string, clearSpace) =>
+  renderMarkdown(
+    clearSpace
+      ? string
+          .split(/\n/)
+          .map((str) => str.trim())
+          .join("\\n")
+      : string
+  )
+);
+
+engine.registerFilter("attributes", (data) =>
+  Object.keys(data)
+    .map((prop) =>
+      typeof data[prop] == "boolean"
+        ? data[prop]
+          ? prop
+          : ""
+        : `prop=${JSON.stringify(data[prop])}`
+    )
+    .join(" ")
+);
+
+engine.registerFilter("includes", (value, list) =>
+  (list || []).includes(value)
+);
 
 engine.registerFilter("find", (data, by, equal) =>
   data.find((data) => getProp(data, by) === equal)

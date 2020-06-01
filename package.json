@@ -1,6 +1,6 @@
 {
   "name": "estack",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "description": "simple bundle generator",
   "module": "src/cli.js",
   "main": "cli.js",
@@ -41,7 +41,6 @@
     "entities": "^2.0.2",
     "fast-glob": "^3.2.2",
     "http-proxy-middleware": "^1.0.3",
-    "httpie": "^1.1.2",
     "js-yaml": "^3.13.1",
     "liquidjs": "^9.12.0",
     "log-update": "^4.0.0",

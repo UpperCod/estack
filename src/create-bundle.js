@@ -2,7 +2,6 @@ import glob from "fast-glob";
 import path from "path";
 import rollup from "rollup";
 import builtins from "builtin-modules";
-import { get } from "httpie";
 import {
   isJs,
   isMd,
@@ -24,6 +23,7 @@ import {
   getFileName,
   getRelativePath,
   getRelativeDeep,
+  requestJson,
 } from "./utils";
 import { createServer } from "./create-server";
 import { rollupPlugins } from "./rollup/config-plugins";
@@ -191,8 +191,9 @@ export async function createBundle(options) {
                   Object.keys(meta.fetch).map(async (prop) => {
                     let value = meta.fetch[prop];
                     if (isUrl(value)) {
-                      value = cacheFetch[prop] = cacheFetch[prop] || get(value);
-                      value = (await value).data;
+                      value = cacheFetch[prop] =
+                        cacheFetch[prop] || requestJson(value);
+                      value = await value;
                     } else {
                       let findFile = path.join(dir, value);
 
