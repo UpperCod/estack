@@ -191,9 +191,9 @@ export async function createBundle(options) {
                   Object.keys(meta.fetch).map(async (prop) => {
                     let value = meta.fetch[prop];
                     if (isUrl(value)) {
-                      value = cacheFetch[prop] =
-                        cacheFetch[prop] || requestJson(value);
-                      value = await value;
+                      cacheFetch[value] =
+                        cacheFetch[value] || requestJson(value);
+                      value = await cacheFetch[value];
                     } else {
                       let findFile = path.join(dir, value);
 
