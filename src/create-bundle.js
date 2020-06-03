@@ -49,6 +49,14 @@ export async function createBundle(options) {
   // cache de rollup
   let rollupCache;
 
+  /**
+   * @callback fileWatcher
+   * @param {string} file - child file, any changes will escalate to the parent.
+   * @param {string} parentFile - parent file
+   * @param {boolean} rebuild - if true, any change will force the rebuild of the parentFile
+   */
+
+  /**@type {fileWatcher} */
   let fileWatcher;
 
   // stores the status of processed files
@@ -133,7 +141,6 @@ export async function createBundle(options) {
     files = files.map(path.normalize);
 
     let rebuildHtml = [];
-
     let nestedFiles = await Promise.all(
       files
         .filter(isHtml)
@@ -197,7 +204,7 @@ export async function createBundle(options) {
                     } else {
                       let findFile = path.join(dir, value);
 
-                      fileWatcher && fileWatcher(findFile, file);
+                      fileWatcher && fileWatcher(findFile, file, true);
 
                       try {
                         value = await readFile(findFile);
@@ -260,15 +267,18 @@ export async function createBundle(options) {
       .filter(prevenLoad)
       .map(async (file) => {
         let css = await readFile(file);
+        let nestedFiles = [];
         let code = await readCss({
           code: css,
           file,
           addWatchFile(childFile) {
             if (options.watch) {
-              fileWatcher && fileWatcher(childFile, file);
+              nestedFiles.push(childFile);
+              fileWatcher && fileWatcher(childFile, file, true);
             }
           },
         });
+        files[file] = { nestedFiles };
         return writeFile(getDest(getFileName(file)), code);
       });
 
@@ -434,65 +444,52 @@ export async function createBundle(options) {
   if (options.watch) {
     // map defining the cross dependencies between child and parents
     let mapSubWatch = {};
-    /**
-     * defines if the file is a parent
-     * @param {string} file
-     */
-    let isRootWatch = (file) =>
-      mapSubWatch[file] ? !Object.keys(mapSubWatch).length : true;
 
     let watcher = watch(options.src, (group) => {
       let files = [];
       let forceBuild;
 
       if (group.add) {
-        let groupFiles = group.add
-          .filter(isRootWatch)
-          .filter(isFixLink)
-          .filter(isNotPreventLoad);
+        let groupFiles = group.add.filter(isFixLink).filter(isNotPreventLoad);
         files = [...files, ...groupFiles];
       }
       if (group.change) {
-        let groupChange = group.change;
+        let groupChange = group.change.filter((file) => !isJs(file)); // ignore js file changes
 
-        groupChange = [
-          ...groupChange,
-          ...group.change
+        let groupFiles = [
+          ...groupChange, // keep files that have changed in the queue
+          ...groupChange // add new files based on existing ones in the queue
             .filter((file) => mapSubWatch[file])
-            .map((file) => Object.keys(mapSubWatch[file]))
+            .map((file) =>
+              Object.keys(mapSubWatch[file]).filter(
+                (subFile) => mapSubWatch[file][subFile]
+              )
+            )
             .flat(),
-        ];
-
-        let groupFiles = groupChange
-          .filter((file) => isRootWatch(file) || isPreventLoad(file))
-          .filter(isFixLink)
-          .filter((file) => !isJs(file))
+        ]
+          .filter(isPreventLoad)
           .map(deleteInput);
 
-        files = [...files, ...groupFiles]
-          .map((file) =>
-            mapSubWatch[file]
-              ? Object.keys(mapSubWatch[file]).map(deleteInput)
-              : file
-          )
-          .flat();
+        files = [...files, ...groupFiles];
       }
+
       if (group.unlink) {
         group.unlink.forEach(deleteInput);
         forceBuild = true;
       }
+
       if (files.length || forceBuild) {
         load(files, forceBuild);
       }
     });
 
-    fileWatcher = (file, parentFile) => {
+    fileWatcher = (file, parentFile, rebuild) => {
       if (!mapSubWatch[file]) {
         mapSubWatch[file] = {};
         watcher.add(file);
       }
       if (parentFile) {
-        mapSubWatch[file][parentFile] = true;
+        mapSubWatch[file][parentFile] = rebuild;
       }
     };
   }
