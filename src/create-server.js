@@ -5,6 +5,12 @@ import sirv from "sirv";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { asyncFs, promiseErrorToNull, isHtml, normalizePath } from "./utils";
 
+let mime = {
+  js: "application/javascript",
+  css: "text/css",
+  html: "text/html; charset=utf-8",
+};
+
 /**
  * @param {Object} options
  * @param {string} options.root
@@ -76,11 +82,10 @@ export async function createServer({ root, port, reload, proxy }) {
           nextAssetsRoot(req, res, next); //
         } else {
           let file = virtualSource.code;
-          if (virtualSource.type == "html") {
-            res.setHeader("Content-Type", "text/html; charset=utf-8");
-            file = addLiveReload(file);
-          }
-          res.end(file);
+
+          res.setHeader("Content-Type", mime[virtualSource.type]);
+
+          res.end(virtualSource.type == "html" ? addLiveReload(file) : file);
         }
       } else if (stateHtml || stateFallback) {
         res.setHeader("Content-Type", "text/html; charset=utf-8");
