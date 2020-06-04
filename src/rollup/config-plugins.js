@@ -9,7 +9,16 @@ import sizes from "@atomico/rollup-plugin-sizes";
 
 let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
-export function rollupPlugins(options) {
+/**
+ *
+ * @param {Object} options
+ * @param {boolean} options.minify
+ * @param {boolean} options.sizes
+ * @param {boolean} options.jsx
+ * @param {boolean} options.jsxFragment
+ * @param {({dest:string,code:string,type:string})=>void} [mountFile] - mount rollup files on development server without writing
+ */
+export function rollupPlugins(options, mountFile) {
   let optionalPlugins = [];
 
   if (options.minify) {
@@ -20,8 +29,20 @@ export function rollupPlugins(options) {
     optionalPlugins.push(sizes());
   }
 
+  if (mountFile) {
+    optionalPlugins.push({
+      type: "mount-file",
+      generateBundle(opts, chunks) {
+        for (let file in chunks) {
+          mountFile({ dest: file, code: chunks[file].code, type: "js" });
+          delete chunks[file];
+        }
+      },
+    });
+  }
+
   return [
-    pluginImportCss(options),
+    pluginImportCss(),
     replace({
       "process.env.NODE_ENV": JSON.stringify("production"),
     }),

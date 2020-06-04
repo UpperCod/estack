@@ -129,6 +129,13 @@ export async function createBundle(options) {
 
   clearInterval(loadingInterval);
 
+  let mountFile = ({ dest, code, type, stream }) => {
+    if (options.watch && server) {
+      server.sources[dest] = { code, stream, type, stream };
+    } else {
+      return writeFile(dest, code);
+    }
+  };
   /**
    * initialize the processing queue on related files
    * @param {string[]} files - list of files to process
@@ -279,7 +286,11 @@ export async function createBundle(options) {
           },
         });
         files[file] = { nestedFiles };
-        return writeFile(getDest(getFileName(file)), code);
+        return mountFile({
+          dest: getDest(getFileName(file)),
+          code,
+          type: "css",
+        });
       });
 
     if (rebuildHtml.length) {
@@ -359,10 +370,11 @@ export async function createBundle(options) {
                 ) {
                   return;
                 }
-                return writeFile(
-                  data.page.dest,
-                  content.replace(/\{\{deep\}\}/g, data.deep) // ensures the relative use of all files declared before writing
-                );
+                return mountFile({
+                  dest: data.page.dest,
+                  code: content.replace(/\{\{deep\}\}/g, data.deep), // ensures the relative use of all files declared before writing
+                  type: "html",
+                });
               }
             })
           )
@@ -376,7 +388,14 @@ export async function createBundle(options) {
       ...files // copy of static files
         .filter(isNotFixLink)
         .filter(prevenLoad)
-        .map(async (file) => copyFile(file, getDest(getFileName(file)))),
+        .map(async (file) => {
+          let dest = getDest(getFileName(file));
+          if (server && options.watch) {
+            mountFile({ dest, stream: file });
+          } else {
+            return copyFile(file, dest);
+          }
+        }),
       ...(files.filter(isJs).filter(prevenLoad).length || forceBuild
         ? [loadRollup()]
         : []), // add rollup to queue only when needed
@@ -397,7 +416,12 @@ export async function createBundle(options) {
       onwarn: streamLog,
       external: options.external,
       cache: rollupCache,
-      plugins: rollupPlugins(options),
+      plugins: rollupPlugins(
+        options,
+        server &&
+          options.watch &&
+          ((source) => mountFile({ ...source, dest: getDest(source.dest) }))
+      ),
     };
 
     if (input.input.length) {
@@ -435,8 +459,9 @@ export async function createBundle(options) {
         });
 
         rollupWatchers.push(watcher);
-      }
 
+        if (server) return;
+      }
       await bundle.write(output);
     }
   }

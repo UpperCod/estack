@@ -3,7 +3,7 @@ import net from "net";
 import polka from "polka";
 import sirv from "sirv";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import { asyncFs, promiseErrorToNull, isHtml } from "./utils";
+import { asyncFs, promiseErrorToNull, isHtml, normalizePath } from "./utils";
 
 /**
  * @param {Object} options
@@ -18,6 +18,10 @@ export async function createServer({ root, port, reload, proxy }) {
     dev: true,
   });
 
+  let nextAssetsRoot = sirv(".", {
+    dev: true,
+  });
+
   port = await findPort(port, port + 100);
 
   let nextProxy =
@@ -27,41 +31,62 @@ export async function createServer({ root, port, reload, proxy }) {
 
   let responses = [];
 
+  let sources = {};
+
+  let addLiveReload = (code) =>
+    (code += `
+  <script>{
+    let source = new EventSource('http://localhost:${port}/livereload');
+    source.onmessage = e =>  setTimeout(()=>location.reload(),250);
+  }</script>
+`);
+
   polka()
     .use(async (req, res, next) => {
       if (req.path == "/livereload" && reload) {
         next();
         return;
       }
-      let url = path.join(root, req.path == "/" ? "index.html" : req.path);
+      let url = normalizePath(
+        path.join(root, req.path == "/" ? "index.html" : req.path)
+      );
+
+      let virtualSource = sources[url];
 
       let optUrl = /\.[\w]+$/.test(url) ? url : url + ".html";
 
-      let [stateHtml, stateStatic, stateFallback] = await Promise.all([
-        // check if the file exists as html
-        isHtml(optUrl) && fileExists(optUrl),
-        // check if the file exists as static
-        fileExists(url),
-        // it is verified in each request of the html type,
-        // to ensure the existence in a dynamic environment
-        isHtml(optUrl) && !proxy && fileExists(fallbackUrl), //
-      ]);
+      let [stateHtml, stateStatic, stateFallback] = virtualSource
+        ? []
+        : await Promise.all([
+            // check if the file exists as html
+            isHtml(optUrl) && fileExists(optUrl),
+            // check if the file exists as static
+            fileExists(url),
+            // it is verified in each request of the html type,
+            // to ensure the existence in a dynamic environment
+            isHtml(optUrl) && !proxy && fileExists(fallbackUrl), //
+          ]);
 
       res.setHeader("Access-Control-Allow-Origin", "*");
 
-      if (stateHtml || stateFallback) {
+      // mirror files to server without writing
+      if (virtualSource) {
+        if (virtualSource.stream) {
+          req.path = virtualSource.stream;
+          nextAssetsRoot(req, res, next); //
+        } else {
+          let file = virtualSource.code;
+          if (virtualSource.type == "html") {
+            res.setHeader("Content-Type", "text/html; charset=utf-8");
+            file = addLiveReload(file);
+          }
+          res.end(file);
+        }
+      } else if (stateHtml || stateFallback) {
         res.setHeader("Content-Type", "text/html; charset=utf-8");
         try {
           let file = await asyncFs.readFile(stateHtml || stateFallback, "utf8");
-          if (reload) {
-            file += `
-            <script>{
-              let source = new EventSource('http://localhost:${port}/livereload');
-              source.onmessage = e =>  setTimeout(()=>location.reload(),250);
-            }</script>
-          `;
-          }
-          res.end(file);
+          res.end(reload ? addLiveReload(file) : file);
         } catch (e) {
           res.end(e);
         }
@@ -90,6 +115,7 @@ export async function createServer({ root, port, reload, proxy }) {
 
   return {
     port,
+    sources,
     reload() {
       responses.forEach((res) => sendMessage(res, "message", "reloading page"));
     },
