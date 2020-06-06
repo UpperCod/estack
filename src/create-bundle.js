@@ -18,6 +18,7 @@ import {
   writeFile,
   yamlParse,
   normalizePath,
+  getProp,
   getPackage,
   getMetaFile,
   getFileName,
@@ -136,6 +137,7 @@ export async function createBundle(options) {
       return writeFile(dest, code);
     }
   };
+
   /**
    * initialize the processing queue on related files
    * @param {string[]} files - list of files to process
@@ -156,7 +158,9 @@ export async function createBundle(options) {
           rebuildHtml.push(file);
 
           let { dir, name } = path.parse(file);
+
           let html = await readFile(file);
+
           let data = [html, {}];
 
           try {
@@ -172,15 +176,21 @@ export async function createBundle(options) {
 
           let fileName = name + ".html";
           let dest = getDest(fileName, meta.folder);
-          let link = normalizePath(
-            path.join("./", meta.folder || "", fileName)
-          );
+          let link =
+            "./" +
+            normalizePath(
+              path.join(meta.folder || "", name == "index" ? "./" : name)
+            );
           let nestedFiles = [];
           let localScan = {}; // prevents a second check if the file is added again from the html
 
           async function addFile(childFile) {
+            if (isUrl(childFile)) return childFile;
+
             let findFile = path.join(dir, childFile);
+
             if (localScan[findFile]) return localScan[findFile];
+
             try {
               await asyncFs.stat(findFile);
               nestedFiles.push(findFile);
@@ -197,7 +207,7 @@ export async function createBundle(options) {
 
           let [content, fetch, aliasFiles] = await Promise.all([
             readHtml({
-              code,
+              code: meta.content || code, //content can also be defined in the meta
               addFile,
             }),
             meta.fetch
@@ -295,19 +305,54 @@ export async function createBundle(options) {
 
     if (rebuildHtml.length) {
       let templates = {};
-      let filesHtml = Object.keys(inputs)
+      let archives = [];
+
+      let pages = Object.keys(inputs)
         .filter(isHtml)
         .map((file) => {
           let data = inputs[file];
-          if (inputs[file].template) {
-            templates[inputs[file].template] = data;
+          if (data.template) {
+            templates[data.template] = data;
+            return;
+          }
+          if (data.archive) {
+            archives.push(data);
             return;
           }
           return data;
         })
         .filter((value) => value);
 
-      let groupAsyncHtml = filesHtml.map(async (page) => {
+      pages = [
+        ...pages,
+        ...archives
+          .map(({ archive, ...page }) => {
+            let collection = queryPages(pages, archive);
+            return Object.keys(collection).map((paged) => {
+              let { pages, ...pagination } = collection[paged];
+
+              let name = paged == 0 ? page.name : paged;
+              let fileName = name + ".html";
+              let dest = getDest(fileName, page.folder);
+
+              let link = normalizePath(
+                "./" + path.join(page.folder || "", name)
+              );
+
+              return {
+                ...page,
+                name: fileName,
+                dest,
+                link,
+                pages,
+                pagination,
+              };
+            });
+          })
+          .flat(),
+      ];
+
+      let groupAsyncHtml = pages.map(async ({ pages: scopePages, ...page }) => {
         let layout = templates[page.layout == null ? "default" : page.layout];
 
         let data = {
@@ -315,14 +360,15 @@ export async function createBundle(options) {
           build: !options.watch,
           page,
           layout,
-          deep: getRelativeDeep(page.folder) || "./",
-          pages: filesHtml.map((subPage) => ({
-            ...subPage,
-            content: null,
-            link: getRelativePath(page.link, subPage.link),
-          })),
+          deep: getRelativeDeep(page.link) || "./",
+          pages: (scopePages || pages).map((subPage) => {
+            return {
+              ...subPage,
+              content: null,
+              link: getRelativePath(page.link, subPage.link),
+            };
+          }),
         };
-
         try {
           let content = await renderHtml(page.content, data);
           return { ...data, page: { ...page, content } };
@@ -346,7 +392,7 @@ export async function createBundle(options) {
                 try {
                   content = await renderHtml(data.layout.content, {
                     ...data,
-                    pages: pages.map(({ page: subPage }) => ({
+                    pages: (data.pages || pages).map(({ page: subPage }) => ({
                       ...subPage,
                       link: getRelativePath(data.page.link, subPage.link),
                     })),
@@ -563,4 +609,42 @@ async function formatOptions({
   options.src = options.src.map(normalizePath);
 
   return options;
+}
+
+function queryPages(pages, { where, sort = "order", limit }) {
+  let keys = Object.keys(where);
+  pages = pages
+    .filter((page) =>
+      keys.every((prop) => [].concat(getProp(page, prop)).includes(where[prop]))
+    )
+    .sort((a, b) => (getProp(a, sort) > getProp(b, sort) ? 1 : -1));
+
+  let item;
+  let start = 0;
+  let paged = 0;
+  let collection = {};
+
+  while ((item = pages.pop())) {
+    if (start++ >= limit) {
+      start = 0;
+      paged++;
+    }
+
+    collection[paged] = collection[paged] || {
+      pages: [],
+      paged,
+      get prev() {
+        return this.paged - 1 || "";
+      },
+      get next() {
+        return this.paged + 1 || "";
+      },
+      get length() {
+        return paged;
+      },
+    };
+    collection[paged].pages.push(item);
+  }
+
+  return collection;
 }

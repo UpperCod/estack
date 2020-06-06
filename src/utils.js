@@ -36,13 +36,42 @@ export let isNotFixLink = (file) => !isFixLink(file);
 export let promiseErrorToNull = async (promise) => promise.catch((e) => null);
 
 /**
- *
- * @param {string} a - New link destination
- * @param {string} b - Origin link
+ * It manages to resolve the relative path,
+ * this function avoids the redirection by
+ * correctly handling the closing of the path
+ * @param {string} from - New link destination
+ * @param {string} to - Origin link
+ * @example
+ * getRelativePath("./post/post-1","post/2/") == "./2/"
+ * getRelativePath("./post/1/","post/2/") == "../2/"
  */
-export let getRelativePath = (a, b) =>
-  normalizePath(path.relative(path.parse(a).dir, b));
+export let getRelativePath = (from, to) => {
+  if (from == to) return "./";
+  let isFolder = /\/$/;
+  let withIndexFrom = isFolder.test(from);
+  let withIndexTo = isFolder.test(to);
+  let isDeep = /^\.\.\/[^\.\/]/;
+  let isNoSlash = /^[^\.\/]/;
+  let link = normalizePath(path.relative(from, to));
 
+  if (withIndexTo) {
+    link += "/";
+  }
+
+  if (!withIndexFrom && isDeep.test(link)) {
+    link = link.replace("../", "./");
+  }
+
+  if (isNoSlash.test(link)) {
+    link = "./" + link;
+  }
+
+  return link;
+};
+/**
+ * get the depth of the route
+ * @param {string} file
+ */
 export let getRelativeDeep = (file) =>
   file
     ? path
@@ -52,9 +81,17 @@ export let getRelativeDeep = (file) =>
         .join("")
     : "";
 
+/**
+ * read from file asynchronously
+ * @param {string} file
+ */
 export let readFile = (file) => asyncFs.readFile(path.join(cwd, file), "utf8");
-
-export async function writeFile(file, data) {
+/**
+ * Create or update a file based on a string, does not handle binaries
+ * @param {string} file
+ * @param {string} code
+ */
+export let writeFile = async (file, code) => {
   let dir = path.join(cwd, path.parse(file).dir);
   try {
     await asyncFs.stat(dir);
@@ -64,10 +101,12 @@ export async function writeFile(file, data) {
     });
   }
 
-  return asyncFs.writeFile(path.join(cwd, file), data, "utf8");
-}
-
-export async function getPackage() {
+  return asyncFs.writeFile(path.join(cwd, file), code, "utf8");
+};
+/**
+ * Read a package.json from the bin execution source
+ */
+export let getPackage = async () => {
   try {
     return {
       ...pkgDefault,
@@ -76,7 +115,7 @@ export async function getPackage() {
   } catch (e) {
     return { ...pkgDefault };
   }
-}
+};
 
 export async function copyFile(src, dest) {
   src = path.join(cwd, src);
@@ -97,6 +136,7 @@ export async function copyFile(src, dest) {
 
 export function streamLog(message) {
   message = message + "";
+  return;
   if (!/SyntaxError/.test(message)) {
     try {
       message ? logUpdate(message) : logUpdate.clear();
@@ -173,4 +213,17 @@ export function requestJson(uri) {
       })
       .on("error", reject);
   });
+}
+
+export function getProp(value, prop, option) {
+  value = value || {};
+  prop = Array.isArray(prop) ? prop : prop.match(/([^\[\]\.]+)/g);
+  for (let i = 0; i < prop.length; i++) {
+    if (typeof value === "object" && prop[i] in value) {
+      value = value[prop[i]];
+    } else {
+      return option;
+    }
+  }
+  return value;
 }

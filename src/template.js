@@ -1,6 +1,8 @@
 import { Liquid } from "liquidjs";
 import { renderMarkdown } from "./markdown";
+import { getProp } from "./utils";
 
+let cache = {};
 let engine = new Liquid({
   cache: false,
   dynamicPartials: false,
@@ -54,6 +56,11 @@ engine.registerFilter("markdown", (string, clearSpace) =>
   )
 );
 
+engine.registerFilter("pagination", (...args) => {
+  console.log(args);
+  return [];
+});
+
 engine.registerFilter("attributes", (data) =>
   Object.keys(data)
     .map((prop) =>
@@ -74,19 +81,7 @@ engine.registerFilter("find", (data, by, equal) =>
   data.find((data) => getProp(data, by) === equal)
 );
 
-function getProp(value, prop, option) {
-  value = value || {};
-  prop = Array.isArray(prop) ? prop : prop.match(/([^\[\]\.]+)/g);
-  for (let i = 0; i < prop.length; i++) {
-    if (typeof value === "object" && prop[i] in value) {
-      value = value[prop[i]];
-    } else {
-      return option;
-    }
-  }
-  return value;
-}
-
 export function renderHtml(code, data) {
-  return engine.parseAndRender(code, data);
+  cache[code] = cache[code] || engine.parse(code);
+  return engine.render(cache[code], data);
 }
