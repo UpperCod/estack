@@ -397,6 +397,7 @@ export let createBundle = async (options) => {
           page,
           layout,
           deep: getRelativeDeep(page.link) || "./",
+          archive: !!scopePages,
           pages: (scopePages || pages).map((subPage) => ({
             ...subPage,
             content: null,
@@ -433,12 +434,12 @@ export let createBundle = async (options) => {
                   content = await renderHtml(data.layout.content, {
                     ...data,
                     // The layout can inherit the pages
-                    pages:
-                      data.pages ||
-                      pages.map(({ page: subPage }) => ({
-                        ...subPage,
-                        link: getRelativePath(data.page.link, subPage.link),
-                      })),
+                    pages: data.archive
+                      ? data.pages
+                      : pages.map(({ page: subPage }) => ({
+                          ...subPage,
+                          link: getRelativePath(data.page.link, subPage.link),
+                        })),
                   });
                 } catch (e) {
                   streamLog(`${SyntaxErrorTransforming} : ${data.layout.file}`);
