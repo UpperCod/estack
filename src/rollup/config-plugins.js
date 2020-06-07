@@ -18,7 +18,7 @@ let extensions = [".js", ".jsx", ".ts", ".tsx"];
  * @param {boolean} options.jsxFragment
  * @param {({dest:string,code:string,type:string})=>void} [mountFile] - mount rollup files on development server without writing
  */
-export function rollupPlugins(options, mountFile) {
+export let rollupPlugins = (options, mountFile) => {
   let optionalPlugins = [];
 
   if (options.minify) {
@@ -61,4 +61,4 @@ export function rollupPlugins(options, mountFile) {
     common(),
     ...optionalPlugins,
   ];
-}
+};

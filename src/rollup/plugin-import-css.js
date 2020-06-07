@@ -1,7 +1,7 @@
 import { isCss } from "../utils";
 import { readCss } from "../read-css";
 
-export function pluginImportCss() {
+export let pluginImportCss = () => {
   return {
     name: "plugin-import-css",
     async transform(code, id) {
@@ -19,4 +19,4 @@ export function pluginImportCss() {
       }
     },
   };
-}
+};

@@ -1,7 +1,7 @@
 import { analyzeHtml, serializeHtml } from "./analize-html";
 import { isUrl } from "./utils";
 
-export async function readHtml({ code, addFile }) {
+export let readHtml = async ({ code, addFile }) => {
   let astHtml = await analyzeHtml(code, async (node) => {
     if (node.nodeName == "link") {
       let isHrefImport = ["stylesheet", "manifest", "preload"].includes(
@@ -22,4 +22,4 @@ export async function readHtml({ code, addFile }) {
     }
   });
   return serializeHtml(astHtml);
-}
+};

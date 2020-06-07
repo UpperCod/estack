@@ -1,8 +1,6 @@
 import parse5 from "parse5";
 
-export function serializeHtml(astHtml) {
-  return parse5.serialize(astHtml);
-}
+export let serializeHtml = (astHtml) => parse5.serialize(astHtml);
 /**
  * parses an html document node to node
  * @param {string} content
@@ -10,26 +8,26 @@ export function serializeHtml(astHtml) {
  * @param {boolean} isRoot
  * @returns {Object} astHtml
  */
-export function analyzeHtml(content, map) {
+export let analyzeHtml = (content, map) => {
   const isRoot = /^\s*<(!doctype|html)/i.test(content);
   const astHtml = parse5[isRoot ? "parse" : "parseFragment"](content);
   const parallel = [];
 
-  function consume(astHtml) {
-    astHtml.map(node => {
+  let consume = (astHtml) => {
+    astHtml.map((node) => {
       parallel.push(
         map({
           ...node,
           setAttribute(name, value) {
-            node.attrs = node.attrs.map(attr =>
+            node.attrs = node.attrs.map((attr) =>
               attr.name == name ? { name, value } : attr
             );
           },
           getAttribute(name) {
             return (node.attrs || [])
-              .filter(attr => attr.name == name)
+              .filter((attr) => attr.name == name)
               .reduce((_, { value }) => value, null);
-          }
+          },
         })
       );
       if (
@@ -39,12 +37,12 @@ export function analyzeHtml(content, map) {
         consume(node.childNodes);
       }
     });
-  }
+  };
 
   map && consume(astHtml.childNodes);
 
   return Promise.all(parallel).then(() => astHtml);
-}
+};
 
 /**
  * @typedef {Object} Node

@@ -9,13 +9,13 @@ let regValueUse = createCaptureMetaCss("use");
 let regValueImport = createCaptureMetaCss("import");
 let regValueNamespace = createCaptureMetaCss("namespace");
 
-export async function readCss(
+export let readCss = async (
   { file, code, addWatchFile },
   imports = {},
   returnRules,
   useRules = [],
   namespace = ""
-) {
+) => {
   let { dir } = path.parse(file);
 
   code = code.replace(regValueNamespace, (nm, value) => {
@@ -110,4 +110,4 @@ export async function readCss(
     return rules;
   }
   return serialize(rules, stringify);
-}
+};

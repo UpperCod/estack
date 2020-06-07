@@ -36,7 +36,7 @@ import { watch } from "./watch";
 
 let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
 
-export async function createBundle(options) {
+export let createBundle = async (options) => {
   streamLog("loading...");
 
   let loadingStep = 3;
@@ -143,7 +143,7 @@ export async function createBundle(options) {
    * @param {string[]} files - list of files to process
    * @param {*} forceBuild
    */
-  async function load(files, forceBuild) {
+  let load = async (files, forceBuild) => {
     // reset build start time
     lastTime = new Date();
 
@@ -192,7 +192,7 @@ export async function createBundle(options) {
             );
           let nestedFiles = [];
 
-          function addFile(childFile) {
+          let addFile = (childFile) => {
             if (isUrl(childFile)) return childFile;
 
             let findFile = path.join(dir, childFile);
@@ -214,7 +214,7 @@ export async function createBundle(options) {
             localScan[findFile] = localScan[findFile] || resolveChildFile();
 
             return localScan[findFile];
-          }
+          };
 
           if (isMd(file)) {
             code = renderMarkdown(code);
@@ -402,6 +402,7 @@ export async function createBundle(options) {
             link: getRelativePath(page.link, subPage.link),
           })),
         };
+
         try {
           let content = await renderHtml(page.content, data);
           return { ...data, page: { ...page, content } };
@@ -492,8 +493,8 @@ export async function createBundle(options) {
     streamLog(`bundle: ${new Date() - lastTime}ms`);
 
     server && server.reload();
-  }
-  async function loadRollup() {
+  };
+  let loadRollup = async () => {
     let countBuild = 0; // Ignore the first build since it synchronizes the reload from root
     // clean the old watcher
     rollupWatchers.filter((watcher) => watcher.close());
@@ -552,7 +553,7 @@ export async function createBundle(options) {
       }
       await bundle.write(output);
     }
-  }
+  };
 
   if (options.watch) {
     // map defining the cross dependencies between child and parents
@@ -608,16 +609,16 @@ export async function createBundle(options) {
   }
 
   return load(files);
-}
+};
 
-async function formatOptions({
+let formatOptions = async ({
   src = [],
   config,
   external,
   jsx,
   jsxFragment,
   ...ignore
-}) {
+}) => {
   let pkg = await getPackage();
 
   src = Array.isArray(src) ? src : src.split(/ *; */g);
@@ -651,9 +652,9 @@ async function formatOptions({
   options.src = options.src.map(normalizePath);
 
   return options;
-}
+};
 
-function queryPages(pages, { where, sort = "order", limit }) {
+let queryPages = (pages, { where, sort = "order", limit }) => {
   let keys = Object.keys(where);
   pages = pages
     .filter((page) =>
@@ -689,4 +690,4 @@ function queryPages(pages, { where, sort = "order", limit }) {
   }
 
   return collection;
-}
+};

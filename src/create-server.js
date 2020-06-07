@@ -19,7 +19,7 @@ let mime = {
  * @param {string} options.proxy
  * @returns {{reload:Function,serverPort:number}}
  */
-export async function createServer({ root, port, reload, proxy }) {
+export let createServer = async ({ root, port, reload, proxy }) => {
   let nextAssets = sirv(root, {
     dev: true,
   });
@@ -135,7 +135,7 @@ export async function createServer({ root, port, reload, proxy }) {
       responses.forEach((res) => sendMessage(res, "message", "reloading page"));
     },
   };
-}
+};
 /**
  * this function searches if the available port is free,
  * if it is not it will search for the next one until
@@ -144,7 +144,7 @@ export async function createServer({ root, port, reload, proxy }) {
  * @param {number} limit - port search limit
  * @param {object} pending - allows terminating execution from an internal recursive process
  */
-async function findPort(port, limit, pending) {
+let findPort = async (port, limit, pending) => {
   if (!pending) {
     pending = {};
     pending.promise = new Promise((resolve, reject) => {
@@ -166,12 +166,12 @@ async function findPort(port, limit, pending) {
   client.on("error", () => pending.resolve(port));
 
   return pending.promise;
-}
+};
 
-function sendMessage(res, channel, data) {
+let sendMessage = (res, channel, data) => {
   res.write(`event: ${channel}\nid: 0\ndata: ${data}\n`);
   res.write("\n\n");
-}
+};
 
 let fileExists = async (file) =>
   (await promiseErrorToNull(asyncFs.stat(file))) && file;

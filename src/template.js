@@ -81,7 +81,7 @@ engine.registerFilter("find", (data, by, equal) =>
   data.find((data) => getProp(data, by) === equal)
 );
 
-export function renderHtml(code, data) {
+export let renderHtml = (code, data) => {
   cache[code] = cache[code] || engine.parse(code);
   return engine.render(cache[code], data);
-}
+};
