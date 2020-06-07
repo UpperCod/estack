@@ -1,6 +1,6 @@
 import { Liquid } from "liquidjs";
 import { renderMarkdown } from "./markdown";
-import { getProp } from "./utils";
+import { getProp, getRelativePath } from "./utils";
 
 let cache = {};
 let engine = new Liquid({
@@ -56,11 +56,6 @@ engine.registerFilter("markdown", (string, clearSpace) =>
   )
 );
 
-engine.registerFilter("pagination", (...args) => {
-  console.log(args);
-  return [];
-});
-
 engine.registerFilter("attributes", (data) =>
   Object.keys(data)
     .map((prop) =>
@@ -80,6 +75,8 @@ engine.registerFilter("includes", (value, list) =>
 engine.registerFilter("find", (data, by, equal) =>
   data.find((data) => getProp(data, by) === equal)
 );
+
+engine.registerFilter("relative", (to, from) => getRelativePath(from, to));
 
 export let renderHtml = (code, data) => {
   cache[code] = cache[code] || engine.parse(code);

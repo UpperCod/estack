@@ -356,11 +356,11 @@ export let createBundle = async (options) => {
         ...pages,
         ...archives
           .map(({ archive, ...page }) => {
-            let collection = queryPages(pages, archive);
+            let collection = queryPages(pages, archive, page.name);
             return Object.keys(collection).map((paged) => {
               let { pages, ...pagination } = collection[paged];
               // Create the pages manually, they are the configuration
-              let name = paged == 0 ? page.name : paged;
+              let name = page.name + (paged == 0 ? "" : "/" + paged);
               let fileName = name + ".html";
               let dest = getDest(fileName, page.folder);
 
@@ -373,6 +373,7 @@ export let createBundle = async (options) => {
                 name: fileName,
                 dest,
                 link,
+                paged,
                 pages, // The pages context will only be based on the scope of the archive
                 pagination,
               };
@@ -654,7 +655,7 @@ let formatOptions = async ({
   return options;
 };
 
-let queryPages = (pages, { where, sort = "order", limit }) => {
+let queryPages = (pages, { where, sort = "order", limit }, name) => {
   let keys = Object.keys(where);
   pages = pages
     .filter((page) =>
@@ -663,31 +664,33 @@ let queryPages = (pages, { where, sort = "order", limit }) => {
     .sort((a, b) => (getProp(a, sort) > getProp(b, sort) ? 1 : -1));
 
   let item;
-  let start = 0;
+  let size = 0;
   let paged = 0;
   let collection = {};
+  let subLink = (current, value) =>
+    collection[value] &&
+    (current == 0 ? "./" : "../") + name + (value == 0 ? "" : "/" + value);
 
-  while ((item = pages.pop())) {
-    if (start++ >= limit) {
-      start = 0;
-      paged++;
-    }
-
+  while ((item = pages.shift())) {
     collection[paged] = collection[paged] || {
       pages: [],
       paged,
+      ref: {},
       get prev() {
-        return this.paged - 1 || "";
+        return subLink(this.paged, this.paged - 1);
       },
       get next() {
-        return this.paged + 1 || "";
+        return subLink(this.paged, this.paged + 1);
       },
       get length() {
         return paged;
       },
     };
     collection[paged].pages.push(item);
+    if (++size == limit) {
+      size = 0;
+      paged++;
+    }
   }
-
   return collection;
 };

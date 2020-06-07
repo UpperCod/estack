@@ -160,7 +160,8 @@ export let streamLog = (message) => {
  * normalizes backslashes
  * @param {string} str
  */
-export let normalizePath = (str) => str.replace(/(\\)+/g, "/");
+export let normalizePath = (str) =>
+  str.replace(/(\\)+/g, "/").replace(/\s+/g, "-").replace(/\-+/g, "-");
 /**
  * a yaml format string to object
  * @param {string} string
