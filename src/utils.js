@@ -32,7 +32,10 @@ export let isCss = (file) => /\.css$/.test(file);
 export let isFixLink = (file) => isHtml(file) || isJs(file) || isCss(file);
 
 export let isNotFixLink = (file) => !isFixLink(file);
-
+/**
+ * Change the catch to null
+ * @param {Promise} promise
+ */
 export let promiseErrorToNull = async (promise) => promise.catch((e) => null);
 
 /**
@@ -116,8 +119,12 @@ export let getPackage = async () => {
     return { ...pkgDefault };
   }
 };
-
-export async function copyFile(src, dest) {
+/**
+ *  Copy a file only if they are different between origin and destination depending on their date
+ * @param {string} src - source file
+ * @param {string} dest - destination for the file
+ */
+export let copyFile = async (src, dest) => {
   src = path.join(cwd, src);
   dest = path.join(cwd, dest);
   let [statSrc, statDest] = await Promise.all([
@@ -132,11 +139,14 @@ export async function copyFile(src, dest) {
     }
     await asyncFs.copyFile(src, dest);
   }
-}
+};
 
-export function streamLog(message) {
+/**
+ * send the log to a stream log
+ * @param {string} message
+ */
+export let streamLog = (message) => {
   message = message + "";
-  return;
   if (!/SyntaxError/.test(message)) {
     try {
       message ? logUpdate(message) : logUpdate.clear();
@@ -145,13 +155,27 @@ export function streamLog(message) {
   }
   logUpdate.clear();
   console.log(message + "\n");
-}
-
+};
+/**
+ * normalizes backslashes
+ * @param {string} str
+ */
 export let normalizePath = (str) => str.replace(/(\\)+/g, "/");
-
+/**
+ * a yaml format string to object
+ * @param {string} string
+ */
 export let yamlParse = (string) => yaml.safeLoad(string);
-
-export function getMetaFile(code) {
+/**
+ * Extract the meta snippet header
+ * @param {string} code
+ * @example
+ * ---
+ * name
+ * ---
+ * lorem...
+ */
+export let getMetaFile = (code) => {
   let meta = {};
   let metaBlock = "---";
   let lineBreak = "\n";
@@ -172,9 +196,12 @@ export function getMetaFile(code) {
     code = body.join(lineBreak);
   }
   return [code, meta];
-}
-
-export function getFileName(file) {
+};
+/**
+ * gets the file name based on its type
+ * @param {string} file
+ */
+export let getFileName = (file) => {
   let { name, ext } = path.parse(file);
   return normalizePath(
     isFixLink(ext)
@@ -183,13 +210,13 @@ export function getFileName(file) {
           file.split("").reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
           ext
   );
-}
+};
 /**
  * generate a request to obtain data
  * @param {string} uri
  * @returns {Promise}
  */
-export function requestJson(uri) {
+export let requestJson = (uri) => {
   return new Promise((resolve, reject) => {
     let dataUri = url.parse(uri);
     (dataUri.protocol == "https:" ? https : http)
@@ -202,6 +229,7 @@ export function requestJson(uri) {
             reject(res);
           }
           if (res.statusCode > 300 && res.headers.location) {
+            // recursively resolve the redirect
             requestJson(url.resolve(dataUri.path, res.headers.location)).then(
               resolve,
               reject
@@ -213,17 +241,22 @@ export function requestJson(uri) {
       })
       .on("error", reject);
   });
-}
-
-export function getProp(value, prop, option) {
+};
+/**
+ * Gets the value of an object based on the index
+ * @param {object} value
+ * @param {string} prop - search index
+ * @param {*} optionValue - optional return value in case the index cannot be resolved
+ */
+export let getProp = (value, prop, optionValue) => {
   value = value || {};
   prop = Array.isArray(prop) ? prop : prop.match(/([^\[\]\.]+)/g);
   for (let i = 0; i < prop.length; i++) {
     if (typeof value === "object" && prop[i] in value) {
       value = value[prop[i]];
     } else {
-      return option;
+      return optionValue;
     }
   }
   return value;
-}
+};

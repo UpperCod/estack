@@ -148,14 +148,22 @@ export async function createBundle(options) {
     lastTime = new Date();
 
     files = files.map(path.normalize);
-
+    // html files are added to this list to check if a rebuild of html files is necessary
     let rebuildHtml = [];
+    // prevents a second check if the file is added again from the html
+    let localScan = {};
+
+    /**
+     * First the html files will be obtained
+     * to extract the assets from these,
+     * assets will be grouped in the variable nestedFiles
+     */
     let nestedFiles = await Promise.all(
       files
         .filter(isHtml)
         .filter(prevenLoad)
         .map(async (file) => {
-          rebuildHtml.push(file);
+          rebuildHtml.push(file); // this will rebuild all the html files
 
           let { dir, name } = path.parse(file);
 
@@ -170,6 +178,7 @@ export async function createBundle(options) {
               `${SyntaxErrorTransforming} ${file}:${e.mark.line}:${e.mark.position}`
             );
           }
+
           let [code, meta] = data;
 
           name = meta.name || name;
@@ -182,34 +191,42 @@ export async function createBundle(options) {
               path.join(meta.folder || "", name == "index" ? "./" : name)
             );
           let nestedFiles = [];
-          let localScan = {}; // prevents a second check if the file is added again from the html
 
-          async function addFile(childFile) {
+          function addFile(childFile) {
             if (isUrl(childFile)) return childFile;
 
             let findFile = path.join(dir, childFile);
+            /**
+             * to optimize the process, the promise that the file looks for is
+             * cached, in order to reduce this process to only one execution between buils
+             */
+            let resolveChildFile = async () => {
+              try {
+                await asyncFs.stat(findFile);
+                nestedFiles.push(findFile);
+                fileWatcher && fileWatcher(findFile, file);
+                return "{{deep}}" + getFileName(findFile);
+              } catch (e) {
+                return childFile;
+              }
+            };
 
-            if (localScan[findFile]) return localScan[findFile];
+            localScan[findFile] = localScan[findFile] || resolveChildFile();
 
-            try {
-              await asyncFs.stat(findFile);
-              nestedFiles.push(findFile);
-              fileWatcher && fileWatcher(findFile, file);
-              return (localScan[findFile] = "{{deep}}" + getFileName(findFile));
-            } catch (e) {
-              return (localScan[findFile] = childFile);
-            }
+            return localScan[findFile];
           }
 
           if (isMd(file)) {
             code = renderMarkdown(code);
           }
-
+          // These processes can be solved in parallel
           let [content, fetch, aliasFiles] = await Promise.all([
+            // The following process scans the resulting html, for the extraction of assets
             readHtml({
               code: meta.content || code, //content can also be defined in the meta
               addFile,
             }),
+            // The following process allows obtaining data external to the document
             meta.fetch
               ? Promise.all(
                   Object.keys(meta.fetch).map(async (prop) => {
@@ -219,6 +236,11 @@ export async function createBundle(options) {
                         cacheFetch[value] || requestJson(value);
                       value = await cacheFetch[value];
                     } else {
+                      /**
+                       * If the file is local, an observer relationship will be added,
+                       * this allows relating the data obtained from the external document
+                       * to the template and synchronizing the changes
+                       */
                       let findFile = path.join(dir, value);
 
                       fileWatcher && fileWatcher(findFile, file, true);
@@ -245,6 +267,7 @@ export async function createBundle(options) {
                   }, {})
                 )
               : null,
+            // The following process allows adding files from the meta
             meta.files
               ? Promise.all(
                   Object.keys(meta.files).map(async (prop) => ({
@@ -270,7 +293,6 @@ export async function createBundle(options) {
             content,
             link,
             dest,
-            nestedFiles,
           };
 
           return nestedFiles;
@@ -278,24 +300,22 @@ export async function createBundle(options) {
     );
 
     files = [...files, ...nestedFiles.flat()];
+    let groupAsyncHtml = [];
 
-    let groupAsync = files
+    let groupAsyncCss = files
       .filter(isCss)
       .filter(prevenLoad)
       .map(async (file) => {
         let css = await readFile(file);
-        let nestedFiles = [];
         let code = await readCss({
           code: css,
           file,
           addWatchFile(childFile) {
             if (options.watch) {
-              nestedFiles.push(childFile);
               fileWatcher && fileWatcher(childFile, file, true);
             }
           },
         });
-        files[file] = { nestedFiles };
         return mountFile({
           dest: getDest(getFileName(file)),
           code,
@@ -304,9 +324,18 @@ export async function createBundle(options) {
       });
 
     if (rebuildHtml.length) {
+      /**
+       * The templates files are virtual, these can be referred
+       * by a file that declares layour for use of this
+       */
       let templates = {};
+      /**
+       * The files are virtual and it allows to generate a query
+       * on the pages in order to create page collections
+       */
       let archives = [];
 
+      // The following processes separate the files according to their use
       let pages = Object.keys(inputs)
         .filter(isHtml)
         .map((file) => {
@@ -330,7 +359,7 @@ export async function createBundle(options) {
             let collection = queryPages(pages, archive);
             return Object.keys(collection).map((paged) => {
               let { pages, ...pagination } = collection[paged];
-
+              // Create the pages manually, they are the configuration
               let name = paged == 0 ? page.name : paged;
               let fileName = name + ".html";
               let dest = getDest(fileName, page.folder);
@@ -344,7 +373,7 @@ export async function createBundle(options) {
                 name: fileName,
                 dest,
                 link,
-                pages,
+                pages, // The pages context will only be based on the scope of the archive
                 pagination,
               };
             });
@@ -352,7 +381,13 @@ export async function createBundle(options) {
           .flat(),
       ];
 
-      let groupAsyncHtml = pages.map(async ({ pages: scopePages, ...page }) => {
+      /**
+       * First resolve the pages independently,
+       * this allows each page to interact with
+       * its scope page before associating the
+       * nested render on the layout
+       */
+      groupAsyncHtml = pages.map(async ({ pages: scopePages, ...page }) => {
         let layout = templates[page.layout == null ? "default" : page.layout];
 
         let data = {
@@ -361,13 +396,11 @@ export async function createBundle(options) {
           page,
           layout,
           deep: getRelativeDeep(page.link) || "./",
-          pages: (scopePages || pages).map((subPage) => {
-            return {
-              ...subPage,
-              content: null,
-              link: getRelativePath(page.link, subPage.link),
-            };
-          }),
+          pages: (scopePages || pages).map((subPage) => ({
+            ...subPage,
+            content: null,
+            link: getRelativePath(page.link, subPage.link),
+          })),
         };
         try {
           let content = await renderHtml(page.content, data);
@@ -377,14 +410,19 @@ export async function createBundle(options) {
         }
       });
 
-      groupAsync = [
-        ...groupAsync,
-        // Improve the execution of parallel tasks, to speed up the build
+      groupAsyncHtml = [
+        /**
+         * expect all page renders to be resolved, before hierarchical
+         * template construction, this is to access all the content
+         * associated with the previous render
+         */
         Promise.all(groupAsyncHtml).then((pages) =>
           Promise.all(
-            // Write the files once all have generated render of their
-            // individual content, this in order to create pages that
-            // group the content of other pages already processed
+            /**
+             * Write the files once all have generated render of their
+             * individual content, this in order to create pages that
+             * group the content of other pages already processed
+             */
             pages.map(async (data) => {
               if (!data) return;
               let content = data.page.content;
@@ -392,10 +430,13 @@ export async function createBundle(options) {
                 try {
                   content = await renderHtml(data.layout.content, {
                     ...data,
-                    pages: (data.pages || pages).map(({ page: subPage }) => ({
-                      ...subPage,
-                      link: getRelativePath(data.page.link, subPage.link),
-                    })),
+                    // The layout can inherit the pages
+                    pages:
+                      data.pages ||
+                      pages.map(({ page: subPage }) => ({
+                        ...subPage,
+                        link: getRelativePath(data.page.link, subPage.link),
+                      })),
                   });
                 } catch (e) {
                   streamLog(`${SyntaxErrorTransforming} : ${data.layout.file}`);
@@ -430,7 +471,8 @@ export async function createBundle(options) {
 
     // parallel queue of asynchronous processes
     await Promise.all([
-      ...groupAsync,
+      ...groupAsyncCss,
+      ...groupAsyncHtml,
       ...files // copy of static files
         .filter(isNotFixLink)
         .filter(prevenLoad)
