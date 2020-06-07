@@ -49,7 +49,7 @@ export let promiseErrorToNull = async (promise) => promise.catch((e) => null);
  * getRelativePath("./post/1/","post/2/") == "../2/"
  */
 export let getRelativePath = (from, to) => {
-  if (from == to) return "./";
+  if (from == to) return "";
   let isFolder = /\/$/;
   let withIndexFrom = isFolder.test(from);
   let withIndexTo = isFolder.test(to);
@@ -75,14 +75,16 @@ export let getRelativePath = (from, to) => {
  * get the depth of the route
  * @param {string} file
  */
-export let getRelativeDeep = (file) =>
-  file
+export let getRelativeDeep = (file) => {
+  file = file.replace(/^(\.\/){0,}/g, "");
+  return file
     ? path
         .normalize(file)
         .split(path.sep)
         .map(() => "../")
         .join("")
-    : "";
+    : "./";
+};
 
 /**
  * read from file asynchronously
