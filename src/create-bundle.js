@@ -288,7 +288,7 @@ export let createBundle = async (options) => {
             ...meta,
             fetch,
             files: aliasFiles,
-            file,
+            file: normalizePath(file),
             name,
             fileName,
             content,
