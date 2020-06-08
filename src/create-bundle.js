@@ -18,7 +18,6 @@ import {
   writeFile,
   yamlParse,
   normalizePath,
-  getProp,
   getPackage,
   getMetaFile,
   getFileName,

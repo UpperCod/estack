@@ -35,7 +35,10 @@ renderer.code = (code, type) => {
 };
 
 renderer.image = (href, title, text) =>
-  `<img src="${safeLink(href)}" alt="${text}" title="${title}">`;
+  `<img src="${safeLink(href)}" alt="${text}">`;
+
+renderer.link = (href, title, text) =>
+  `<a href="${safeLink(href)}">${text}</a>`;
 
 marked.setOptions({
   renderer,

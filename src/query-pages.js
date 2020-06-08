@@ -1,3 +1,4 @@
+import { getProp } from "./utils";
 /**
  *
  * @param {Object[]} pages - collection of pages
