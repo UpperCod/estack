@@ -33,6 +33,7 @@ import { readCss } from "./read-css";
 import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
+import { queryPages } from "./query-pages";
 
 let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
 
@@ -654,44 +655,4 @@ let formatOptions = async ({
   options.src = options.src.map(normalizePath);
 
   return options;
-};
-
-let queryPages = (pages, { where, sort = "order", limit }, name) => {
-  let keys = Object.keys(where);
-  pages = pages
-    .filter((page) =>
-      keys.every((prop) => [].concat(getProp(page, prop)).includes(where[prop]))
-    )
-    .sort((a, b) => (getProp(a, sort) > getProp(b, sort) ? 1 : -1));
-
-  let item;
-  let size = 0;
-  let paged = 0;
-  let collection = {};
-  let subLink = (current, value) =>
-    collection[value] &&
-    (current == 0 ? "./" : "../") + name + (value == 0 ? "" : "/" + value);
-
-  while ((item = pages.shift())) {
-    collection[paged] = collection[paged] || {
-      pages: [],
-      paged,
-      ref: {},
-      get prev() {
-        return subLink(this.paged, this.paged - 1);
-      },
-      get next() {
-        return subLink(this.paged, this.paged + 1);
-      },
-      get length() {
-        return paged;
-      },
-    };
-    collection[paged].pages.push(item);
-    if (++size == limit) {
-      size = 0;
-      paged++;
-    }
-  }
-  return collection;
 };
