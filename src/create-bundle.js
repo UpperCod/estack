@@ -434,6 +434,18 @@ export let createBundle = async (options) => {
               if (!data) return;
               let content = data.page.content;
               if (data.layout) {
+                /**
+                 * If the layout used by the page has the singlePage configuration,
+                 * it will only generate the page that this property of fine based on its name
+                 * @example
+                 * singlePage : index
+                 */
+                if (
+                  data.layout.singlePage &&
+                  data.layout.singlePage !== data.page.name
+                ) {
+                  return;
+                }
                 try {
                   content = await renderHtml(data.layout.content, {
                     ...data,
@@ -451,19 +463,6 @@ export let createBundle = async (options) => {
               }
 
               if (content != null) {
-                /**
-                 * If the layout used by the page has the singlePage configuration,
-                 * it will only generate the page that this property of fine based on its name
-                 * @example
-                 * singlePage : index
-                 */
-                if (
-                  data.layout &&
-                  data.layout.singlePage &&
-                  data.layout.singlePage !== data.page.name
-                ) {
-                  return;
-                }
                 return mountFile({
                   dest: data.page.dest,
                   code: content.replace(/\{\{deep\}\}/g, data.deep), // ensures the relative use of all files declared before writing
