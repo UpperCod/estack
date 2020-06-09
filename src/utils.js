@@ -147,16 +147,25 @@ export let copyFile = async (src, dest) => {
  * send the log to a stream log
  * @param {string} message
  */
-export let streamLog = (message) => {
-  message = message + "";
-  if (!/SyntaxError/.test(message)) {
-    try {
-      message ? logUpdate(message) : logUpdate.clear();
-      return;
-    } catch (e) {}
-  }
-  logUpdate.clear();
-  console.log(message + "\n");
+export let createStreamLog = () => {
+  let messageError = [];
+  return (message) => {
+    message = message + "";
+    if (!/^[A-Z](\w+)Error/.test(message)) {
+      if (messageError.length) messageError.push("\n");
+      message = [...messageError, message].join("\n");
+      messageError = [];
+      try {
+        message ? logUpdate(message) : logUpdate.clear();
+        return;
+      } catch (e) {
+        logUpdate.clear();
+        console.log(message);
+      }
+    } else {
+      messageError.push(message);
+    }
+  };
 };
 /**
  * normalizes backslashes

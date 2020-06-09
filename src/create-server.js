@@ -7,7 +7,9 @@ import { asyncFs, promiseErrorToNull, isHtml, normalizePath } from "./utils";
 
 let mime = {
   js: "application/javascript",
+  json: "application/json",
   css: "text/css",
+  text: "text/plain",
   html: "text/html; charset=utf-8",
 };
 

@@ -14,7 +14,6 @@ import {
   readFile,
   asyncFs,
   copyFile,
-  streamLog,
   writeFile,
   yamlParse,
   normalizePath,
@@ -23,6 +22,7 @@ import {
   getFileName,
   getRelativePath,
   getRelativeDeep,
+  createStreamLog,
   requestJson,
 } from "./utils";
 import { createServer } from "./create-server";
@@ -37,6 +37,8 @@ import { queryPages } from "./query-pages";
 let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
 
 export let createBundle = async (options) => {
+  let streamLog = createStreamLog();
+
   streamLog("loading...");
 
   let loadingStep = 3;
@@ -231,29 +233,31 @@ export let createBundle = async (options) => {
               ? Promise.all(
                   Object.keys(meta.fetch).map(async (prop) => {
                     let value = meta.fetch[prop];
-                    if (isUrl(value)) {
-                      cacheFetch[value] =
-                        cacheFetch[value] || requestJson(value);
-                      value = await cacheFetch[value];
-                    } else {
-                      /**
-                       * If the file is local, an observer relationship will be added,
-                       * this allows relating the data obtained from the external document
-                       * to the template and synchronizing the changes
-                       */
-                      let findFile = path.join(dir, value);
+                    try {
+                      if (isUrl(value)) {
+                        cacheFetch[value] =
+                          cacheFetch[value] || requestJson(value);
+                        value = await cacheFetch[value];
+                      } else {
+                        /**
+                         * If the file is local, an observer relationship will be added,
+                         * this allows relating the data obtained from the external document
+                         * to the template and synchronizing the changes
+                         */
+                        let findFile = path.join(dir, value);
 
-                      fileWatcher && fileWatcher(findFile, file, true);
+                        fileWatcher && fileWatcher(findFile, file, true);
 
-                      try {
-                        value = await readFile(findFile);
-                      } catch (e) {
-                        console.log(e + "\n");
+                        try {
+                          value = await readFile(findFile);
+
+                          value = (isYaml(findFile) ? yamlParse : JSON.parse)(
+                            value
+                          );
+                        } catch (e) {}
                       }
-
-                      value = (isYaml(findFile) ? yamlParse : JSON.parse)(
-                        value
-                      );
+                    } catch (e) {
+                      streamLog(`FetchError: ${file} : src=${value}`);
                     }
                     return {
                       prop,
@@ -520,7 +524,6 @@ export let createBundle = async (options) => {
         dir: options.dest,
         format: "es",
         sourcemap: options.sourcemap,
-        chunkFileNames: "chunks/[hash].js",
       };
 
       let bundle = await rollup.rollup(input);

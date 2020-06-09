@@ -34,7 +34,17 @@ export let rollupPlugins = (options, mountFile) => {
       type: "mount-file",
       generateBundle(opts, chunks) {
         for (let file in chunks) {
-          mountFile({ dest: file, code: chunks[file].code, type: "js" });
+          let { code, map } = chunks[file];
+          if (opts.sourcemap) {
+            let fileMap = file + ".map";
+            mountFile({
+              dest: fileMap,
+              code: map + "",
+              type: "json",
+            });
+            code += `\n//# sourceMappingURL=${fileMap}`;
+          }
+          mountFile({ dest: file, code, type: "js" });
           delete chunks[file];
         }
       },

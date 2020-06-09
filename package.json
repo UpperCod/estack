@@ -1,6 +1,6 @@
 {
   "name": "estack",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "simple bundle generator",
   "module": "src/cli.js",
   "main": "cli.js",
@@ -9,8 +9,8 @@
     "test": "npm run clear && ava",
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "build:example:watch": "node cli.js example/src/**/*.{html,md} example/dest --server --watch",
-    "build:example": "node cli.js example/src/**/*.{html,md} example/dest --minify --sizes",
+    "build:example:watch": "node cli.js example/src/**/*.{html,md} example/dest --server --watch --sourcemap",
+    "build:example": "node cli.js example/src/**/*.{html,md} example/dest --minify --sizes  --sourcemap",
     "prepare": "npm run build && npm run test"
   },
   "author": "UpperCod",
