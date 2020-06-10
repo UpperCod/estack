@@ -1,6 +1,6 @@
 ![EStack](./brand/header.svg)
 
-EStack simplifies development of static websites and distribution of ES modules, with EStack you can:
+**EStack simplifies development of static websites and distribution of ES modules**, with EStack you can:
 
 1. **Create static sites**: EStack will process your Html and Markdown files for extraction for asset detection and template management.
 2. **Create css bundles**: EStack processes css files with [Stylis](https://stylis.js.org/) a modern, light and fast alternative to Postcss.

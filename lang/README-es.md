@@ -1,6 +1,6 @@
-# EStack
+![EStack](../brand/header.svg)
 
-EStack simplifica desarrollo de sitios web estáticos y distribución de módulos ES, con EStack tu podrás:
+**EStack simplifica desarrollo de sitios web estáticos y distribución de módulos ES**, con EStack tu podrás:
 
 1. **Crear sitios estático**: EStack procesara sus archivos Html y Markdown para la extracción para la detección de assets y manejo de plantilla.
 2. **Empaquetador de css**: EStack procesa los ficheros css con [Stylis](https://stylis.js.org/) una alternativa moderna, ligera y rápida a Postcss.
