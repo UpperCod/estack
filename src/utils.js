@@ -218,8 +218,9 @@ export let getFileName = (file) => {
   return normalizePath(
     isFixLink(ext)
       ? name + (isJs(ext) ? ".js" : isMd(ext) ? ".html" : ext)
-      : "file-" +
-          file.split("").reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
+      : file.split("").reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
+          "-" +
+          name +
           ext
   );
 };
