@@ -18,7 +18,6 @@ import {
   yamlParse,
   normalizePath,
   getPackage,
-  getMetaFile,
   getFileName,
   getRelativePath,
   getRelativeDeep,
@@ -32,7 +31,7 @@ import { readCss } from "./read-css";
 import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
-import { queryPages } from "./query-pages";
+import { queryPages, getMetaPage } from "./utils-pages";
 
 let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
 
@@ -174,7 +173,7 @@ export let createBundle = async (options) => {
           let data = [html, {}];
 
           try {
-            data = getMetaFile(html);
+            data = getMetaPage(html);
           } catch (e) {
             streamLog(
               `${SyntaxErrorTransforming} ${file}:${e.mark.line}:${e.mark.position}`
@@ -221,70 +220,75 @@ export let createBundle = async (options) => {
           if (isMd(file)) {
             code = renderMarkdown(code);
           }
+          /**
+           * The following process is in charge of transforming the
+           * fetch object to the data declared in the request
+           */
+          let processFetch = () =>
+            meta.fetch &&
+            Promise.all(
+              Object.keys(meta.fetch).map(async (prop) => {
+                let value = meta.fetch[prop];
+                try {
+                  if (isUrl(value)) {
+                    cacheFetch[value] = cacheFetch[value] || requestJson(value);
+                    value = await cacheFetch[value];
+                  } else {
+                    /**
+                     * If the file is local, an observer relationship will be added,
+                     * this allows relating the data obtained from the external document
+                     * to the template and synchronizing the changes
+                     */
+                    let findFile = path.join(dir, value);
+
+                    fileWatcher && fileWatcher(findFile, file, true);
+
+                    try {
+                      value = await readFile(findFile);
+
+                      value = (isYaml(findFile) ? yamlParse : JSON.parse)(
+                        value
+                      );
+                    } catch (e) {}
+                  }
+                } catch (e) {
+                  streamLog(`FetchError: ${file} : src=${value}`);
+                }
+                return {
+                  prop,
+                  value,
+                };
+              })
+            ).then((data) =>
+              data.reduce((fetch, { prop, value }) => {
+                fetch[prop] = value;
+                return fetch;
+              }, {})
+            );
+          /**
+           * The following process allows the allocation of aliases for each file to process
+           */
+          let processFiles = () =>
+            meta.files &&
+            Promise.all(
+              Object.keys(meta.files).map(async (prop) => ({
+                prop,
+                value: await addFile(meta.files[prop]),
+              }))
+            ).then((files) =>
+              files.reduce((aliasFiles, { prop, value }) => {
+                aliasFiles[prop] = value;
+                return aliasFiles;
+              }, {})
+            );
           // These processes can be solved in parallel
           let [content, fetch, aliasFiles] = await Promise.all([
-            // The following process scans the resulting html, for the extraction of assets
             readHtml({
               code: meta.content || code, //content can also be defined in the meta
               addFile,
             }),
-            // The following process allows obtaining data external to the document
-            meta.fetch
-              ? Promise.all(
-                  Object.keys(meta.fetch).map(async (prop) => {
-                    let value = meta.fetch[prop];
-                    try {
-                      if (isUrl(value)) {
-                        cacheFetch[value] =
-                          cacheFetch[value] || requestJson(value);
-                        value = await cacheFetch[value];
-                      } else {
-                        /**
-                         * If the file is local, an observer relationship will be added,
-                         * this allows relating the data obtained from the external document
-                         * to the template and synchronizing the changes
-                         */
-                        let findFile = path.join(dir, value);
-
-                        fileWatcher && fileWatcher(findFile, file, true);
-
-                        try {
-                          value = await readFile(findFile);
-
-                          value = (isYaml(findFile) ? yamlParse : JSON.parse)(
-                            value
-                          );
-                        } catch (e) {}
-                      }
-                    } catch (e) {
-                      streamLog(`FetchError: ${file} : src=${value}`);
-                    }
-                    return {
-                      prop,
-                      value,
-                    };
-                  })
-                ).then((data) =>
-                  data.reduce((fetch, { prop, value }) => {
-                    fetch[prop] = value;
-                    return fetch;
-                  }, {})
-                )
-              : null,
-            // The following process allows adding files from the meta
-            meta.files
-              ? Promise.all(
-                  Object.keys(meta.files).map(async (prop) => ({
-                    prop,
-                    value: await addFile(meta.files[prop]),
-                  }))
-                ).then((files) =>
-                  files.reduce((aliasFiles, { prop, value }) => {
-                    aliasFiles[prop] = value;
-                    return aliasFiles;
-                  }, {})
-                )
-              : null,
+            processFetch(),
+            processFiles(),
           ]);
 
           inputs[file] = {
