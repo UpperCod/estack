@@ -1,4 +1,4 @@
-import { getProp } from "./utils";
+import { getProp, yamlParse } from "./utils";
 /**
  *
  * @param {Object[]} pages - collection of pages
@@ -63,4 +63,36 @@ export let queryPages = (
     }
   }
   return collection;
+};
+
+/**
+ * Extract the meta snippet header
+ * @param {string} code
+ * @example
+ * ---
+ * name
+ * ---
+ * lorem...
+ */
+export let getMetaPage = (code) => {
+  let meta = {};
+  let metaBlock = "---";
+  let lineBreak = "\n";
+  if (!code.indexOf(metaBlock)) {
+    let data = [];
+    let lines = code.slice(3).split(lineBreak);
+    let body = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (!lines[i].indexOf(metaBlock)) {
+        body = lines.slice(i + 1);
+        break;
+      }
+      data.push(lines[i]);
+    }
+    if (data.length) {
+      meta = yamlParse(data.join(lineBreak));
+    }
+    code = body.join(lineBreak);
+  }
+  return [code, meta];
 };

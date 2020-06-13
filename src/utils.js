@@ -148,7 +148,7 @@ export let copyFile = async (src, dest) => {
  * @param {string} message
  */
 export let createStreamLog = () => {
-  let messageError = [];
+  let messageError = {};
   return (message) => {
     message = message + "";
     if (!/^[A-Z](\w+)Error/.test(message)) {
@@ -178,37 +178,7 @@ export let normalizePath = (str) =>
  * @param {string} string
  */
 export let yamlParse = (string) => yaml.safeLoad(string);
-/**
- * Extract the meta snippet header
- * @param {string} code
- * @example
- * ---
- * name
- * ---
- * lorem...
- */
-export let getMetaFile = (code) => {
-  let meta = {};
-  let metaBlock = "---";
-  let lineBreak = "\n";
-  if (!code.indexOf(metaBlock)) {
-    let data = [];
-    let lines = code.slice(3).split(lineBreak);
-    let body = [];
-    for (let i = 0; i < lines.length; i++) {
-      if (!lines[i].indexOf(metaBlock)) {
-        body = lines.slice(i + 1);
-        break;
-      }
-      data.push(lines[i]);
-    }
-    if (data.length) {
-      meta = yamlParse(data.join(lineBreak));
-    }
-    code = body.join(lineBreak);
-  }
-  return [code, meta];
-};
+
 /**
  * gets the file name based on its type
  * @param {string} file
