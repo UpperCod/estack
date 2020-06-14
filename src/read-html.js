@@ -1,5 +1,5 @@
 import { analyzeHtml, serializeHtml } from "./analize-html";
-import { isUrl } from "./utils";
+import { isUrl } from "./utils/utils";
 
 export let readHtml = async ({ code, addFile }) => {
   let astHtml = await analyzeHtml(code, async (node) => {

@@ -1,4 +1,4 @@
-import { isCss } from "../utils";
+import { isCss } from "../utils/utils";
 import { readCss } from "../read-css";
 
 export let pluginImportCss = () => {

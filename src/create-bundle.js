@@ -18,12 +18,13 @@ import {
   yamlParse,
   normalizePath,
   getPackage,
-  getFileName,
   getRelativePath,
   getRelativeDeep,
-  createStreamLog,
   requestJson,
-} from "./utils";
+  queryPages,
+  getMetaPage,
+  logger,
+} from "./utils/utils";
 import { createServer } from "./create-server";
 import { rollupPlugins } from "./rollup/config-plugins";
 import { readHtml } from "./read-html";
@@ -31,17 +32,11 @@ import { readCss } from "./read-css";
 import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
-import { queryPages, getMetaPage } from "./utils-pages";
+import { MARK_ROOT, MARK_ROLLLUP } from "./constants";
 
 let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
 
 export let createBundle = async (options) => {
-  let streamLog = createStreamLog();
-
-  streamLog("loading...");
-
-  let loadingStep = 3;
-
   let server;
 
   // date of last build
@@ -66,11 +61,6 @@ export let createBundle = async (options) => {
 
   let cacheFetch = {};
 
-  const loadingInterval = setInterval(() => {
-    if (server) return;
-    loadingStep = loadingStep == 0 ? 3 : loadingStep;
-    streamLog("loading" + ".".repeat(loadingStep--));
-  }, 250);
   // format options
   options = await formatOptions(options);
 
@@ -89,6 +79,21 @@ export let createBundle = async (options) => {
   let getDest = (file, folder = "") =>
     normalizePath(path.join(options.dest, folder, file));
 
+  /**
+   * gets the file name based on its type
+   * @param {string} file
+   */
+  let getFileName = (file) => {
+    let { name, ext } = path.parse(file);
+    return normalizePath(
+      isFixLink(ext)
+        ? name + (isJs(ext) ? ".js" : isMd(ext) ? ".html" : ext)
+        : file.split("").reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
+            "-" +
+            name +
+            ext
+    );
+  };
   /**
    * prevents the file from working more than once
    * @param {string} file
@@ -125,11 +130,8 @@ export let createBundle = async (options) => {
       console.log(e);
     }
 
-    streamLog("");
-    console.log(`\nserver running on http://localhost:${server.port}\n`);
+    logger.fixed(`Server running on http://localhost:${server.port}\n`);
   }
-
-  clearInterval(loadingInterval);
 
   let mountFile = ({ dest, code, type, stream }) => {
     if (options.watch && server) {
@@ -139,6 +141,9 @@ export let createBundle = async (options) => {
     }
   };
 
+  let debugRoot = (message) => logger.debug(message, MARK_ROOT);
+  let debugRollup = (message) => logger.debug(message, MARK_ROLLLUP);
+
   /**
    * initialize the processing queue on related files
    * @param {string[]} files - list of files to process
@@ -146,7 +151,7 @@ export let createBundle = async (options) => {
    */
   let load = async (files, forceBuild) => {
     // reset build start time
-    lastTime = new Date();
+    logger.mark(MARK_ROOT);
 
     files = files.map(path.normalize);
     // html files are added to this list to check if a rebuild of html files is necessary
@@ -175,7 +180,7 @@ export let createBundle = async (options) => {
           try {
             data = getMetaPage(html);
           } catch (e) {
-            streamLog(
+            debugRoot(
               `${SyntaxErrorTransforming} ${file}:${e.mark.line}:${e.mark.position}`
             );
           }
@@ -252,7 +257,7 @@ export let createBundle = async (options) => {
                     } catch (e) {}
                   }
                 } catch (e) {
-                  streamLog(`FetchError: ${file} : src=${value}`);
+                  debugRoot(`FetchError: ${file} : src=${value}`);
                 }
                 return {
                   prop,
@@ -308,6 +313,7 @@ export let createBundle = async (options) => {
     );
 
     files = [...files, ...nestedFiles.flat()];
+
     let groupAsyncHtml = [];
 
     let groupAsyncCss = files
@@ -417,7 +423,7 @@ export let createBundle = async (options) => {
           let content = await renderHtml(page.content, data);
           return { ...data, page: { ...page, content } };
         } catch (e) {
-          streamLog(`${SyntaxErrorTransforming} : ${page.file}`);
+          debugRoot(`${SyntaxErrorTransforming} : ${page.file}`);
         }
       });
 
@@ -462,7 +468,7 @@ export let createBundle = async (options) => {
                         })),
                   });
                 } catch (e) {
-                  streamLog(`${SyntaxErrorTransforming} : ${data.layout.file}`);
+                  debugRoot(`${SyntaxErrorTransforming} : ${data.layout.file}`);
                 }
               }
 
@@ -496,14 +502,17 @@ export let createBundle = async (options) => {
         }),
       ...(files.filter(isJs).filter(prevenLoad).length || forceBuild
         ? [loadRollup()]
-        : []), // add rollup to queue only when needed
+        : []),
     ]);
 
-    streamLog(`bundle: ${new Date() - lastTime}ms`);
+    logger.markBuild(MARK_ROOT);
 
     server && server.reload();
   };
+
   let loadRollup = async () => {
+    logger.mark(MARK_ROLLLUP);
+
     let countBuild = 0; // Ignore the first build since it synchronizes the reload from root
     // clean the old watcher
     rollupWatchers.filter((watcher) => watcher.close());
@@ -511,7 +520,7 @@ export let createBundle = async (options) => {
 
     let input = {
       input: Object.keys(inputs).filter(isJs),
-      onwarn: streamLog,
+      onwarn: debugRollup,
       external: options.external,
       cache: rollupCache,
       plugins: rollupPlugins(
@@ -543,14 +552,15 @@ export let createBundle = async (options) => {
         watcher.on("event", async (event) => {
           switch (event.code) {
             case "START":
-              lastTime = new Date();
+              logger.mark(MARK_ROLLLUP);
               break;
             case "END":
-              streamLog(`bundle: ${new Date() - lastTime}ms`);
+              logger.markBuild(MARK_ROLLLUP);
               countBuild++ && server && server.reload();
               break;
             case "ERROR":
-              streamLog(event.error);
+              debugRollup(event.error);
+              logger.markBuild(MARK_ROLLLUP, true);
               break;
           }
         });
@@ -562,6 +572,8 @@ export let createBundle = async (options) => {
       await bundle.write(output);
     }
   };
+
+  logger.play();
 
   if (options.watch) {
     // map defining the cross dependencies between child and parents
@@ -616,7 +628,13 @@ export let createBundle = async (options) => {
     };
   }
 
-  return load(files);
+  try {
+    await load(files);
+  } catch (e) {
+    debugRoot(e);
+    await logger.markBuild(MARK_ROOT, true);
+    process.exit();
+  }
 };
 
 let formatOptions = async ({

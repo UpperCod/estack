@@ -1,6 +1,6 @@
 import { Liquid } from "liquidjs";
 import { renderMarkdown } from "./markdown";
-import { getProp, getRelativePath } from "./utils";
+import { getProp, getRelativePath } from "./utils/utils";
 
 let cache = {};
 let engine = new Liquid({
@@ -38,11 +38,6 @@ engine.registerFilter("group", (data, by) => {
   return Object.keys(groups)
     .sort()
     .map((prop) => ({ group: prop, items: groups[prop] }));
-});
-
-engine.registerFilter("log", (data) => {
-  console.log(data);
-  return "";
 });
 
 engine.registerFilter("markdown", (string, clearSpace) =>

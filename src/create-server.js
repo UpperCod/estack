@@ -3,7 +3,13 @@ import net from "net";
 import polka from "polka";
 import sirv from "sirv";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import { asyncFs, promiseErrorToNull, isHtml, normalizePath } from "./utils";
+
+import {
+  asyncFs,
+  promiseErrorToNull,
+  isHtml,
+  normalizePath,
+} from "./utils/utils";
 
 let mime = {
   js: "application/javascript",

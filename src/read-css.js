@@ -1,6 +1,6 @@
 import path from "path";
 import { compile, serialize, stringify } from "stylis";
-import { readFile } from "./utils";
+import { readFile } from "./utils/utils";
 
 let createCaptureMetaCss = (type) =>
   RegExp(String.raw`@${type}\s*(?:|\"|\')([^\"\']+)(?:|\"|\');`);

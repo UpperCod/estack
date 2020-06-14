@@ -1,4 +1,4 @@
-import { getProp, yamlParse } from "./utils";
+import { getProp, yamlParse } from "./general";
 /**
  *
  * @param {Object[]} pages - collection of pages
