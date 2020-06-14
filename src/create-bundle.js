@@ -475,7 +475,7 @@ export let createBundle = async (options) => {
               if (content != null) {
                 return mountFile({
                   dest: data.page.dest,
-                  code: content.replace(/\{\{deep\}\}/g, data.deep), // ensures the relative use of all files declared before writing
+                  code: content.replace(/{{ *deep *}}/g, data.deep), // ensures the relative use of all files declared before writing
                   type: "html",
                 });
               }

@@ -9,7 +9,7 @@
     "test": "npm run clear && ava",
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "build:example:watch": "node cli.js example/src/**/*.{html,md} example/dest --server --watch --sourcemap",
+    "build:example:watch": "node cli.js example/src/**/*.{html,md} example/dest --server --watch --sourcemap --after-build npm run clear",
     "build:example": "node cli.js example/src/**/*.{html,md} example/dest --minify --sizes  --sourcemap",
     "prepare": "npm run build && npm run test"
   },

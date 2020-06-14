@@ -13,7 +13,7 @@ import {
 
 let mime = {
   js: "application/javascript",
-  json: "application/json",
+  json: "application/json; charset=utf-8",
   css: "text/css",
   text: "text/plain",
   html: "text/html; charset=utf-8",
@@ -117,6 +117,9 @@ export let createServer = async ({ root, port, reload, proxy }) => {
         nextAssets(req, res, next);
       } else if (nextProxy) {
         nextProxy(req, res, next);
+      } else {
+        res.statusCode = 404;
+        res.end("");
       }
     })
     .use((req, res) => {
