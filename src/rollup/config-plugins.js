@@ -5,7 +5,6 @@ import sucrase from "@rollup/plugin-sucrase";
 import replace from "@rollup/plugin-replace";
 import { pluginTerser } from "./plugin-terser";
 import { pluginImportCss } from "./plugin-import-css";
-import sizes from "@atomico/rollup-plugin-sizes";
 
 let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
@@ -18,15 +17,11 @@ let extensions = [".js", ".jsx", ".ts", ".tsx"];
  * @param {boolean} options.jsxFragment
  * @param {({dest:string,code:string,type:string})=>void} [mountFile] - mount rollup files on development server without writing
  */
-export let rollupPlugins = (options, mountFile) => {
+export function rollupPlugins(options, mountFile) {
   let optionalPlugins = [];
 
   if (options.minify) {
     optionalPlugins.push(pluginTerser({ sourcemap: options.sourcemap }));
-  }
-
-  if (options.sizes) {
-    optionalPlugins.push(sizes());
   }
 
   if (mountFile) {
@@ -71,4 +66,4 @@ export let rollupPlugins = (options, mountFile) => {
     common(),
     ...optionalPlugins,
   ];
-};
+}

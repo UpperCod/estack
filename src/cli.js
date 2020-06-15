@@ -15,6 +15,11 @@ sade("estack [src] [dest]")
   .option("--port", "Define the server port", 8000)
   .option("--proxy", "Redirect requests that are not resolved locally", "")
   .option(
+    "--runAfterBuild",
+    "Allows to run a package script after each build cycle",
+    ""
+  )
+  .option(
     "--sizes",
     "Displays the sizes of the files associated with rollup",
     false

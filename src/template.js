@@ -73,7 +73,7 @@ engine.registerFilter("find", (data, by, equal) =>
 
 engine.registerFilter("relative", (to, from) => getRelativePath(from, to));
 
-export let renderHtml = (code, data) => {
+export function renderHtml(code, data) {
   cache[code] = cache[code] || engine.parse(code);
   return engine.render(cache[code], data);
-};
+}

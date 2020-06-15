@@ -10,6 +10,7 @@ let pkgDefault = {
   devDependencies: {},
   peerDependencies: {},
   babel: {},
+  scripts: {},
 };
 
 /**
@@ -29,7 +30,7 @@ export let readFile = (file) => asyncFs.readFile(path.join(cwd, file), "utf8");
  * @param {string} file
  * @param {string} code
  */
-export let writeFile = async (file, code) => {
+export async function writeFile(file, code) {
   let dir = path.join(cwd, path.parse(file).dir);
   try {
     await asyncFs.stat(dir);
@@ -39,26 +40,14 @@ export let writeFile = async (file, code) => {
     });
   }
   return asyncFs.writeFile(path.join(cwd, file), code, "utf8");
-};
-/**
- * Read a package.json from the bin execution source
- */
-export let getPackage = async () => {
-  try {
-    return {
-      ...pkgDefault,
-      ...JSON.parse(await readFile("package.json")),
-    };
-  } catch (e) {
-    return { ...pkgDefault };
-  }
-};
+}
+
 /**
  *  Copy a file only if they are different between origin and destination depending on their date
  * @param {string} src - source file
  * @param {string} dest - destination for the file
  */
-export let copyFile = async (src, dest) => {
+export async function copyFile(src, dest) {
   src = path.join(cwd, src);
   dest = path.join(cwd, dest);
   let [statSrc, statDest] = await Promise.all([
@@ -73,7 +62,7 @@ export let copyFile = async (src, dest) => {
     }
     await asyncFs.copyFile(src, dest);
   }
-};
+}
 
 /**
  * It manages to resolve the relative path,
@@ -85,7 +74,7 @@ export let copyFile = async (src, dest) => {
  * getRelativePath("./post/post-1","post/2/") == "./2/"
  * getRelativePath("./post/1/","post/2/") == "../2/"
  */
-export let getRelativePath = (from, to) => {
+export function getRelativePath(from, to) {
   if (from == to) return "";
   let isFolder = /\/$/;
   let withIndexFrom = isFolder.test(from);
@@ -107,12 +96,12 @@ export let getRelativePath = (from, to) => {
   }
 
   return link;
-};
+}
 /**
  * get the depth of the route
  * @param {string} file
  */
-export let getRelativeDeep = (file) => {
+export function getRelativeDeep(file) {
   file = file.replace(/^(\.\/){0,}/g, "");
   return file
     ? path
@@ -121,4 +110,18 @@ export let getRelativeDeep = (file) => {
         .map(() => "../")
         .join("")
     : "./";
-};
+}
+
+/**
+ * Read a package.json from the bin execution source
+ */
+export async function getPackage() {
+  try {
+    return {
+      ...pkgDefault,
+      ...JSON.parse(await readFile("package.json")),
+    };
+  } catch (e) {
+    return { ...pkgDefault };
+  }
+}

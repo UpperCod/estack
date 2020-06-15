@@ -8,10 +8,10 @@ import { getProp, yamlParse } from "./general";
  * @param {1|-1} [options.order] - page order is ascending(1) or decent(-1)
  * @param {string} options.folder - folder to return between pages
  */
-export let queryPages = (
+export function queryPages(
   pages,
   { where, sort = "order", limit, order = -1, folder = "" }
-) => {
+) {
   let keys = Object.keys(where);
   pages = pages
     .filter((page) =>
@@ -63,7 +63,7 @@ export let queryPages = (
     }
   }
   return collection;
-};
+}
 
 /**
  * Extract the meta snippet header
@@ -74,7 +74,7 @@ export let queryPages = (
  * ---
  * lorem...
  */
-export let getMetaPage = (code) => {
+export function getMetaPage(code) {
   let meta = {};
   let metaBlock = "---";
   let lineBreak = "\n";
@@ -95,4 +95,4 @@ export let getMetaPage = (code) => {
     code = body.join(lineBreak);
   }
   return [code, meta];
-};
+}

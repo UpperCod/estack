@@ -7,7 +7,7 @@ let cache = {};
  * @param {object} options
  * @param {boolean} options.sourcemap
  */
-export let pluginTerser = ({ sourcemap }) => {
+export function pluginTerser({ sourcemap }) {
   return {
     name: "plugin-terser",
     async renderChunk(code, chunk) {
@@ -21,4 +21,4 @@ export let pluginTerser = ({ sourcemap }) => {
       }
     },
   };
-};
+}

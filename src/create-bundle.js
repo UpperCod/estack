@@ -24,6 +24,7 @@ import {
   queryPages,
   getMetaPage,
   logger,
+  npmRun,
 } from "./utils/utils";
 import { createServer } from "./create-server";
 import { rollupPlugins } from "./rollup/config-plugins";
@@ -33,14 +34,12 @@ import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
 import { MARK_ROOT, MARK_ROLLLUP } from "./constants";
+import { stderr } from "process";
 
 let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
 
-export let createBundle = async (options) => {
+export async function createBundle(options) {
   let server;
-
-  // date of last build
-  let lastTime = new Date();
 
   let rollupWatchers = [];
   // cache de rollup
@@ -67,10 +66,6 @@ export let createBundle = async (options) => {
   // get list based on input expression
   let files = await glob(options.src);
 
-  let deleteInput = (file) => {
-    delete inputs[file];
-    return file;
-  };
   /**
    * returns the write destination of the file
    * @param {string} file - file name
@@ -80,11 +75,46 @@ export let createBundle = async (options) => {
     normalizePath(path.join(options.dest, folder, file));
 
   /**
+   * Check if the file is locked
+   * @param {string} file
+   * @returns {boolean}
+   */
+  let isPreventLoad = (file) => file in inputs;
+
+  /**
+   * check if the file can be processed
+   * @param {stirng} file
+   * @return {boolean}
+   */
+  let isNotPreventLoad = (file) => !isPreventLoad(file);
+
+  let debugRoot = (message) => logger.debug(message, MARK_ROOT);
+  let debugRollup = (message) => logger.debug(message, MARK_ROLLLUP);
+
+  async function markBuild(mark) {
+    await logger.markBuild(mark);
+    if (options.runAfterBuild) {
+      logger.mark(options.runAfterBuild);
+      npmRun(
+        options.runAfterBuild,
+        () => logger.markBuild(options.runAfterBuild),
+        () => logger.markBuildError("", options.runAfterBuild)
+      );
+    }
+  }
+
+  function deleteInput(file) {
+    delete inputs[file];
+    return file;
+  }
+
+  /**
    * gets the file name based on its type
    * @param {string} file
    */
-  let getFileName = (file) => {
+  function getFileName(file) {
     let { name, ext } = path.parse(file);
+
     return normalizePath(
       isFixLink(ext)
         ? name + (isJs(ext) ? ".js" : isMd(ext) ? ".html" : ext)
@@ -93,30 +123,18 @@ export let createBundle = async (options) => {
             name +
             ext
     );
-  };
+  }
   /**
    * prevents the file from working more than once
    * @param {string} file
    */
-  let prevenLoad = (file) => {
+  function prevenLoad(file) {
     if (file in inputs) {
       return false;
     } else {
       return (inputs[file] = true);
     }
-  };
-  /**
-   * Check if the file is locked
-   * @param {string} file
-   * @returns {boolean}
-   */
-  let isPreventLoad = (file) => file in inputs;
-  /**
-   * check if the file can be processed
-   * @param {stirng} file
-   * @return {boolean}
-   */
-  let isNotPreventLoad = (file) => !isPreventLoad(file);
+  }
 
   if (options.server) {
     try {
@@ -130,26 +148,23 @@ export let createBundle = async (options) => {
       console.log(e);
     }
 
-    logger.fixed(`Server running on http://localhost:${server.port}\n`);
+    logger.header(`Server running on http://localhost:${server.port}`);
   }
 
-  let mountFile = ({ dest, code, type, stream }) => {
+  function mountFile({ dest, code, type, stream }) {
     if (options.watch && server) {
       server.sources[dest] = { code, stream, type, stream };
     } else {
       return writeFile(dest, code);
     }
-  };
-
-  let debugRoot = (message) => logger.debug(message, MARK_ROOT);
-  let debugRollup = (message) => logger.debug(message, MARK_ROLLLUP);
+  }
 
   /**
    * initialize the processing queue on related files
    * @param {string[]} files - list of files to process
    * @param {*} forceBuild
    */
-  let load = async (files, forceBuild) => {
+  async function load(files, forceBuildRollup) {
     // reset build start time
     logger.mark(MARK_ROOT);
 
@@ -198,7 +213,7 @@ export let createBundle = async (options) => {
             );
           let nestedFiles = [];
 
-          let addFile = (childFile) => {
+          function addFile(childFile) {
             if (isUrl(childFile)) return childFile;
 
             let findFile = path.join(dir, childFile);
@@ -206,7 +221,7 @@ export let createBundle = async (options) => {
              * to optimize the process, the promise that the file looks for is
              * cached, in order to reduce this process to only one execution between buils
              */
-            let resolveChildFile = async () => {
+            async function resolveChildFile() {
               try {
                 await asyncFs.stat(findFile);
                 nestedFiles.push(findFile);
@@ -215,12 +230,12 @@ export let createBundle = async (options) => {
               } catch (e) {
                 return childFile;
               }
-            };
+            }
 
             localScan[findFile] = localScan[findFile] || resolveChildFile();
 
             return localScan[findFile];
-          };
+          }
 
           if (isMd(file)) {
             code = renderMarkdown(code);
@@ -500,19 +515,20 @@ export let createBundle = async (options) => {
             return copyFile(file, dest);
           }
         }),
-      ...(files.filter(isJs).filter(prevenLoad).length || forceBuild
+      ...(files.filter(isJs).filter(prevenLoad).length || forceBuildRollup
         ? [loadRollup()]
         : []),
     ]);
 
-    logger.markBuild(MARK_ROOT);
+    //logger.markBuild(MARK_ROOT);
+    markBuild(MARK_ROOT);
 
     server && server.reload();
-  };
-
-  let loadRollup = async () => {
-    logger.mark(MARK_ROLLLUP);
-
+  }
+  /**
+   * Scope of the rollup process running in parallel to the EStack process
+   */
+  async function loadRollup() {
     let countBuild = 0; // Ignore the first build since it synchronizes the reload from root
     // clean the old watcher
     rollupWatchers.filter((watcher) => watcher.close());
@@ -538,6 +554,10 @@ export let createBundle = async (options) => {
         sourcemap: options.sourcemap,
       };
 
+      if (options.watch) {
+        logger.mark(MARK_ROLLLUP);
+      }
+
       let bundle = await rollup.rollup(input);
 
       rollupCache = bundle.cache;
@@ -555,12 +575,12 @@ export let createBundle = async (options) => {
               logger.mark(MARK_ROLLLUP);
               break;
             case "END":
-              logger.markBuild(MARK_ROLLLUP);
+              //logger.markBuild(MARK_ROLLLUP);
+              markBuild(MARK_ROLLLUP);
               countBuild++ && server && server.reload();
               break;
             case "ERROR":
-              debugRollup(event.error);
-              logger.markBuild(MARK_ROLLLUP, true);
+              logger.markBuildError(event.error, MARK_ROLLLUP);
               break;
           }
         });
@@ -568,10 +588,11 @@ export let createBundle = async (options) => {
         rollupWatchers.push(watcher);
 
         if (server) return;
+      } else {
+        await bundle.write(output);
       }
-      await bundle.write(output);
     }
-  };
+  }
 
   logger.play();
 
@@ -631,20 +652,20 @@ export let createBundle = async (options) => {
   try {
     await load(files);
   } catch (e) {
-    debugRoot(e);
-    await logger.markBuild(MARK_ROOT, true);
+    await logger.markBuildError(e, MARK_ROOT);
     process.exit();
   }
-};
+}
 
-let formatOptions = async ({
+async function formatOptions({
   src = [],
   config,
   external,
   jsx,
   jsxFragment,
+  runAfterBuild,
   ...ignore
-}) => {
+}) {
   let pkg = await getPackage();
 
   src = Array.isArray(src) ? src : src.split(/ *; */g);
@@ -670,6 +691,7 @@ let formatOptions = async ({
     ...ignore,
     ...pkg[config],
     pkg,
+    runAfterBuild: pkg.scripts[runAfterBuild] ? runAfterBuild : "",
     jsx: jsx == "react" ? "React.createElement" : jsx,
     jsxFragment: jsx == "react" ? "React.Fragment" : jsxFragment,
   };
@@ -678,4 +700,4 @@ let formatOptions = async ({
   options.src = options.src.map(normalizePath);
 
   return options;
-};
+}

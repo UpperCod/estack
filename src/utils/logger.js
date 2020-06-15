@@ -3,7 +3,8 @@ import colors from "colors/safe";
 
 const DEBUG = "debug";
 const BUILD = "build";
-const FIXED = "fixed";
+const HEADER = "header";
+const FOOTER = "footer";
 const LOADING = "loading";
 
 let play;
@@ -12,28 +13,48 @@ let load = new Promise((r) => (play = r));
 let marks = {};
 
 let messageError = {
-  [FIXED]: [],
+  [LOADING]: "",
+  [HEADER]: {},
   [DEBUG]: {},
+  [FOOTER]: {},
 };
 
-let log = async (message, type, mark, fail) => {
+let message = colors.bold("loading");
+let dots = 3;
+let getMessage = (dots) => message + colors.green(".".repeat(dots));
+
+log(getMessage(dots));
+
+let interval = setInterval(() => {
+  dots = dots == 0 ? 3 : dots;
+  log(getMessage(dots--), LOADING);
+}, 250);
+
+let clearLoading = () => clearInterval(interval);
+
+let id = 0;
+
+async function log(message, type, mark, fail) {
   message += "";
 
-  if (messageError[type]) {
-    let select = messageError[type];
-    if (type != FIXED) {
-      select = select[mark] = select[mark] || [];
-    }
-    select.push(message);
-  }
-
   if (type != LOADING) {
-    if (type == BUILD) {
+    if (messageError[type]) {
+      let select = messageError[type];
+      if (type == HEADER || type == FOOTER) {
+        select[mark] = message;
+      } else {
+        select[mark] = select[mark] || [];
+        select.push(message);
+      }
+    }
+
+    if (type == BUILD || type == HEADER || type == FOOTER) {
       await load;
 
       let allMessagesDebug = Object.keys(messageError[DEBUG])
         .map((mark) => messageError[DEBUG][mark])
-        .flat();
+        .flat()
+        .filter((value) => value);
 
       if (!fail) messageError[DEBUG][mark] = []; // clean messages associated only with build cycle
 
@@ -69,50 +90,36 @@ let log = async (message, type, mark, fail) => {
         stringTable([
           ["Build", "Status", "Duration", "Time"],
           ...allMessageBuild,
-        ]);
+        ]) +
+        "\n";
+
+      let allMessageHeader = Object.keys(messageError[HEADER]).map((i) =>
+        colors.bold(messageError[HEADER][i])
+      );
+
+      let allMessageFooter = Object.keys(messageError[FOOTER]).map((i) =>
+        colors.bold(messageError[FOOTER][i])
+      );
 
       message = [
-        ...messageError[FIXED].map(
-          (message) => "→ " + colors.bold(colors.cyan(message))
-        ),
+        ...allMessageHeader,
         ...allMessagesDebug,
         allMessageBuild,
-      ].join("\n");
+        ...allMessageFooter,
+      ]
+        .filter((value) => value)
+        .join("\n");
     } else {
       message = null;
     }
   }
 
-  if (message) {
+  if (message != null) {
     logUpdate(message);
   }
-};
+}
 
-let message = colors.bold("loading");
-let dots = 3;
-let getMessage = (dots) => message + colors.green(".".repeat(dots));
-log(getMessage(dots));
-
-let interval = setInterval(() => {
-  dots = dots == 0 ? 3 : dots;
-  log(getMessage(dots--), LOADING);
-}, 250);
-
-let clearLoading = () => clearInterval(interval);
-
-export let logger = {
-  play: () => {
-    clearLoading();
-    log("", LOADING);
-    play();
-  },
-  debug: (message, mark) => log(message, DEBUG, mark),
-  fixed: (message) => log(message, FIXED),
-  mark: (mark) => (marks[mark] = { start: new Date() }),
-  markBuild: (mark, fail) => log("", BUILD, mark, fail),
-};
-
-let stringTable = (rows, padding = 2) => {
+function stringTable(rows, padding = 2) {
   let spaces = rows.reduce(
     (spaces, row) =>
       row.reduce((spaces, value, index) => {
@@ -142,4 +149,39 @@ let stringTable = (rows, padding = 2) => {
         .join("")
     )
     .join("\n");
+}
+
+export let logger = {
+  debug(message, mark) {
+    return log(message, DEBUG, mark);
+  },
+  header(message) {
+    let i = id++;
+    console.log({ i });
+    let send = (message) => log(message, HEADER, i);
+    send(message);
+    return send;
+  },
+  footer(message) {
+    let i = id++;
+
+    let send = (message) => log(message, FOOTER, i);
+    send(message);
+    return send;
+  },
+  mark(mark) {
+    return (marks[mark] = { start: new Date() });
+  },
+  markBuild(mark) {
+    return log("", BUILD, mark);
+  },
+  markBuildError(message, mark) {
+    log(message, DEBUG, mark);
+    return log("", BUILD, mark, true);
+  },
+  play() {
+    clearLoading();
+    log(" ", LOADING);
+    play();
+  },
 };

@@ -1,6 +1,6 @@
 import chokidar from "chokidar";
 
-export let watch = (glob, listener) => {
+export function watch(glob, listener) {
   let currentGroup;
 
   let loadGroup = () => {
@@ -23,4 +23,4 @@ export let watch = (glob, listener) => {
   });
 
   return watcher;
-};
+}

@@ -7,8 +7,8 @@ import https from "https";
  * @param {string} uri
  * @returns {Promise}
  */
-export let requestJson = (uri) => {
-  return new Promise((resolve, reject) => {
+export let requestJson = (uri) =>
+  new Promise((resolve, reject) => {
     let dataUri = url.parse(uri);
     (dataUri.protocol == "https:" ? https : http)
       .get(uri, { headers: { "user-agent": "node.js" } }, (res) => {
@@ -32,4 +32,3 @@ export let requestJson = (uri) => {
       })
       .on("error", reject);
   });
-};

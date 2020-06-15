@@ -43,11 +43,23 @@ renderer.link = (href, title, text) =>
 marked.setOptions({
   renderer,
 });
+
+let bracketsStart = createReplace("{{");
+let bracketsEnd = createReplace("}}");
+
+function safeLink(link) {
+  link = bracketsStart.replace(link);
+  link = bracketsEnd.replace(link);
+  link = escape(link);
+  link = bracketsStart.recover(link);
+  return bracketsEnd.recover(link);
+}
+
 /**
  * Maintains the use of brackets to normalize the work of liquidjs
  * @param {string} value
  */
-let createReplace = (value) => {
+function createReplace(value) {
   let regValue = RegExp(value, "g");
   let alias = (Math.random() + "").replace("0.", "__");
   let regAlias = RegExp(alias, "g");
@@ -55,18 +67,7 @@ let createReplace = (value) => {
     replace: (str) => str.replace(regValue, alias),
     recover: (str) => str.replace(regAlias, value),
   };
-};
-
-let bracketsStart = createReplace("{{");
-let bracketsEnd = createReplace("}}");
-
-let safeLink = (link) => {
-  link = bracketsStart.replace(link);
-  link = bracketsEnd.replace(link);
-  link = escape(link);
-  link = bracketsStart.recover(link);
-  return bracketsEnd.recover(link);
-};
+}
 
 export let renderMarkdown = (code) =>
   (cache[code] = cache[code] || marked(code));

@@ -8,12 +8,12 @@ export let serializeHtml = (astHtml) => parse5.serialize(astHtml);
  * @param {boolean} isRoot
  * @returns {Object} astHtml
  */
-export let analyzeHtml = (content, map) => {
+export function analyzeHtml(content, map) {
   const isRoot = /^\s*<(!doctype|html)/i.test(content);
   const astHtml = parse5[isRoot ? "parse" : "parseFragment"](content);
   const parallel = [];
 
-  let consume = (astHtml) => {
+  let consume = (astHtml) =>
     astHtml.map((node) => {
       parallel.push(
         map({
@@ -37,12 +37,11 @@ export let analyzeHtml = (content, map) => {
         consume(node.childNodes);
       }
     });
-  };
 
   map && consume(astHtml.childNodes);
 
   return Promise.all(parallel).then(() => astHtml);
-};
+}
 
 /**
  * @typedef {Object} Node
