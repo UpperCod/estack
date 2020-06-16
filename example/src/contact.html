@@ -3,13 +3,13 @@ title: Contact
 name: yes-contact
 folder: contact
 files:
-  single:
-    share: false
-    src: single.js
+  ts: ./code-ts.ts
+  js: ./code-js.js
 ---
 
 <h1>Contact</h1>
 
 <img src="{{page.files.avatar}}" />
 
-<script type="module" src="{{page.files.single}}"></script>
+<script type="module" src="{{page.files.ts}}"></script>
+<script type="module" src="{{page.files.js}}"></script>

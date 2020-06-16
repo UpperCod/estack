@@ -562,7 +562,7 @@ export async function createBundle(options) {
   /**
    * Scope of the rollup process running in parallel to the EStack process
    */
-  async function loadRollup() {
+  function loadRollup() {
     let countBuild = 0; // Ignore the first build since it synchronizes the reload from root
     // clean the old watcher
     rollupWatchers.filter((watcher) => watcher.close());
@@ -587,67 +587,69 @@ export async function createBundle(options) {
         [[]]
       );
 
-    groups.map(async (group, id) => {
-      let config = customConfig.get(group) || {};
-      let mark = MARK_ROLLLUP + (id ? ":" + (config.id || id) : "");
-      let input = {
-        input: group,
-        onwarn: debugRollup,
-        external: options.external,
-        cache: rollupCache[id],
-        plugins: rollupPlugins(
-          options,
-          server &&
-            options.watch &&
-            ((source) => mountFile({ ...source, dest: getDest(source.dest) }))
-        ),
-      };
-
-      if (input.input.length) {
-        let output = {
-          dir: options.dest,
-          format: "es",
-          sourcemap: options.sourcemap,
+    return Promise.all(
+      groups.map(async (group, id) => {
+        let config = customConfig.get(group) || {};
+        let mark = MARK_ROLLLUP + (id ? ":" + (config.id || id) : "");
+        let input = {
+          input: group,
+          onwarn: debugRollup,
+          external: options.external,
+          cache: rollupCache[id],
+          plugins: rollupPlugins(
+            options,
+            server &&
+              options.watch &&
+              ((source) => mountFile({ ...source, dest: getDest(source.dest) }))
+          ),
         };
 
-        if (options.watch) {
-          logger.mark(mark);
+        if (input.input.length) {
+          let output = {
+            dir: options.dest,
+            format: "es",
+            sourcemap: options.sourcemap,
+          };
+
+          if (options.watch) {
+            logger.mark(mark);
+          }
+
+          let bundle = await rollup.rollup(input);
+
+          rollupCache[id] = bundle.cache;
+
+          if (options.watch) {
+            let watcher = rollup.watch({
+              ...input,
+              output,
+              watch: { exclude: "node_modules/**" },
+            });
+
+            watcher.on("event", async (event) => {
+              switch (event.code) {
+                case "START":
+                  logger.mark(mark);
+                  break;
+                case "END":
+                  await markBuild(mark);
+                  countBuild++ && server && server.reload();
+                  break;
+                case "ERROR":
+                  logger.markBuildError(event.error, mark);
+                  break;
+              }
+            });
+
+            rollupWatchers.push(watcher);
+
+            if (server) return;
+          } else {
+            await bundle.write(output);
+          }
         }
-
-        let bundle = await rollup.rollup(input);
-
-        rollupCache[id] = bundle.cache;
-
-        if (options.watch) {
-          let watcher = rollup.watch({
-            ...input,
-            output,
-            watch: { exclude: "node_modules/**" },
-          });
-
-          watcher.on("event", async (event) => {
-            switch (event.code) {
-              case "START":
-                logger.mark(mark);
-                break;
-              case "END":
-                await markBuild(mark);
-                countBuild++ && server && server.reload();
-                break;
-              case "ERROR":
-                logger.markBuildError(event.error, mark);
-                break;
-            }
-          });
-
-          rollupWatchers.push(watcher);
-
-          if (server) return;
-        } else {
-          await bundle.write(output);
-        }
-      }
-    });
+      })
+    );
   }
 
   if (options.watch) {

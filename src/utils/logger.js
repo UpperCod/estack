@@ -123,7 +123,11 @@ async function log(message, type, mark, fail) {
     }
   }
   if (typeof message == "string" && message) {
-    logUpdate(message);
+    try {
+      logUpdate(message);
+    } catch (e) {
+      console.log(message);
+    }
   }
 }
 /**
