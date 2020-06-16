@@ -1,6 +1,6 @@
 import { share } from "./share";
 
 console.log({
-  all: document.querySelector("*"),
+  body: document.querySelector("body"),
   share,
 });

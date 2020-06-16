@@ -43,7 +43,7 @@ export async function createBundle(options) {
 
   let rollupWatchers = [];
   // cache de rollup
-  let rollupCache;
+  let rollupCache = {};
 
   /**
    * @callback fileWatcher
@@ -59,6 +59,8 @@ export async function createBundle(options) {
   let inputs = {};
 
   let cacheFetch = {};
+
+  let exportCondition = {};
 
   // format options
   options = await formatOptions(options);
@@ -230,9 +232,12 @@ export async function createBundle(options) {
                 await asyncFs.stat(findFile);
                 nestedFiles.push(findFile);
                 fileWatcher && fileWatcher(findFile, file);
-                return "{{deep}}" + getFileName(findFile);
+                return {
+                  file: findFile,
+                  src: "{{deep}}" + getFileName(findFile),
+                };
               } catch (e) {
-                return childFile;
+                return { src: childFile };
               }
             }
 
@@ -295,10 +300,35 @@ export async function createBundle(options) {
           let processFiles = () =>
             meta.files &&
             Promise.all(
-              Object.keys(meta.files).map(async (prop) => ({
-                prop,
-                value: await addFile(meta.files[prop]),
-              }))
+              Object.keys(meta.files).map(async (prop) => {
+                let value = meta.files[prop];
+                if (typeof value == "object") {
+                  let { src, ...config } = value;
+                  value = await addFile(src);
+                  if (value.file) {
+                    let nextConfig = {
+                      id: prop,
+                      share: true,
+                      ...config,
+                    };
+                    if (
+                      exportCondition[value.file] &&
+                      JSON.stringify(exportCondition[value.file]) !=
+                        JSON.stringify(nextConfig)
+                    ) {
+                      deleteInput(value.file);
+                    }
+                    exportCondition[value.file] = nextConfig;
+                  }
+                  value = value.src;
+                } else {
+                  value = (await addFile(value)).src;
+                }
+                return {
+                  prop,
+                  value,
+                };
+              })
             ).then((files) =>
               files.reduce((aliasFiles, { prop, value }) => {
                 aliasFiles[prop] = value;
@@ -309,7 +339,7 @@ export async function createBundle(options) {
           let [content, fetch, aliasFiles] = await Promise.all([
             readHtml({
               code: meta.content || code, //content can also be defined in the meta
-              addFile,
+              addFile: async (file) => (await addFile(file)).src,
             }),
             processFetch(),
             processFiles(),
@@ -538,64 +568,86 @@ export async function createBundle(options) {
     rollupWatchers.filter((watcher) => watcher.close());
     rollupWatchers = [];
 
-    let input = {
-      input: Object.keys(inputs).filter(isJs),
-      onwarn: debugRollup,
-      external: options.external,
-      cache: rollupCache,
-      plugins: rollupPlugins(
-        options,
-        server &&
-          options.watch &&
-          ((source) => mountFile({ ...source, dest: getDest(source.dest) }))
-      ),
-    };
+    let customConfig = new Map();
 
-    if (input.input.length) {
-      let output = {
-        dir: options.dest,
-        format: "es",
-        sourcemap: options.sourcemap,
+    let groups = Object.keys(inputs)
+      .filter(isJs)
+      .sort()
+      .reduce(
+        (list, file) => {
+          let config = exportCondition[file];
+          if (config && !config.share) {
+            customConfig.set(file, config);
+            list.push(file);
+          } else {
+            list[0].push(file);
+          }
+          return list;
+        },
+        [[]]
+      );
+
+    groups.map(async (group, id) => {
+      let config = customConfig.get(group) || {};
+      let mark = MARK_ROLLLUP + (id ? ":" + (config.id || id) : "");
+      let input = {
+        input: group,
+        onwarn: debugRollup,
+        external: options.external,
+        cache: rollupCache[id],
+        plugins: rollupPlugins(
+          options,
+          server &&
+            options.watch &&
+            ((source) => mountFile({ ...source, dest: getDest(source.dest) }))
+        ),
       };
 
-      if (options.watch) {
-        logger.mark(MARK_ROLLLUP);
+      if (input.input.length) {
+        let output = {
+          dir: options.dest,
+          format: "es",
+          sourcemap: options.sourcemap,
+        };
+
+        if (options.watch) {
+          logger.mark(mark);
+        }
+
+        let bundle = await rollup.rollup(input);
+
+        rollupCache[id] = bundle.cache;
+
+        if (options.watch) {
+          let watcher = rollup.watch({
+            ...input,
+            output,
+            watch: { exclude: "node_modules/**" },
+          });
+
+          watcher.on("event", async (event) => {
+            switch (event.code) {
+              case "START":
+                logger.mark(mark);
+                break;
+              case "END":
+                await markBuild(mark);
+                countBuild++ && server && server.reload();
+                break;
+              case "ERROR":
+                logger.markBuildError(event.error, mark);
+                break;
+            }
+          });
+
+          rollupWatchers.push(watcher);
+
+          if (server) return;
+        } else {
+          await bundle.write(output);
+        }
       }
-
-      let bundle = await rollup.rollup(input);
-
-      rollupCache = bundle.cache;
-
-      if (options.watch) {
-        let watcher = rollup.watch({
-          ...input,
-          output,
-          watch: { exclude: "node_modules/**" },
-        });
-
-        watcher.on("event", async (event) => {
-          switch (event.code) {
-            case "START":
-              logger.mark(MARK_ROLLLUP);
-              break;
-            case "END":
-              //logger.markBuild(MARK_ROLLLUP);
-              await markBuild(MARK_ROLLLUP);
-              countBuild++ && server && server.reload();
-              break;
-            case "ERROR":
-              logger.markBuildError(event.error, MARK_ROLLLUP);
-              break;
-          }
-        });
-
-        rollupWatchers.push(watcher);
-
-        if (server) return;
-      } else {
-        await bundle.write(output);
-      }
-    }
+    });
   }
 
   if (options.watch) {

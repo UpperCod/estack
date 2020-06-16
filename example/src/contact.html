@@ -2,8 +2,14 @@
 title: Contact
 name: yes-contact
 folder: contact
+files:
+  single:
+    share: false
+    src: single.js
 ---
 
 <h1>Contact</h1>
 
-<img src="avatar.png" />
+<img src="{{page.files.avatar}}" />
+
+<script type="module" src="{{page.files.single}}"></script>
