@@ -5,7 +5,12 @@ const DEBUG = "debug";
 const BUILD = "build";
 const HEADER = "header";
 const FOOTER = "footer";
+const FORCE = "force";
 const LOADING = "loading";
+
+const STATUS_REJECTED = "Rejected";
+const STATUS_RESOLVED = "Resolved";
+const STATUS_PENDING = "Pending";
 
 let play;
 let load = new Promise((r) => (play = r));
@@ -38,45 +43,52 @@ async function log(message, type, mark, fail) {
   message += "";
 
   if (type != LOADING) {
-    if (messageError[type]) {
+    if (type != FORCE && messageError[type]) {
       let select = messageError[type];
       if (type == HEADER || type == FOOTER) {
         select[mark] = message;
       } else {
         select[mark] = select[mark] || [];
-        select.push(message);
+
+        select[mark].push(message);
       }
     }
 
-    if (type == BUILD || type == HEADER || type == FOOTER) {
+    if (type == BUILD || type == HEADER || type == FOOTER || type == FORCE) {
       await load;
 
       let allMessagesDebug = Object.keys(messageError[DEBUG])
         .map((mark) => messageError[DEBUG][mark])
         .flat()
-        .filter((value) => value);
+        .filter((message) => message)
+        .map((message) => colors.red(message));
 
       if (!fail) messageError[DEBUG][mark] = []; // clean messages associated only with build cycle
 
       let allMessageBuild = Object.keys(marks).map((prop) => {
         let markRef = marks[prop];
 
-        if (mark == prop) {
+        if (type == BUILD && mark == prop) {
           let { start } = markRef;
           markRef.start = new Date();
           markRef.duration = markRef.start - start;
         }
 
         let { duration, start } = markRef;
-
+        let status =
+          fail && prop == mark
+            ? STATUS_REJECTED
+            : duration
+            ? STATUS_RESOLVED
+            : STATUS_PENDING;
         return [
           prop,
-          fail && prop == mark ? "Error" : markRef.duration ? "Ready" : "Await",
-          duration
-            ? duration > 500
-              ? (duration / 1000).toFixed(1) + "s"
-              : duration + "ms"
-            : "...",
+          status,
+          status == STATUS_PENDING
+            ? "..."
+            : duration > 500
+            ? (duration / 1000).toFixed(1) + "s"
+            : duration + "ms",
           colors.grey(
             [start.getHours(), start.getMinutes(), start.getSeconds()]
               .map((value) => (value < 10 ? "0" + value : value))
@@ -85,27 +97,24 @@ async function log(message, type, mark, fail) {
         ];
       });
 
-      allMessageBuild =
-        "\n" +
-        stringTable([
-          ["Build", "Status", "Duration", "Time"],
-          ...allMessageBuild,
-        ]) +
-        "\n";
+      allMessageBuild = stringTable([
+        ["Build", "Status", "Duration", "Time"],
+        ...allMessageBuild,
+      ]);
 
       let allMessageHeader = Object.keys(messageError[HEADER]).map((i) =>
-        colors.bold(messageError[HEADER][i])
+        colors.green(colors.bold(messageError[HEADER][i]))
       );
 
       let allMessageFooter = Object.keys(messageError[FOOTER]).map((i) =>
-        colors.bold(messageError[FOOTER][i])
+        colors.gray(messageError[FOOTER][i])
       );
 
       message = [
-        ...allMessageHeader,
-        ...allMessagesDebug,
+        ...addPadding(" ", allMessageHeader),
         allMessageBuild,
-        ...allMessageFooter,
+        ...addPadding(" ", allMessagesDebug, -1),
+        ...addPadding(" ", allMessageFooter, -1),
       ]
         .filter((value) => value)
         .join("\n");
@@ -113,10 +122,24 @@ async function log(message, type, mark, fail) {
       message = null;
     }
   }
-
-  if (message != null) {
+  if (typeof message == "string" && message) {
     logUpdate(message);
   }
+}
+/**
+ * Add a line break only if the array has indexes
+ * @param {string[]} list
+ * @param {1|-1} [position] - if it is equal to -1 the line break
+ *                            will be added at the beginning in the
+ *                            array, opposite case the line break in
+ *                            the array will be added at the end
+ * @returns {list}
+ */
+function addPadding(padding, list, position) {
+  if (list.length) {
+    list[position == -1 ? "unshift" : "push"](padding);
+  }
+  return list;
 }
 
 function stringTable(rows, padding = 2) {
@@ -135,10 +158,10 @@ function stringTable(rows, padding = 2) {
     .map((row, indexRow) =>
       row
         .map((value, indexColumn) => {
-          let isError = value == "Error";
+          let isColorRed = value == STATUS_REJECTED;
           value =
             value + " ".repeat(spaces[indexColumn] - value.length + padding);
-          return isError
+          return isColorRed
             ? colors.red(value)
             : indexRow == 0
             ? colors.grey(colors.bold(value))
@@ -157,7 +180,7 @@ export let logger = {
   },
   header(message) {
     let i = id++;
-    console.log({ i });
+
     let send = (message) => log(message, HEADER, i);
     send(message);
     return send;
@@ -170,7 +193,8 @@ export let logger = {
     return send;
   },
   mark(mark) {
-    return (marks[mark] = { start: new Date() });
+    marks[mark] = { start: new Date() };
+    return log("", FORCE);
   },
   markBuild(mark) {
     return log("", BUILD, mark);

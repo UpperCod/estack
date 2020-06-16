@@ -9,10 +9,9 @@
     "test": "npm run clear && ava",
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "build:example:watch": "node cli.js example/src/**/*.{html,md} example/dest --server --watch --sourcemap --runAfterBuild hook:after",
-    "build:example": "node cli.js example/src/**/*.{html,md} example/dest --minify --sizes  --sourcemap --runAfterBuild hook:after",
-    "prepare": "npm run build && npm run test",
-    "hook:after": "npm -v"
+    "build:example:watch": "node cli.js example/src/**/*.{html,md} example/dest --server --watch --sourcemap",
+    "build:example": "node cli.js example/src/**/*.{html,md} example/dest --minify --sizes  --sourcemap",
+    "prepare": "npm run build && npm run test"
   },
   "author": "UpperCod",
   "license": "ISC",

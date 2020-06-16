@@ -90,16 +90,18 @@ export async function createBundle(options) {
 
   let debugRoot = (message) => logger.debug(message, MARK_ROOT);
   let debugRollup = (message) => logger.debug(message, MARK_ROLLLUP);
+  let footerLog = logger.footer("");
 
   async function markBuild(mark) {
+    if (options.runAfterBuild) logger.mark(options.runAfterBuild);
     await logger.markBuild(mark);
     if (options.runAfterBuild) {
-      logger.mark(options.runAfterBuild);
-      npmRun(
-        options.runAfterBuild,
-        () => logger.markBuild(options.runAfterBuild),
-        () => logger.markBuildError("", options.runAfterBuild)
-      );
+      try {
+        await npmRun(options.runAfterBuild, footerLog);
+        logger.markBuild(options.runAfterBuild);
+      } catch (e) {
+        logger.markBuildError(options.runAfterBuild, footerLog);
+      }
     }
   }
 
@@ -158,6 +160,8 @@ export async function createBundle(options) {
       return writeFile(dest, code);
     }
   }
+
+  logger.play();
 
   /**
    * initialize the processing queue on related files
@@ -521,7 +525,7 @@ export async function createBundle(options) {
     ]);
 
     //logger.markBuild(MARK_ROOT);
-    markBuild(MARK_ROOT);
+    await markBuild(MARK_ROOT);
 
     server && server.reload();
   }
@@ -576,7 +580,7 @@ export async function createBundle(options) {
               break;
             case "END":
               //logger.markBuild(MARK_ROLLLUP);
-              markBuild(MARK_ROLLLUP);
+              await markBuild(MARK_ROLLLUP);
               countBuild++ && server && server.reload();
               break;
             case "ERROR":
@@ -593,8 +597,6 @@ export async function createBundle(options) {
       }
     }
   }
-
-  logger.play();
 
   if (options.watch) {
     // map defining the cross dependencies between child and parents
