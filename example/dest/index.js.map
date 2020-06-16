@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../src/index.js"],"sourcesContent":["import { share } from \"./share\";\r\n\r\nconsole.log({\r\n  all: document.querySelector(\"*\"),\r\n  share,\r\n});\r\n"],"names":["console"],"mappings":"uCAEAA"}
