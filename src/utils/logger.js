@@ -86,7 +86,7 @@ async function log(message, type, mark, fail) {
           status,
           status == STATUS_PENDING
             ? "..."
-            : duration > 500
+            : duration >= 100
             ? (duration / 1000).toFixed(1) + "s"
             : duration + "ms",
           colors.grey(
