@@ -6,3 +6,5 @@ description: my post 1
 ---
 
 ## {{ page.title }}
+
+![img](../avatar.png)

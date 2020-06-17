@@ -221,11 +221,9 @@ export async function createBundle(options) {
 
           let fileName = name + ".html";
           let dest = getDest(fileName, meta.folder);
-          let link =
-            "./" +
-            normalizePath(
-              path.join(meta.folder || "", name == "index" ? "./" : name)
-            );
+          let link = normalizePath(
+            "/" + path.join(meta.folder || "", name == "index" ? "/" : name)
+          );
           let nestedFiles = [];
 
           function addFile(childFile) {
@@ -427,7 +425,7 @@ export async function createBundle(options) {
               let dest = getDest(fileName, page.folder);
 
               let link = normalizePath(
-                "./" + path.join(page.folder || "", name)
+                "/" + path.join(page.folder || "", name)
               );
 
               return {
@@ -481,14 +479,13 @@ export async function createBundle(options) {
               }))
               .reduce(mapPropToObject, {});
           }
-
           let data = {
             pkg: options.pkg,
             build: !options.watch,
             query,
             page,
             layout,
-            deep: getRelativeDeep(page.link) || "./",
+            deep: getRelativeDeep(page.link),
             archive: !!scopePages,
             pages: (scopePages || pages).map(createRelativeLink),
           };

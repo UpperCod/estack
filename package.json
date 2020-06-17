@@ -10,7 +10,7 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "build:example:watch": "node cli.js example/src/**/*.{html,md} example/dest --server --watch --sourcemap",
-    "build:example": "node cli.js example/src/index.{html,md} example/dest --minify --sizes  --sourcemap",
+    "build:example": "node cli.js example/src/**/*.{html,md} example/dest --minify --sizes  --sourcemap",
     "prepare": "npm run build && npm run test"
   },
   "author": "UpperCod",
@@ -40,6 +40,7 @@
     "chokidar": "^3.3.1",
     "colors": "^1.4.0",
     "entities": "^2.0.2",
+    "esm": "^3.2.25",
     "fast-glob": "^3.2.2",
     "http-proxy-middleware": "^1.0.3",
     "js-yaml": "^3.13.1",
@@ -61,8 +62,12 @@
     "fsevents": "~2.1.2"
   },
   "ava": {
+    "require": [
+      "esm"
+    ],
     "files": [
-      "test/**/*.test.js"
+      "test/**/*.test.js",
+      "src/**/*.test.js"
     ]
   }
 }

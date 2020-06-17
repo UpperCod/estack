@@ -18,7 +18,10 @@ let pkgDefault = {
  * @param {string} str
  */
 export let normalizePath = (str) =>
-  str.replace(/(\\)+/g, "/").replace(/\s+/g, "-").replace(/\-+/g, "-");
+  str
+    .replace(/[\\\/]+/g, "/")
+    .replace(/\s+/g, "-")
+    .replace(/\-+/g, "-");
 
 /**
  * read from file asynchronously
@@ -75,47 +78,46 @@ export async function copyFile(src, dest) {
  * getRelativePath("./post/1/","post/2/") == "../2/"
  */
 export function getRelativePath(from, to) {
-  if (from == to) return "";
-  let isFolder = /\/$/;
-  let withIndexFrom = isFolder.test(from);
-  let withIndexTo = isFolder.test(to);
-  let isDeep = /^\.\.\/[^\.\/]/;
-  let isNoSlash = /^[^\.\/]/;
-  let link = normalizePath(path.relative(from, to));
+  let split = /\/+/;
+  let [, ...folderFrom] = from.split(split);
+  let [, ...folderTo] = to.split(split);
 
-  if (withIndexTo) {
-    link += "/";
+  let link = [];
+  let sameFolder = true;
+  for (let i = 0; i < folderFrom.length; i++) {
+    if (folderFrom[i] == folderTo[i]) {
+      if (folderFrom.length < folderTo.length) {
+        link.push(...folderTo.slice(i));
+      } else {
+        if (!i) link.push("..");
+        link.push(folderTo[i]);
+      }
+    } else {
+      if (sameFolder) {
+        link.push(...folderTo.slice(i));
+      } else {
+        link.unshift("..");
+      }
+      sameFolder = false;
+    }
   }
 
-  if (!withIndexFrom && isDeep.test(link)) {
-    link = link.replace("../", "./");
-  }
-
-  if (!withIndexFrom && link == "..") {
-    link = "." + to;
-  }
-
-  if (isNoSlash.test(link)) {
-    link = "./" + link;
-  }
-
-  console.log({ link, from, to });
-
-  return link;
+  return (link[0] != ".." ? "./" : "") + link.join("/");
 }
 /**
  * get the depth of the route
  * @param {string} file
  */
 export function getRelativeDeep(file) {
-  file = file.replace(/^(\.\/){0,}/g, "");
-  return file
-    ? path
-        .normalize(file)
-        .split(path.sep)
-        .map(() => "../")
-        .join("")
-    : "./";
+  let folders = file
+    .replace(/^\//, "")
+    .replace(/\/[^\/]+$/, "")
+    .split(/\/+/);
+
+  console.log({ file, folders });
+
+  let deep = folders.length > 1 ? folders.map(() => "..").join("/") : "./";
+  return /\/$/.test(deep) ? deep : deep + "/";
 }
 
 /**
