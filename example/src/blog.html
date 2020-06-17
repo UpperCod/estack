@@ -1,0 +1,27 @@
+---
+title: Blog
+query:
+  blog:
+    where:
+      folder: blog
+archive:
+  where:
+    folder: blog
+  limit: 2
+---
+
+<h1>{{page.title}}</h1>
+
+{{query.blog|json}}
+
+<!---->
+
+{% for item in pages %}
+<article>
+  <h3>{{item.title}}</h3>
+  <a href="{{item.link}}">Read article</a>
+</article>
+{% endfor %}
+
+<a href="{{page.pagination.prev}}">prev</a>
+<a href="{{page.pagination.next}}">prev</a>

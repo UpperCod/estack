@@ -10,19 +10,23 @@ import { getProp, yamlParse } from "./general";
  */
 export function queryPages(
   pages,
-  { where, sort = "order", limit, order = -1, folder = "" }
+  { where, sort = "date", limit, order = -1, folder = "", onlyPages },
+  mapPage
 ) {
   let keys = Object.keys(where);
+  let item;
+  let size = 0;
+  let currentPaged = 0;
+  let collection = {};
+
   pages = pages
     .filter((page) =>
       keys.every((prop) => [].concat(getProp(page, prop)).includes(where[prop]))
     )
     .sort((a, b) => (getProp(a, sort) > getProp(b, sort) ? order : order * -1));
 
-  let item;
-  let size = 0;
-  let currentPaged = 0;
-  let collection = {};
+  pages = mapPage ? pages.map(mapPage) : pages;
+
   /**
    * returns access to page as relative path for page pagination
    * @param {number} paged - page position
@@ -48,8 +52,13 @@ export function queryPages(
   });
 
   if (limit == null) {
+    if (onlyPages) {
+      return pages;
+    }
+
     collection[0] = createPaged(0);
     collection[0].pages = pages;
+
     return collection;
   }
 

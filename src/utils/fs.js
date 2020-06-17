@@ -91,9 +91,15 @@ export function getRelativePath(from, to) {
     link = link.replace("../", "./");
   }
 
+  if (!withIndexFrom && link == "..") {
+    link = "." + to;
+  }
+
   if (isNoSlash.test(link)) {
     link = "./" + link;
   }
+
+  console.log({ link, from, to });
 
   return link;
 }

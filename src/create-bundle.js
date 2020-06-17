@@ -34,9 +34,18 @@ import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
 import { MARK_ROOT, MARK_ROLLLUP } from "./constants";
-import { stderr } from "process";
 
 let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
+
+/**
+ *
+ * @param {Object} data -
+ * @param {{prop:string,value:*}} mapProp -
+ */
+let mapPropToObject = (data, { prop, value }) => {
+  data[prop] = value;
+  return data;
+};
 
 export async function createBundle(options) {
   let server;
@@ -288,12 +297,7 @@ export async function createBundle(options) {
                   value,
                 };
               })
-            ).then((data) =>
-              data.reduce((fetch, { prop, value }) => {
-                fetch[prop] = value;
-                return fetch;
-              }, {})
-            );
+            ).then((data) => data.reduce(mapPropToObject, {}));
           /**
            * The following process allows the allocation of aliases for each file to process
            */
@@ -329,12 +333,7 @@ export async function createBundle(options) {
                   value,
                 };
               })
-            ).then((files) =>
-              files.reduce((aliasFiles, { prop, value }) => {
-                aliasFiles[prop] = value;
-                return aliasFiles;
-              }, {})
-            );
+            ).then((files) => files.reduce(mapPropToObject, {}));
           // These processes can be solved in parallel
           let [content, fetch, aliasFiles] = await Promise.all([
             readHtml({
@@ -419,7 +418,7 @@ export async function createBundle(options) {
         ...pages,
         ...archives
           .map(({ archive, ...page }) => {
-            let collection = queryPages(pages, archive, page.name);
+            let collection = queryPages(pages, archive);
             return Object.keys(collection).map((paged) => {
               let { pages, ...pagination } = collection[paged];
               // Create the pages manually, they are the configuration
@@ -451,30 +450,57 @@ export async function createBundle(options) {
        * its scope page before associating the
        * nested render on the layout
        */
-      groupAsyncHtml = pages.map(async ({ pages: scopePages, ...page }) => {
-        let layout = templates[page.layout == null ? "default" : page.layout];
+      groupAsyncHtml = pages.map(
+        async ({ pages: scopePages, query, ...page }) => {
+          let layout = templates[page.layout == null ? "default" : page.layout];
 
-        let data = {
-          pkg: options.pkg,
-          build: !options.watch,
-          page,
-          layout,
-          deep: getRelativeDeep(page.link) || "./",
-          archive: !!scopePages,
-          pages: (scopePages || pages).map((subPage) => ({
+          let createRelativeLink = (subPage) => ({
             ...subPage,
+            /**
+             * Access to content is suppressed, this is only a scope as metadata,
+             * since in itself the content has not been rendered in this section
+             * with the context of the page. This is only allowed from template pages
+             */
+
             content: null,
             link: getRelativePath(page.link, subPage.link),
-          })),
-        };
+          });
 
-        try {
-          let content = await renderHtml(page.content, data);
-          return { ...data, page: { ...page, content } };
-        } catch (e) {
-          debugRoot(`${SyntaxErrorTransforming} : ${page.file}`);
+          if (query) {
+            query = Object.keys(query)
+              .map((prop) => ({
+                prop,
+                value: queryPages(
+                  pages,
+                  {
+                    onlyPages: true,
+                    ...query[prop],
+                  },
+                  createRelativeLink
+                ),
+              }))
+              .reduce(mapPropToObject, {});
+          }
+
+          let data = {
+            pkg: options.pkg,
+            build: !options.watch,
+            query,
+            page,
+            layout,
+            deep: getRelativeDeep(page.link) || "./",
+            archive: !!scopePages,
+            pages: (scopePages || pages).map(createRelativeLink),
+          };
+
+          try {
+            let content = await renderHtml(page.content, data);
+            return { ...data, page: { ...page, content } };
+          } catch (e) {
+            debugRoot(`${SyntaxErrorTransforming} : ${page.file}`);
+          }
         }
-      });
+      );
 
       groupAsyncHtml = [
         /**
