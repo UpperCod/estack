@@ -109,15 +109,8 @@ export function getRelativePath(from, to) {
  * @param {string} file
  */
 export function getRelativeDeep(file) {
-  let folders = file
-    .replace(/^\//, "")
-    .replace(/\/[^\/]+$/, "")
-    .split(/\/+/);
-
-  console.log({ file, folders });
-
-  let deep = folders.length > 1 ? folders.map(() => "..").join("/") : "./";
-  return /\/$/.test(deep) ? deep : deep + "/";
+  let folders = file.split(/[^\/]+/).filter((vallue) => vallue);
+  return folders.length > 1 ? ["", ...folders].join("..") : "./";
 }
 
 /**
