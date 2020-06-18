@@ -172,7 +172,7 @@ export async function createBundle(options) {
     }
   }
 
-  logger.play();
+  if (!options.silent) logger.play();
 
   /**
    * initialize the processing queue on related files

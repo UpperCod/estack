@@ -13,6 +13,7 @@ sade("estack [src] [dest]")
   .option("--sourcemap", "Enable the use of sourcemap", false)
   .option("--server", "Create a server, by default localhost:8000", false)
   .option("--port", "Define the server port", 8000)
+  .option("--silent", "prevents printing of logs", false)
   .option("--proxy", "Redirect requests that are not resolved locally", "")
   .option(
     "--runAfterBuild",

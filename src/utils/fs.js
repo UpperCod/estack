@@ -9,7 +9,6 @@ let pkgDefault = {
   dependencies: {},
   devDependencies: {},
   peerDependencies: {},
-  babel: {},
   scripts: {},
 };
 
