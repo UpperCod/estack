@@ -6,3 +6,9 @@ description: my post 4
 ---
 
 ## {{ page.title }}
+
+```
+let x = 100;
+
+<home></home>
+```

@@ -1,5 +1,5 @@
 import marked from "marked";
-import { escape } from "entities";
+import { escape } from "html-escaper";
 import Prism from "prismjs";
 import "prismjs/components/prism-javascript";
 import "prismjs/components/prism-typescript";
