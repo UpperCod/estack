@@ -13,6 +13,7 @@ test.before(async () => {
     dest,
     server: true,
     port,
+    silent: true,
   });
 });
 

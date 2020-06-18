@@ -11,6 +11,7 @@ test.before(async () => {
   await createBundle({
     src,
     dest,
+    silent: true,
   });
 });
 
