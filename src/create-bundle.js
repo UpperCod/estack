@@ -217,6 +217,11 @@ export async function createBundle(options) {
 
           let [code, meta] = data;
 
+          if (!options.watch && meta.draft) {
+            deleteInput(file);
+            return [];
+          }
+
           name = meta.name || name;
 
           let fileName = name + ".html";
