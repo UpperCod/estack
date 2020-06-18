@@ -26,7 +26,6 @@
     "estack": "./cli.js"
   },
   "dependencies": {
-    "html-escaper": "^3.0.0",
     "rollup": "^2.16.1"
   },
   "devDependencies": {
@@ -43,6 +42,7 @@
     "entities": "^2.0.2",
     "esm": "^3.2.25",
     "fast-glob": "^3.2.2",
+    "html-escaper": "^3.0.0",
     "http-proxy-middleware": "^1.0.3",
     "js-yaml": "^3.13.1",
     "liquidjs": "^9.12.0",
