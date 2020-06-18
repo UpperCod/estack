@@ -10,7 +10,7 @@ test("getRelativeDeep", (t) => {
 });
 
 test("getRelativePath", (t) => {
-  t.is(getRelativePath("/", "/"), "./");
+  t.is(getRelativePath("/", "/"), "");
   t.is(getRelativePath("/blog", "/blog/post-2"), "./blog/post-2");
   t.is(getRelativePath("/blog/", "/blog/post-2"), "../blog/post-2");
   t.is(getRelativePath("/blog/post-1", "/blog/post-2"), "../blog/post-2");

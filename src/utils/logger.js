@@ -26,17 +26,6 @@ let messageError = {
 
 let message = colors.bold("loading");
 let dots = 3;
-let getMessage = (dots) => message + colors.green(".".repeat(dots));
-
-log(getMessage(dots));
-
-let interval = setInterval(() => {
-  dots = dots == 0 ? 3 : dots;
-  log(getMessage(dots--), LOADING);
-}, 250);
-
-let clearLoading = () => clearInterval(interval);
-
 let id = 0;
 
 async function log(message, type, mark, fail) {
@@ -179,19 +168,33 @@ function stringTable(rows, padding = 2) {
 }
 
 export let logger = {
+  load() {
+    let getMessage = (dots) => message + colors.green(".".repeat(dots));
+
+    log(getMessage(dots));
+
+    let interval = setInterval(() => {
+      dots = dots == 0 ? 3 : dots;
+      log(getMessage(dots--), LOADING);
+    }, 250);
+
+    return () => {
+      clearInterval(interval);
+      log(" ", LOADING);
+      play();
+    };
+  },
   debug(message, mark) {
     return log(message, DEBUG, mark);
   },
   header(message) {
     let i = id++;
-
     let send = (message) => log(message, HEADER, i);
     send(message);
     return send;
   },
   footer(message) {
     let i = id++;
-
     let send = (message) => log(message, FOOTER, i);
     send(message);
     return send;
@@ -206,10 +209,5 @@ export let logger = {
   markBuildError(message, mark) {
     log(message, DEBUG, mark);
     return log("", BUILD, mark, true);
-  },
-  play() {
-    clearLoading();
-    log(" ", LOADING);
-    play();
   },
 };

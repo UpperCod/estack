@@ -77,7 +77,7 @@ export async function copyFile(src, dest) {
  * getRelativePath("./post/1/","post/2/") == "../2/"
  */
 export function getRelativePath(from, to) {
-  if (from == to) return "./";
+  if (from == to) return "";
 
   let split = /\/+/;
   let [, ...folderFrom] = from.split(split);

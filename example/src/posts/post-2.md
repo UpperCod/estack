@@ -6,3 +6,5 @@ description: my post 2
 ---
 
 ## {{ page.title }}
+
+<a href="{{page.link}}">reload?</a>

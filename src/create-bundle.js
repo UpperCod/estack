@@ -34,6 +34,7 @@ import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
 import { MARK_ROOT, MARK_ROLLLUP } from "./constants";
+import { debug } from "console";
 
 let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
 
@@ -76,6 +77,10 @@ export async function createBundle(options) {
 
   // get list based on input expression
   let files = await glob(options.src);
+
+  let playLog = options.silent
+    ? () => console.log(`EStack running: ${options.src}`)
+    : logger.load();
 
   /**
    * returns the write destination of the file
@@ -172,7 +177,7 @@ export async function createBundle(options) {
     }
   }
 
-  if (!options.silent) logger.play();
+  playLog();
 
   /**
    * initialize the processing queue on related files
@@ -422,25 +427,43 @@ export async function createBundle(options) {
         ...archives
           .map(({ archive, ...page }) => {
             let collection = queryPages(pages, archive);
-            return Object.keys(collection).map((paged) => {
-              let { pages, ...pagination } = collection[paged];
+            let folderLink = page.link;
+            return collection.map((pages, paged) => {
               // Create the pages manually, they are the configuration
-              let name = page.name + (paged == 0 ? "" : "/" + paged);
-              let fileName = name + ".html";
-              let dest = getDest(fileName, page.folder);
+              let name = paged ? "/" + paged : "";
+              let fileName = paged ? folderLink + name : folderLink;
+              let dest = getDest(fileName + ".html");
 
-              let link = normalizePath(
-                "/" + path.join(page.folder || "", name)
-              );
+              let link = normalizePath("/" + fileName);
+
+              let position = paged - 1;
+              let prev = collection[position]
+                ? getRelativePath(
+                    link,
+                    folderLink + (position ? "/" + position : "")
+                  )
+                : false;
+
+              position = paged + 1;
+
+              let next = collection[position]
+                ? getRelativePath(
+                    link,
+                    folderLink + (position ? "/" + position : "")
+                  )
+                : false;
 
               return {
                 ...page,
                 name: fileName,
                 dest,
                 link,
-                paged,
                 pages, // The pages context will only be based on the scope of the archive
-                pagination,
+                pagination: {
+                  prev,
+                  next,
+                  paged,
+                },
               };
             });
           })
@@ -735,8 +758,10 @@ export async function createBundle(options) {
 
   try {
     await load(files);
+    return options;
   } catch (e) {
-    await logger.markBuildError(e, MARK_ROOT);
+    //await logger.markBuildError(e, MARK_ROOT);
+    console.log(e);
     process.exit();
   }
 }

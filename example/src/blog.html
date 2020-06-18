@@ -10,19 +10,26 @@ archive:
   limit: 2
 ---
 
-<h1>{{page.title}}</h1>
-
-{{query.blog|json}}
+<h1>{{page.title}} - {{page.pagination.paged}}</h1>
 
 <h1>{{deep}}</h1>
 <img src="avatar.png" />
-
+<!--every-->
 {% for item in pages %}
 <article>
   <h3>{{item.title}}</h3>
   <a href="{{item.link}}">Read article</a>
 </article>
 {% endfor %}
-
+<!---->
+<h1>
+  {{page.pagination|json}}
+</h1>
+<!---->
+{% if page.pagination.prev %}
 <a href="{{page.pagination.prev}}">prev</a>
-<a href="{{page.pagination.next}}">prev</a>
+{% endif %}
+<!--{{page.pagination|json}}-->
+{% if page.pagination.next %}
+<a href="{{page.pagination.next}}">next</a>
+{% endif %}

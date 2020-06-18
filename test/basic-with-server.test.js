@@ -27,9 +27,7 @@ test("basic: transformation and writing of export files", async (t) => {
     `Array.from(document.querySelectorAll("[href],[src]")).map(el=>el.outerHTML).join("")`
   );
 
-  let { data } = require("./basic/cases").find(
-    ({ file }) => file == "index.html"
-  );
+  let { data } = cases.find(({ file }) => file == "index.html");
 
   t.is(utils.normalizeData(els), utils.normalizeData(data));
 });

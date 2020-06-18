@@ -17,7 +17,7 @@ export function queryPages(
   let item;
   let size = 0;
   let currentPaged = 0;
-  let collection = {};
+  let collection = [];
 
   pages = pages
     .filter((page) =>
@@ -27,45 +27,21 @@ export function queryPages(
 
   pages = mapPage ? pages.map(mapPage) : pages;
 
-  /**
-   * returns access to page as relative path for page pagination
-   * @param {number} paged - page position
-   * @param {number} value - previous or next page
-   */
-  let subLink = (paged, value) =>
-    !!collection[value] &&
-    (paged == 0 ? "./" : "../") + folder + (value == 0 ? "" : "/" + value);
-
-  let createPaged = (paged) => ({
-    pages: [],
-    paged,
-    ref: {},
-    get prev() {
-      return subLink(paged, paged - 1);
-    },
-    get next() {
-      return subLink(paged, paged + 1);
-    },
-    get length() {
-      return currentPaged;
-    },
-  });
-
   if (limit == null) {
     if (onlyPages) {
       return pages;
     }
 
-    collection[0] = createPaged(0);
-    collection[0].pages = pages;
+    collection[0] = pages;
 
     return collection;
   }
 
   while ((item = pages.shift())) {
-    collection[currentPaged] =
-      collection[currentPaged] || createPaged(currentPaged);
-    collection[currentPaged].pages.push(item);
+    collection[currentPaged] = collection[currentPaged] || [];
+
+    collection[currentPaged].push(item);
+
     if (++size == limit) {
       size = 0;
       currentPaged++;
