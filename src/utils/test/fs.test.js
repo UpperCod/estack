@@ -1,5 +1,5 @@
 import test from "ava";
-import { getRelativeDeep } from "../fs";
+import { getRelativeDeep, getRelativePath } from "../fs";
 
 test("getRelativeDeep", (t) => {
   t.is(getRelativeDeep("/"), "./");
@@ -7,4 +7,13 @@ test("getRelativeDeep", (t) => {
   t.is(getRelativeDeep("/folder/"), "../../");
   t.is(getRelativeDeep("/folder/folder"), "../../");
   t.is(getRelativeDeep("/folder/folder/folder"), "../../../");
+});
+
+test("getRelativePath", (t) => {
+  t.is(getRelativePath("/", "/"), "./");
+  t.is(getRelativePath("/blog", "/blog/post-2"), "./blog/post-2");
+  t.is(getRelativePath("/blog/", "/blog/post-2"), "../blog/post-2");
+  t.is(getRelativePath("/blog/post-1", "/blog/post-2"), "../blog/post-2");
+  t.is(getRelativePath("/", "/folder"), "./folder");
+  t.is(getRelativePath("/cource/items/post-4", "/post-4"), "../../post-4");
 });

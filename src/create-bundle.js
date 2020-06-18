@@ -766,7 +766,6 @@ async function formatOptions({
   let options = {
     src,
     external,
-    babel: pkg.babel,
     ...ignore,
     ...pkg[config],
     pkg,
