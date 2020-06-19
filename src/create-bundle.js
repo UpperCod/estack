@@ -170,7 +170,7 @@ export async function createBundle(options) {
   }
 
   function mountFile({ dest, code, type, stream }) {
-    if (options.watch && server) {
+    if (options.virtual) {
       server.sources[dest] = { code, stream, type, stream };
     } else {
       return writeFile(dest, code);
@@ -594,7 +594,7 @@ export async function createBundle(options) {
         .filter(prevenLoad)
         .map(async (file) => {
           let dest = getDest(getFileName(file));
-          if (server && options.watch) {
+          if (options.virtual) {
             mountFile({ dest, stream: file });
           } else {
             return copyFile(file, dest);
@@ -649,8 +649,7 @@ export async function createBundle(options) {
           cache: rollupCache[id],
           plugins: rollupPlugins(
             options,
-            server &&
-              options.watch &&
+            options.virtual &&
               ((source) => mountFile({ ...source, dest: getDest(source.dest) }))
           ),
         };
@@ -773,6 +772,7 @@ async function formatOptions({
   jsx,
   jsxFragment,
   runAfterBuild,
+  forceWrite,
   ...ignore
 }) {
   let pkg = await getPackage();
@@ -799,6 +799,7 @@ async function formatOptions({
     ...ignore,
     ...pkg[config],
     pkg,
+    virtual: !forceWrite && ignore.watch && ignore.server,
     runAfterBuild: pkg.scripts[runAfterBuild] ? runAfterBuild : "",
     jsx: jsx == "react" ? "React.createElement" : jsx,
     jsxFragment: jsx == "react" ? "React.Fragment" : jsxFragment,
