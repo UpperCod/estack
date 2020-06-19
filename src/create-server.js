@@ -2,7 +2,9 @@ import path from "path";
 import net from "net";
 import polka from "polka";
 import sirv from "sirv";
-import { createProxyMiddleware } from "http-proxy-middleware";
+import httpProxy from "http-proxy";
+// import proxyMiddleware from "express-http-proxy";
+//import { createProxyMiddleware } from "http-proxy-middleware";
 
 import {
   asyncFs,
@@ -18,6 +20,10 @@ let mime = {
   text: "text/plain",
   html: "text/html; charset=utf-8",
 };
+
+let proxyServer = httpProxy.createProxyServer({
+  changeOrigin: true,
+});
 
 let sendMessage = (res, channel, data) => {
   res.write(`event: ${channel}\nid: 0\ndata: ${data}\n`);
@@ -47,7 +53,11 @@ export async function createServer({ root, port, reload, proxy }) {
   port = await findPort(port, port + 100);
 
   let nextProxy =
-    proxy && createProxyMiddleware({ target: proxy, changeOrigin: true });
+    proxy &&
+    ((req, res) =>
+      proxyServer.web(req, res, {
+        target: proxy,
+      }));
 
   let fallback = normalizePath(path.join(root, "index.html"));
 

@@ -18,11 +18,11 @@ export default {
     sourcemap: true,
   },
   external: [...builtins, ...Object.keys(pkg.dependencies)],
-  treeshake: {
-    moduleSideEffects: false,
-    propertyReadSideEffects: false,
-    tryCatchDeoptimization: false,
-  },
+  //treeshake: {
+  //  moduleSideEffects: false,
+  //  propertyReadSideEffects: false,
+  //  tryCatchDeoptimization: false,
+  //},
   plugins: [
     replace({
       "PKG.VERSION": pkg.version,

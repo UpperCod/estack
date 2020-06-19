@@ -1,5 +1,5 @@
 import marked from "marked";
-import { escape } from "html-escaper";
+//import { escape } from "html-escaper";
 import Prism from "prismjs";
 import "prismjs/components/prism-javascript";
 import "prismjs/components/prism-typescript";
@@ -17,6 +17,8 @@ import "prismjs/components/prism-json";
 import "prismjs/components/prism-python";
 
 let cache = {};
+
+let escape = () => "";
 
 let renderer = new marked.Renderer();
 // add an additional container prevent the table from collapsing the page
