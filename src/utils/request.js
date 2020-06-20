@@ -1,13 +1,14 @@
 import url from "url";
 import http from "http";
 import https from "https";
+import { isJsonContent } from "./types";
 
 /**
  * generate a request to obtain data
  * @param {string} uri
  * @returns {Promise}
  */
-export let requestJson = (uri) =>
+export let request = (uri) =>
   new Promise((resolve, reject) => {
     let dataUri = url.parse(uri);
     (dataUri.protocol == "https:" ? https : http)
@@ -21,12 +22,12 @@ export let requestJson = (uri) =>
           }
           if (res.statusCode > 300 && res.headers.location) {
             // recursively resolve the redirect
-            requestJson(url.resolve(dataUri.path, res.headers.location)).then(
+            request(url.resolve(dataUri.path, res.headers.location)).then(
               resolve,
               reject
             );
           } else {
-            resolve(JSON.parse(data));
+            resolve(isJsonContent(data) ? JSON.parse(data) : data);
           }
         });
       })

@@ -19,6 +19,15 @@ import "prismjs/components/prism-python";
 let cache = {};
 
 let renderer = new marked.Renderer();
+
+export let highlighted = (code, type) =>
+  Prism.languages[type]
+    ? Prism.highlight(code, Prism.languages[type], type)
+    : escape(code);
+
+export let renderMarkdown = (code) =>
+  (cache[code] = cache[code] || marked(code));
+
 // add an additional container prevent the table from collapsing the page
 renderer.table = (header, body) =>
   `<div class="markdown-table-container"><table>${header + body}</table></div>`;
@@ -26,11 +35,10 @@ renderer.table = (header, body) =>
 //  configure the container to allow language to be highlighted independently of the class
 renderer.code = (code, type) => {
   try {
-    return `<pre class="markdown-code-container" data-code="${type}"><code class="language-${type}">${
-      Prism.languages[type]
-        ? Prism.highlight(code, Prism.languages[type], type)
-        : escape(code)
-    }</code></pre>`;
+    return `<pre class="markdown-code-container" data-code="${type}"><code class="language-${type}">${highlighted(
+      code,
+      type
+    )}</code></pre>`;
   } catch (e) {}
 };
 
@@ -68,6 +76,3 @@ function createReplace(value) {
     recover: (str) => str.replace(regAlias, value),
   };
 }
-
-export let renderMarkdown = (code) =>
-  (cache[code] = cache[code] || marked(code));

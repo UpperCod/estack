@@ -11,6 +11,7 @@ import {
   isHtml,
   isFixLink,
   isNotFixLink,
+  isJsonContent,
   readFile,
   asyncFs,
   copyFile,
@@ -20,7 +21,7 @@ import {
   getPackage,
   getRelativePath,
   getRelativeDeep,
-  requestJson,
+  request,
   queryPages,
   getMetaPage,
   logger,
@@ -277,7 +278,7 @@ export async function createBundle(options) {
                 let value = meta.fetch[prop];
                 try {
                   if (isUrl(value)) {
-                    cacheFetch[value] = cacheFetch[value] || requestJson(value);
+                    cacheFetch[value] = cacheFetch[value] || request(value);
                     value = await cacheFetch[value];
                   } else {
                     /**
@@ -292,9 +293,11 @@ export async function createBundle(options) {
                     try {
                       value = await readFile(findFile);
 
-                      value = (isYaml(findFile) ? yamlParse : JSON.parse)(
-                        value
-                      );
+                      value = isYaml(findFile)
+                        ? yamlParse
+                        : isJsonContent(value)
+                        ? JSON.parse(value)
+                        : value;
                     } catch (e) {}
                   }
                 } catch (e) {

@@ -1,8 +1,9 @@
 import { Liquid } from "liquidjs";
-import { renderMarkdown } from "./markdown";
-import { getProp, getRelativePath } from "./utils/utils";
+import { renderMarkdown, highlighted } from "./markdown";
+import { getProp, getRelativePath, normalizeLineSpace } from "./utils/utils";
 
 let cache = {};
+
 let engine = new Liquid({
   cache: false,
   dynamicPartials: false,
@@ -40,15 +41,12 @@ engine.registerFilter("group", (data, by) => {
     .map((prop) => ({ group: prop, items: groups[prop] }));
 });
 
-engine.registerFilter("markdown", (string, clearSpace) =>
-  renderMarkdown(
-    clearSpace
-      ? string
-          .split(/\n/)
-          .map((str) => str.trim())
-          .join("\\n")
-      : string
-  )
+engine.registerFilter("markdown", (string) =>
+  renderMarkdown(normalizeLineSpace(string))
+);
+
+engine.registerFilter("highlighted", (string, type) =>
+  highlighted(normalizeLineSpace(string), type)
 );
 
 engine.registerFilter("attributes", (data) =>
@@ -70,8 +68,6 @@ engine.registerFilter("includes", (value, list) =>
 engine.registerFilter("find", (data, by, equal) =>
   data.find((data) => getProp(data, by) === equal)
 );
-
-engine.registerFilter("relative", (to, from) => getRelativePath(from, to));
 
 export function renderHtml(code, data) {
   cache[code] = cache[code] || engine.parse(code);

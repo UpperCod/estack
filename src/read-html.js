@@ -1,6 +1,8 @@
 import { analyzeHtml, serializeHtml } from "./analize-html";
 import { isUrl } from "./utils/utils";
 
+const EXCLUDE_SRC = ["iframe"];
+
 export async function readHtml({ code, addFile }) {
   let astHtml = await analyzeHtml(code, async (node) => {
     if (node.nodeName == "link") {
@@ -12,7 +14,7 @@ export async function readHtml({ code, addFile }) {
         node.setAttribute("href", await addFile(href));
       }
     } else if (
-      !["iframe"].includes(node.nodeName) &&
+      !EXCLUDE_SRC.includes(node.nodeName) &&
       node.getAttribute("src")
     ) {
       let src = node.getAttribute("src");

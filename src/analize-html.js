@@ -1,5 +1,7 @@
 import parse5 from "parse5";
 
+const EXCLUDE_CONSUME = ["script", "pre", "code", "style"];
+
 export let serializeHtml = (astHtml) => parse5.serialize(astHtml);
 /**
  * parses an html document node to node
@@ -30,10 +32,7 @@ export function analyzeHtml(content, map) {
           },
         })
       );
-      if (
-        !["script", "pre", "code", "style"].includes(node.nodeName) &&
-        node.childNodes
-      ) {
+      if (!EXCLUDE_CONSUME.includes(node.nodeName) && node.childNodes) {
         consume(node.childNodes);
       }
     });
