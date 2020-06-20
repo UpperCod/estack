@@ -72,7 +72,7 @@ engine.registerFilter("find", (data, by, equal) =>
 engine.registerTag("fragment", {
   parse({ args }) {
     let tokenizer = new Tokenizer(args);
-    this.name = tokenizer.readWord();
+    this.name = tokenizer.readFileName().content;
     tokenizer.skipBlank();
     tokenizer.advance();
     this.value = tokenizer.readHashes(); //new Tokenizer().readHashes();
@@ -93,7 +93,7 @@ engine.registerTag("fragment", {
     );
 
     let fragment = await this.liquid.evalValue(
-      "fragments." + this.name.content,
+      `fragments[${this.name}]`,
       scope
     );
 
