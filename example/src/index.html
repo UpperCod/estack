@@ -2,9 +2,17 @@
 title: Home
 files:
   avatar: avatar.png
+code: |
+  let x = 100;
+  <script></script>
+fetch:
+  weare: https://raw.githubusercontent.com/atomicojs/atomico/master/README.md
 ---
 
 <h1>Home</h1>
+
+{% fragment header, avatar :
+"https://a.wattpad.com/cover/136601520-352-k976369.jpg" %}
 
 <img src="{{page.files.avatar}}" />
 
@@ -13,3 +21,13 @@ files:
 
 <h1>link : {{page.link}}</h1>
 <h1>avatar : {{page.files.avatar}}</h1>
+
+<pre>
+  <code>
+{{page.code|highlighted}}  
+  </code>
+</pre>
+
+<section>
+  {{page.fetch.weare|markdown}}
+</section>

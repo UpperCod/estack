@@ -402,6 +402,8 @@ export async function createBundle(options) {
        * by a file that declares layour for use of this
        */
       let templates = {};
+
+      let fragments = {};
       /**
        * The files are virtual and it allows to generate a query
        * on the pages in order to create page collections
@@ -413,6 +415,10 @@ export async function createBundle(options) {
         .filter(isHtml)
         .map((file) => {
           let data = inputs[file];
+          if (data.fragment) {
+            fragments[data.fragment] = data;
+            return;
+          }
           if (data.template) {
             templates[data.template] = data;
             return;
@@ -516,6 +522,7 @@ export async function createBundle(options) {
             query,
             page,
             layout,
+            fragments,
             deep: getRelativeDeep(page.link),
             archive: !!scopePages,
             pages: (scopePages || pages).map(createRelativeLink),

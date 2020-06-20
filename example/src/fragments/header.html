@@ -1,0 +1,10 @@
+---
+title: i am header
+fragment: header
+files:
+  avatar: ../avatar.png
+---
+
+<h2>....header? {{title}}</h2>
+
+<img src="{{avatar | default: files.avatar}}" />

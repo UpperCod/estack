@@ -1,6 +1,6 @@
-import { Liquid } from "liquidjs";
+import { Liquid, Tokenizer, evalToken } from "liquidjs";
 import { renderMarkdown, highlighted } from "./markdown";
-import { getProp, getRelativePath, normalizeLineSpace } from "./utils/utils";
+import { getProp, normalizeLineSpace, logger } from "./utils/utils";
 
 let cache = {};
 
@@ -68,6 +68,40 @@ engine.registerFilter("includes", (value, list) =>
 engine.registerFilter("find", (data, by, equal) =>
   data.find((data) => getProp(data, by) === equal)
 );
+
+engine.registerTag("fragment", {
+  parse({ args }) {
+    let tokenizer = new Tokenizer(args);
+    this.name = tokenizer.readWord();
+    tokenizer.skipBlank();
+    tokenizer.advance();
+    this.value = tokenizer.readHashes(); //new Tokenizer().readHashes();
+  },
+  async render(scope) {
+    let data = await Promise.all(
+      this.value.map(async (hash) => {
+        return {
+          prop: hash.name.content,
+          value: evalToken(hash.value, scope),
+        };
+      })
+    ).then((data) =>
+      data.reduce((data, { prop, value }) => {
+        data[prop] = value;
+        return data;
+      }, {})
+    );
+
+    let fragment = await this.liquid.evalValue(
+      "fragments." + this.name.content,
+      scope
+    );
+
+    return fragment
+      ? renderHtml(fragment.content, { ...fragment, content: null, ...data })
+      : "";
+  },
+});
 
 export function renderHtml(code, data) {
   cache[code] = cache[code] || engine.parse(code);
