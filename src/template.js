@@ -49,18 +49,6 @@ engine.registerFilter("highlighted", (string, type) =>
   highlighted(normalizeLineSpace(string), type)
 );
 
-engine.registerFilter("attributes", (data) =>
-  Object.keys(data)
-    .map((prop) =>
-      typeof data[prop] == "boolean"
-        ? data[prop]
-          ? prop
-          : ""
-        : `prop=${JSON.stringify(data[prop])}`
-    )
-    .join(" ")
-);
-
 engine.registerFilter("includes", (value, list) =>
   (list || []).includes(value)
 );
@@ -74,23 +62,28 @@ engine.registerTag("fragment", {
     let tokenizer = new Tokenizer(args);
     this.name = tokenizer.readFileName().content;
     tokenizer.skipBlank();
-    tokenizer.advance();
-    this.value = tokenizer.readHashes(); //new Tokenizer().readHashes();
+    let withValue = tokenizer.readWord();
+    if (withValue && withValue.content == "with") {
+      tokenizer.skipBlank();
+      this.value = tokenizer.readHashes();
+    }
   },
   async render(scope) {
-    let data = await Promise.all(
-      this.value.map(async (hash) => {
-        return {
-          prop: hash.name.content,
-          value: evalToken(hash.value, scope),
-        };
-      })
-    ).then((data) =>
-      data.reduce((data, { prop, value }) => {
-        data[prop] = value;
-        return data;
-      }, {})
-    );
+    let data = this.value
+      ? await Promise.all(
+          this.value.map(async (hash) => {
+            return {
+              prop: hash.name.content,
+              value: evalToken(hash.value, scope),
+            };
+          })
+        ).then((data) =>
+          data.reduce((data, { prop, value }) => {
+            data[prop] = value;
+            return data;
+          }, {})
+        )
+      : {};
 
     let fragment = await this.liquid.evalValue(
       `fragments[${this.name}]`,

@@ -11,8 +11,8 @@ fetch:
 
 <h1>Home</h1>
 
-{% fragment "headers/v1" avatar :
-"https://a.wattpad.com/cover/136601520-352-k976369.jpg" %}
+{% fragment "headers/v1" with avatar :
+"https://a.wattpad.com/cover/136601520-352-k976369.jpg", title : "normalize?" %}
 
 <img src="{{page.files.avatar}}" />
 

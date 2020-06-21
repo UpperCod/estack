@@ -240,7 +240,7 @@ It allows generating an import alias as a page variable, eg:
 ```markdown
 ---
 files:
-cover: ./my-image.jpg
+  cover: ./my-image.jpg
 ---
 
 ## image

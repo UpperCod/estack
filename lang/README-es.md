@@ -317,3 +317,78 @@ import style from "./my-css.css";
 ```
 
 Útil para trabajar con webcomponents, ya que el css se entrega mitificado, ideal para su uso dentro del shadowDom.
+
+## Liquidjs
+
+### Filtros
+
+#### order
+
+```
+{{ myList | order : "my.field" }}
+```
+
+Este ordena una lista a base del indice asociado al objeto dentro de esta.
+
+#### group
+
+```liquid
+{{ myList | group : "tag" }}
+```
+
+Permite agrupar objetos en listas según el índice dado
+
+#### markdown
+
+```liquid
+{{ myString | markdown }}
+```
+
+Aplica el transformador de markdown
+
+#### highlighted
+
+```liquid
+{{ myCode | highlighted : "js" }}
+```
+
+Aplica el transformador de [Primsjs](https://prismjs.com/)
+
+#### find
+
+```liquid
+{{ myCode | find : "tag", "case" }}
+```
+
+### Tags
+
+**fragment.html** : EStack detecta los fragmentos gracias a la propiedad `fragment`.
+
+```html
+---
+title: default title
+fragment: header # Ahora puede usar este fragmento dentro del sitio solo declarando el nombre
+---
+
+<header>
+  <h1>{{title}}</h1>
+</header>
+```
+
+**Ejemplo**
+
+```html
+{% fragment "header" %}
+<!--output-->
+<header>
+  <h1>default title</h1>
+</header>
+
+{% fragment "header" with title : "custom title" %}
+<!--output-->
+<header>
+  <h1>custom title</h1>
+</header>
+```
+
+Este tag permite reutilizar bloques de codigo, estos bloques no conoceran solo su contexto y el de asignación.
