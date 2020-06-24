@@ -8,4 +8,4 @@ description: my post 1
 
 ## {{ page.title }} **every** _italic_
 
-![img](../avatar.png)
+[![img](../avatar.png)]({{page.title}})

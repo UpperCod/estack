@@ -15,6 +15,7 @@ import "prismjs/components/prism-sql";
 import "prismjs/components/prism-liquid";
 import "prismjs/components/prism-json";
 import "prismjs/components/prism-python";
+import { escapeTemplate } from "./template";
 
 let cache = {};
 
@@ -25,8 +26,13 @@ export let highlighted = (code, type) =>
     ? Prism.highlight(code, Prism.languages[type], type)
     : escape(code);
 
-export let renderMarkdown = (code) =>
-  (cache[code] = cache[code] || marked(code));
+export let renderMarkdown = (code) => {
+  if (!cache[code]) {
+    let escape = escapeTemplate(code);
+    cache[code] = escape.recovery(marked(escape.code));
+  }
+  return cache[code];
+};
 
 // add an additional container prevent the table from collapsing the page
 renderer.table = (header, body) =>
@@ -42,37 +48,6 @@ renderer.code = (code, type) => {
   } catch (e) {}
 };
 
-renderer.image = (href, title, text) =>
-  `<img src="${safeLink(href)}" alt="${text}">`;
-
-renderer.link = (href, title, text) =>
-  `<a href="${safeLink(href)}">${text}</a>`;
-
 marked.setOptions({
   renderer,
 });
-
-let bracketsStart = createReplace("{{");
-let bracketsEnd = createReplace("}}");
-
-function safeLink(link) {
-  link = bracketsStart.replace(link);
-  link = bracketsEnd.replace(link);
-  link = escape(link);
-  link = bracketsStart.recover(link);
-  return bracketsEnd.recover(link);
-}
-
-/**
- * Maintains the use of brackets to normalize the work of liquidjs
- * @param {string} value
- */
-function createReplace(value) {
-  let regValue = RegExp(value, "g");
-  let alias = (Math.random() + "").replace("0.", "__");
-  let regAlias = RegExp(alias, "g");
-  return {
-    replace: (str) => str.replace(regValue, alias),
-    recover: (str) => str.replace(regAlias, value),
-  };
-}

@@ -4,6 +4,10 @@ import { getProp, normalizeLineSpace, logger } from "./utils/utils";
 
 let cache = {};
 
+let count = 0;
+let alias = {};
+let time = Date.now();
+
 let engine = new Liquid({
   cache: false,
   dynamicPartials: false,
@@ -95,6 +99,30 @@ engine.registerTag("fragment", {
       : "";
   },
 });
+
+export function escapeTemplate(code) {
+  let replace = [];
+  code = code.replace(/({{[^}]*}})/g, (id) => {
+    if (!alias[id]) {
+      let value =
+        time + "-" + count++ + (Math.random() + "").replace("0.", "-");
+      alias[id] = { value, reg: RegExp(value, "g") };
+    }
+    if (!replace.includes(id)) {
+      replace.push(id);
+    }
+    return alias[id].value;
+  });
+  return {
+    code,
+    recovery(code) {
+      return replace.reduce(
+        (code, id) => code.replace(alias[id].reg, id),
+        code
+      );
+    },
+  };
+}
 
 export function renderHtml(code, data) {
   cache[code] = cache[code] || engine.parse(code);
