@@ -34,10 +34,7 @@ import { readCss } from "./read-css";
 import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
-import { MARK_ROOT, MARK_ROLLLUP } from "./constants";
-import { debug } from "console";
-
-let SyntaxErrorTransforming = `SyntaxError: Error transforming`;
+import { MARK_ROOT, MARK_ROLLLUP, ERROR_TRANSFORMING } from "./constants";
 
 /**
  *
@@ -217,7 +214,7 @@ export async function createBuild(options) {
             data = getMetaPage(html);
           } catch (e) {
             debugRoot(
-              `${SyntaxErrorTransforming} ${file}:${e.mark.line}:${e.mark.position}`
+              `${ERROR_TRANSFORMING} ${file}:${e.mark.line}:${e.mark.position}`
             );
           }
 
@@ -252,7 +249,7 @@ export async function createBuild(options) {
                 fileWatcher && fileWatcher(findFile, file);
                 return {
                   file: findFile,
-                  src: "{{deep}}" + getFileName(findFile),
+                  src: "__DEEP__" + getFileName(findFile),
                 };
               } catch (e) {
                 return { src: childFile };
@@ -479,6 +476,7 @@ export async function createBuild(options) {
           .flat(),
       ];
 
+      let resolvedPages = {};
       /**
        * First resolve the pages independently,
        * this allows each page to interact with
@@ -488,7 +486,6 @@ export async function createBuild(options) {
       resolveHtmlFiles = pages.map(
         async ({ pages: scopePages, query, ...page }) => {
           let layout = templates[page.layout == null ? "default" : page.layout];
-
           let createRelativeLink = (subPage) => ({
             ...subPage,
             /**
@@ -496,8 +493,9 @@ export async function createBuild(options) {
              * since in itself the content has not been rendered in this section
              * with the context of the page. This is only allowed from template pages
              */
-
-            content: null,
+            get content() {
+              return resolvedPages[subPage.file];
+            },
             link: getRelativePath(page.link, subPage.link),
           });
 
@@ -529,10 +527,13 @@ export async function createBuild(options) {
           };
 
           try {
-            let content = await renderHtml(page.content, data);
+            let content = (resolvedPages[page.file] = await renderHtml(
+              page.content,
+              data
+            ));
             return { ...data, page: { ...page, content } };
           } catch (e) {
-            debugRoot(`${SyntaxErrorTransforming} : ${page.file}`);
+            debugRoot(`${ERROR_TRANSFORMING} : ${page.file}`);
           }
         }
       );
@@ -578,14 +579,14 @@ export async function createBuild(options) {
                         })),
                   });
                 } catch (e) {
-                  debugRoot(`${SyntaxErrorTransforming} : ${data.layout.file}`);
+                  debugRoot(`${ERROR_TRANSFORMING} : ${data.layout.file}`);
                 }
               }
 
               if (content != null) {
                 return mountFile({
                   dest: data.page.dest,
-                  code: content.replace(/{{ *deep *}}/g, data.deep), // ensures the relative use of all files declared before writing
+                  code: content.replace(/__DEEP__/g, data.deep), // ensures the relative use of all files declared before writing
                   type: "html",
                 });
               }

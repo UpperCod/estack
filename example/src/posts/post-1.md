@@ -6,6 +6,6 @@ date: 2020-01-01
 description: my post 1
 ---
 
-## {{ page.title }}
+## {{ page.title }} **every** _italic_
 
 ![img](../avatar.png)
