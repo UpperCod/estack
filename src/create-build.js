@@ -49,7 +49,7 @@ let mapPropToObject = (data, { prop, value }) => {
   return data;
 };
 
-export async function createBundle(options) {
+export async function createBuild(options) {
   let server;
 
   let rollupWatchers = [];
@@ -271,7 +271,7 @@ export async function createBundle(options) {
            * The following process is in charge of transforming the
            * fetch object to the data declared in the request
            */
-          let processFetch = () =>
+          let resolveMetaFetch = () =>
             meta.fetch &&
             Promise.all(
               Object.keys(meta.fetch).map(async (prop) => {
@@ -312,7 +312,7 @@ export async function createBundle(options) {
           /**
            * The following process allows the allocation of aliases for each file to process
            */
-          let processFiles = () =>
+          let resolveMetaFiles = () =>
             meta.files &&
             Promise.all(
               Object.keys(meta.files).map(async (prop) => {
@@ -351,8 +351,8 @@ export async function createBundle(options) {
               code: meta.content || code, //content can also be defined in the meta
               addFile: async (file) => (await addFile(file)).src,
             }),
-            processFetch(),
-            processFiles(),
+            resolveMetaFetch(),
+            resolveMetaFiles(),
           ]);
 
           inputs[file] = {
@@ -373,9 +373,9 @@ export async function createBundle(options) {
 
     files = [...files, ...nestedFiles.flat()];
 
-    let groupAsyncHtml = [];
+    let resolveHtmlFiles = [];
 
-    let groupAsyncCss = files
+    let resolveCssFiles = files
       .filter(isCss)
       .filter(prevenLoad)
       .map(async (file) => {
@@ -485,7 +485,7 @@ export async function createBundle(options) {
        * its scope page before associating the
        * nested render on the layout
        */
-      groupAsyncHtml = pages.map(
+      resolveHtmlFiles = pages.map(
         async ({ pages: scopePages, query, ...page }) => {
           let layout = templates[page.layout == null ? "default" : page.layout];
 
@@ -537,13 +537,13 @@ export async function createBundle(options) {
         }
       );
 
-      groupAsyncHtml = [
+      resolveHtmlFiles = [
         /**
          * expect all page renders to be resolved, before hierarchical
          * template construction, this is to access all the content
          * associated with the previous render
          */
-        Promise.all(groupAsyncHtml).then((pages) =>
+        Promise.all(resolveHtmlFiles).then((pages) =>
           Promise.all(
             /**
              * Write the files once all have generated render of their
@@ -597,8 +597,8 @@ export async function createBundle(options) {
 
     // parallel queue of asynchronous processes
     await Promise.all([
-      ...groupAsyncCss,
-      ...groupAsyncHtml,
+      ...resolveCssFiles,
+      ...resolveHtmlFiles,
       ...files // copy of static files
         .filter(isNotFixLink)
         .filter(prevenLoad)
@@ -611,7 +611,7 @@ export async function createBundle(options) {
           }
         }),
       ...(files.filter(isJs).filter(prevenLoad).length || forceBuildRollup
-        ? [loadRollup()]
+        ? [resolveFilesJs()]
         : []),
     ]);
 
@@ -623,7 +623,7 @@ export async function createBundle(options) {
   /**
    * Scope of the rollup process running in parallel to the EStack process
    */
-  function loadRollup() {
+  function resolveFilesJs() {
     let countBuild = 0; // Ignore the first build since it synchronizes the reload from root
     // clean the old watcher
     rollupWatchers.filter((watcher) => watcher.close());

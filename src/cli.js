@@ -1,11 +1,11 @@
 import sade from "sade";
-import { createBundle } from "./create-bundle";
-export { createBundle } from "./create-bundle";
+import { createBuild } from "./create-build";
+export { createBuild } from "./create-build";
 
 sade("estack [src] [dest]")
   .version("PKG.VERSION")
-  .option("--watch", "Watch files in bundle and rebuild on changes", false)
-  .option("--external", "Does not include dependencies in the bundle")
+  .option("--watch", "Detect file changes to generate a new build", false)
+  .option("--external", "Does not include dependencies in build")
   .option(
     "-c, --config",
     "Allows you to export a configuration from package.json"
@@ -40,7 +40,7 @@ sade("estack [src] [dest]")
   .example("src/*.js dist")
   .example("src/*.html")
   .action((src, dest = "dest", options) => {
-    createBundle({
+    createBuild({
       ...options,
       src,
       dest,
