@@ -34,7 +34,13 @@ import { readCss } from "./read-css";
 import { renderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
-import { MARK_ROOT, MARK_ROLLLUP, ERROR_TRANSFORMING } from "./constants";
+import {
+  MARK_ROOT,
+  MARK_ROLLLUP,
+  ERROR_TRANSFORMING,
+  DEEP_ALIAS,
+  DEEP_REPLACE,
+} from "./constants";
 
 /**
  *
@@ -249,7 +255,7 @@ export async function createBuild(options) {
                 fileWatcher && fileWatcher(findFile, file);
                 return {
                   file: findFile,
-                  src: "__DEEP__" + getFileName(findFile),
+                  src: DEEP_ALIAS + getFileName(findFile),
                 };
               } catch (e) {
                 return { src: childFile };
@@ -586,7 +592,7 @@ export async function createBuild(options) {
               if (content != null) {
                 return mountFile({
                   dest: data.page.dest,
-                  code: content.replace(/__DEEP__/g, data.deep), // ensures the relative use of all files declared before writing
+                  code: content.replace(DEEP_REPLACE, data.deep), // ensures the relative use of all files declared before writing
                   type: "html",
                 });
               }
