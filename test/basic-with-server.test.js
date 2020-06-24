@@ -1,5 +1,5 @@
 const test = require("ava");
-const { createBundle } = require("../cli");
+const { createBuild } = require("../cli");
 const puppeteer = require("puppeteer");
 const utils = require("./utils");
 
@@ -8,7 +8,7 @@ let dest = "./test/basic/public";
 let port = 8000;
 
 test.before(async () => {
-  await createBundle({
+  await createBuild({
     src,
     dest,
     server: true,

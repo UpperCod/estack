@@ -1,5 +1,5 @@
 const test = require("ava");
-const { createBundle } = require("../cli");
+const { createBuild } = require("../cli");
 const fs = require("fs").promises;
 const path = require("path");
 const utils = require("./utils");
@@ -8,7 +8,7 @@ let src = "./test/basic/index.html";
 let dest = "./test/basic/dest";
 
 test.before(async () => {
-  await createBundle({
+  await createBuild({
     src,
     dest,
     silent: true,
