@@ -15,24 +15,22 @@ import "prismjs/components/prism-sql";
 import "prismjs/components/prism-liquid";
 import "prismjs/components/prism-json";
 import "prismjs/components/prism-python";
-import { escapeTemplate } from "./template";
 
 let cache = {};
 
 let renderer = new marked.Renderer();
+
+let count = 0;
+let alias = {};
+let time = Date.now();
 
 export let highlighted = (code, type) =>
   Prism.languages[type]
     ? Prism.highlight(code, Prism.languages[type], type)
     : escape(code);
 
-export let renderMarkdown = (code) => {
-  if (!cache[code]) {
-    let escape = escapeTemplate(code);
-    cache[code] = escape.recovery(marked(escape.code));
-  }
-  return cache[code];
-};
+export let renderMarkdown = (code) =>
+  (cache[code] = cache[code] || marked(code));
 
 // add an additional container prevent the table from collapsing the page
 renderer.table = (header, body) =>
@@ -48,6 +46,40 @@ renderer.code = (code, type) => {
   } catch (e) {}
 };
 
+renderer.link = (href, title, text) => {
+  href = escapeTemplate(href);
+  return `<a href="${href.recovery(escape(href.code))}">${text}</a>`;
+};
+
+renderer.image = (href, title, text) => {
+  href = escapeTemplate(href);
+  return `<img src="${href.recovery(escape(href.code))}" alt="${text}">`;
+};
+
 marked.setOptions({
   renderer,
 });
+
+function escapeTemplate(code) {
+  let replace = [];
+  code = code.replace(/({{[^}]*}})/g, (id) => {
+    if (!alias[id]) {
+      let value =
+        time + "-" + count++ + (Math.random() + "").replace("0.", "-");
+      alias[id] = { value, reg: RegExp(value, "g") };
+    }
+    if (!replace.includes(id)) {
+      replace.push(id);
+    }
+    return alias[id].value;
+  });
+  return {
+    code,
+    recovery(code) {
+      return replace.reduce(
+        (code, id) => code.replace(alias[id].reg, id),
+        code
+      );
+    },
+  };
+}

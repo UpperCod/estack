@@ -82,10 +82,7 @@ export async function createBuild(options) {
   // get list based on input expression
   let files = await glob(options.src);
 
-  let playLog = options.silent
-    ? () => console.log(`EStack running: ${options.src}`)
-    : logger.load();
-
+  let playLog = logger.load();
   /**
    * returns the write destination of the file
    * @param {string} file - file name
@@ -790,8 +787,11 @@ async function formatOptions({
   jsxFragment,
   runAfterBuild,
   forceWrite,
+  silent,
   ...ignore
 }) {
+  if (silent) process.env.silent = true;
+
   let pkg = await getPackage();
 
   src = Array.isArray(src) ? src : src.split(/ *; */g);
