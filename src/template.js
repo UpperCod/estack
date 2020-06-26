@@ -51,14 +51,17 @@ export function createRenderHtml() {
 
     engine.registerFilter("link", function (link) {
         let {
-            environments: { [DATA_PAGE]: _page },
+            environments: { page },
         } = this.context;
-        if (_page && _page.link) {
-            return resolvePath(link, _page.link);
+        if (page && page.link) {
+            return resolvePath(link, page.link);
         }
         return link;
     });
-
+    /**
+     * It allows including fragments of html, these have a scope limited only to your document
+     * the fragments will only inherit the data associated with it
+     */
     engine.registerTag(
         "fragment",
         createTag(async ({ [DATA_FRAGMENT]: _fragments = {} }, name, data) => {
@@ -72,6 +75,13 @@ export function createRenderHtml() {
                 : "";
         })
     );
+    /**
+     * Execute the addDataFetch function associated with the page context
+     * @example
+     * {% fetch myData = "https://my-api" %}
+     * {{myData | json}}
+     * {{page.fetch.myData}}
+     */
 
     engine.registerTag(
         "fetch",
@@ -89,6 +99,10 @@ export function createRenderHtml() {
     };
 }
 
+/**
+ *
+ * @param {Tag} next - function in charge of processing the tag context
+ */
 function createTag(next) {
     return {
         parse({ args }) {
@@ -137,3 +151,11 @@ function createTag(next) {
         },
     };
 }
+
+/**
+ * @callback Tag
+ * @param {object} scope - Second parameter inherited from render, eg : render(code,scope).
+ * @param {string} name  - name variable used as the first argument to the tag
+ * @param {object} [data] - arguments obtained from the tag invocation
+ * @param {(name:string,value:any)=>any} - define a local value as a variable
+ */

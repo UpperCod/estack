@@ -110,8 +110,11 @@ export function getRelativePath(from, to) {
  * @param {string} from
  * @param {string} to
  */
-export function resolvePath(from, to) {
+export function resolveRelativePath(from, to) {
     return getRelativePath(to, normalizePath(path.join(to, from)));
+}
+export function resolvePath(from, to) {
+    return normalizePath(path.join(to, from));
 }
 /**
  * get the depth of the route

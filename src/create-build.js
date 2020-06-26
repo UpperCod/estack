@@ -404,7 +404,7 @@ export async function createBuild(options) {
                     let page = inputs[file];
                     let { data } = page;
                     if (data.fragment) {
-                        fragments[data.fragment] = page;
+                        fragments[data.fragment] = data;
                         return;
                     } else if (data.template) {
                         templates[data.template] = page;
@@ -510,6 +510,8 @@ export async function createBuild(options) {
                     page: { ...data, query },
                     layout: layout && layout.data,
                     pages: pagesData,
+                    // The following properties can only be accessed
+                    // from the scope of the stack and are for internal use
                     [DATA_FRAGMENT]: fragments,
                     [DATA_LAYOUT]: layout,
                     [DATA_PAGE]: page,
