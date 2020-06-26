@@ -9,14 +9,13 @@ fetch:
   weare: https://raw.githubusercontent.com/atomicojs/atomico/master/README.md
 ---
 
-<h1>Home</h1>
+<h1>{% file './code-js.js' %}</h1>
 
 {% fragment "headers/v1" with avatar :
 "https://a.wattpad.com/cover/136601520-352-k976369.jpg", title : "normalize?" %}
 
 <img src="{{page.files.avatar}}" />
 
-<script type="module" src="./code-js.js"></script>
 <script type="module" src="./code-ts.js"></script>
 
 <h1>link : {{page.link}}</h1>

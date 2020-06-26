@@ -31,7 +31,7 @@ import { createServer } from "./create-server";
 import { rollupPlugins } from "./rollup/config-plugins";
 import { readHtml } from "./read-html";
 import { readCss } from "./read-css";
-import { renderHtml } from "./template";
+import { createRenderHtml } from "./template";
 import { renderMarkdown } from "./markdown";
 import { watch } from "./watch";
 import {
@@ -58,6 +58,8 @@ export async function createBuild(options) {
   let rollupWatchers = [];
   // cache de rollup
   let rollupCache = {};
+
+  let renderHtml = createRenderHtml({});
 
   /**
    * @callback fileWatcher
