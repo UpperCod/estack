@@ -35,7 +35,7 @@ export function createRenderHtml() {
         highlighted(normalizeLineSpace(string), type)
     );
 
-    engine.registerFilter("assets", async function (file) {
+    engine.registerFilter("asset", async function (file) {
         let {
             environments: { [DATA_PAGE]: _page },
         } = this.context;
@@ -61,8 +61,8 @@ export function createRenderHtml() {
 
     engine.registerTag(
         "fragment",
-        createTag(async ({ [DATA_FRAGMENT]: _fragments = {} }, file, data) => {
-            let fragment = _fragments[file];
+        createTag(async ({ [DATA_FRAGMENT]: _fragments = {} }, name, data) => {
+            let fragment = _fragments[name];
             return fragment
                 ? renderHtml(fragment.content, {
                       ...fragment,
@@ -75,15 +75,9 @@ export function createRenderHtml() {
 
     engine.registerTag(
         "fetch",
-        createTag(async ({ [DATA_FRAGMENT]: _fragments = {} }, file, data) => {
-            let fragment = _fragments[file];
-            return fragment
-                ? renderHtml(fragment.content, {
-                      ...fragment,
-                      content: null,
-                      ...data,
-                  })
-                : "";
+        createTag(async ({ [DATA_PAGE]: addFetch }, name, data) => {
+            await addFetch(name, data);
+            return "";
         })
     );
 
@@ -97,7 +91,7 @@ function createTag(next) {
     return {
         parse({ args }) {
             let tokenizer = new Tokenizer(args);
-            this.file = tokenizer.readFileName().content;
+            this.name = tokenizer.readFileName().content;
             tokenizer.skipBlank();
             let withValue = tokenizer.readWord();
             if (withValue && /^(with|=)$/.test(withValue.content)) {
@@ -121,7 +115,7 @@ function createTag(next) {
                       }, {})
                   )
                 : {};
-            return next.call(this, scope.environments, this.file, data);
+            return next.call(this, scope.environments, this.name, data);
         },
     };
 }

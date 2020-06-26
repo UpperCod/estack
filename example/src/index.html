@@ -6,11 +6,10 @@
     <title>Document</title>
 </head>
 <body>
-    <div src="{{ "code-js.js" | assets }}"></div>
-    <a href="{{ "/es" }}">Español</a>
+    <div src="{{ "code-js.js" | asset }}"></div>
+    <a href="{{ "es" | link }}">Español</a>
     <a href="{{ "/" }}">Ingles</a>
-    <img src="{{ "avatar.png" | assets }}" alt="">
+    <img src="{{ "avatar.png" | asset }}" alt="">
     
-    {% fetch users = "./lang-en.yaml" | replace: "-en", page.lang %}
 </body>
 </html>

@@ -324,11 +324,11 @@ export async function createBuild(options) {
                     /**
                      * The following process allows the allocation of aliases for each file to process
                      */
-                    let resolveDataFiles = () =>
-                        data.files &&
+                    let resolveDataAssets = () =>
+                        data.assets &&
                         Promise.all(
-                            Object.keys(data.files).map(async (prop) => {
-                                let value = data.files[prop];
+                            Object.keys(data.assets).map(async (prop) => {
+                                let value = data.assets[prop];
                                 if (typeof value == "object") {
                                     let { src, ...config } = value;
                                     value = await addFile(src);
@@ -363,7 +363,7 @@ export async function createBuild(options) {
                     // These processes can be solved in parallel
                     let [dataFetch, dataFiles] = await Promise.all([
                         resolveDataFetch(),
-                        resolveDataFiles(),
+                        resolveDataAssets(),
                     ]);
 
                     inputs[file] = {
