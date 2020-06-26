@@ -1,1 +1,1 @@
-console.log("js");
+document.querySelector("*");

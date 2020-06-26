@@ -1,6 +1,7 @@
 import { Liquid, Tokenizer, evalToken } from "liquidjs";
 import { renderMarkdown, highlighted } from "./markdown";
-import { getProp, normalizeLineSpace } from "./utils/utils";
+import { getProp, normalizeLineSpace, resolvePath } from "./utils/utils";
+import { DATA_FRAGMENT, DATA_PAGE, DATA_LAYOUT } from "./constants";
 
 export function createRenderHtml() {
     let cache = {};
@@ -36,19 +37,45 @@ export function createRenderHtml() {
 
     engine.registerFilter("assets", async function (file) {
         let {
-            environments: { _page },
+            environments: { [DATA_PAGE]: _page },
         } = this.context;
 
-        if (_page.addFile) {
+        if (_page && _page.addFile) {
             file = (await _page.addFile(file)).src;
         }
 
         return file;
     });
 
+    /**@todo */
+
+    engine.registerFilter("link", function (link) {
+        let {
+            environments: { [DATA_PAGE]: _page },
+        } = this.context;
+        if (_page && _page.link) {
+            return resolvePath(link, _page.link);
+        }
+        return link;
+    });
+
     engine.registerTag(
         "fragment",
-        createTag(async ({ _fragments = {} }, file, data) => {
+        createTag(async ({ [DATA_FRAGMENT]: _fragments = {} }, file, data) => {
+            let fragment = _fragments[file];
+            return fragment
+                ? renderHtml(fragment.content, {
+                      ...fragment,
+                      content: null,
+                      ...data,
+                  })
+                : "";
+        })
+    );
+
+    engine.registerTag(
+        "fetch",
+        createTag(async ({ [DATA_FRAGMENT]: _fragments = {} }, file, data) => {
             let fragment = _fragments[file];
             return fragment
                 ? renderHtml(fragment.content, {
@@ -73,7 +100,7 @@ function createTag(next) {
             this.file = tokenizer.readFileName().content;
             tokenizer.skipBlank();
             let withValue = tokenizer.readWord();
-            if (withValue && withValue.content == "with") {
+            if (withValue && /^(with|=)$/.test(withValue.content)) {
                 tokenizer.skipBlank();
                 this.value = tokenizer.readHashes();
             }

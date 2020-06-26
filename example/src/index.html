@@ -1,32 +1,16 @@
----
-title: Home
-files:
-  avatar: avatar.png
-code: |
-  let x = 100;
-  <script></script>
-fetch:
-  weare: https://raw.githubusercontent.com/atomicojs/atomico/master/README.md
----
-
-<h1>{% file './code-js.js' %}</h1>
-
-{% fragment "headers/v1" with avatar :
-"https://a.wattpad.com/cover/136601520-352-k976369.jpg", title : "normalize?" %}
-
-<img src="{{page.files.avatar}}" />
-
-<script type="module" src="./code-ts.js"></script>
-
-<h1>link : {{page.link}}</h1>
-<h1>avatar : {{page.files.avatar}}</h1>
-
-<pre>
-  <code>
-{{page.code|highlighted}}  
-  </code>
-</pre>
-
-<section>
-  {{page.fetch.weare|markdown}}
-</section>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div src="{{ "code-js.js" | assets }}"></div>
+    <a href="{{ "/es" }}">Español</a>
+    <a href="{{ "/" }}">Ingles</a>
+    <img src="{{ "avatar.png" | assets }}" alt="">
+    
+    {% fetch users = "./lang-en.yaml" | replace: "-en", page.lang %}
+</body>
+</html>

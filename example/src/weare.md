@@ -1,3 +1,0 @@
-# weare
-
-lore...
