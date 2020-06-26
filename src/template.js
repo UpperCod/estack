@@ -1,7 +1,7 @@
 import { Liquid, Tokenizer, evalToken } from "liquidjs";
 import { renderMarkdown, highlighted } from "./markdown";
 import { getProp, normalizeLineSpace, resolvePath } from "./utils/utils";
-import { DATA_FRAGMENT, DATA_PAGE, DATA_LAYOUT } from "./constants";
+import { DATA_FRAGMENT, DATA_PAGE } from "./constants";
 
 export function createRenderHtml() {
     let cache = {};
@@ -75,8 +75,10 @@ export function createRenderHtml() {
 
     engine.registerTag(
         "fetch",
-        createTag(async ({ [DATA_PAGE]: addFetch }, name, data) => {
-            await addFetch(name, data);
+        createTag(async ({ [DATA_PAGE]: _page }, name, data, set) => {
+            if (_page && _page.addDataFetch) {
+                set(name, await _page.addDataFetch(name, data));
+            }
             return "";
         })
     );
@@ -93,29 +95,45 @@ function createTag(next) {
             let tokenizer = new Tokenizer(args);
             this.name = tokenizer.readFileName().content;
             tokenizer.skipBlank();
-            let withValue = tokenizer.readWord();
-            if (withValue && /^(with|=)$/.test(withValue.content)) {
-                tokenizer.skipBlank();
-                this.value = tokenizer.readHashes();
+            if (tokenizer.peek() === "=") {
+                this.type = "=";
+                tokenizer.advance();
+                this.value = tokenizer.remaining();
+            } else {
+                let withValue = tokenizer.readWord();
+                if (withValue && withValue.content == "with") {
+                    tokenizer.skipBlank();
+                    this.value = tokenizer.readHashes();
+                }
             }
         },
         async render(scope) {
-            let data = this.value
-                ? await Promise.all(
-                      this.value.map(async (hash) => {
-                          return {
-                              prop: hash.name.content,
-                              value: evalToken(hash.value, scope),
-                          };
-                      })
-                  ).then((data) =>
-                      data.reduce((data, { prop, value }) => {
-                          data[prop] = value;
-                          return data;
-                      }, {})
-                  )
-                : {};
-            return next.call(this, scope.environments, this.name, data);
+            let data =
+                this.type == "="
+                    ? await this.liquid.evalValue(this.value, scope)
+                    : this.value
+                    ? await Promise.all(
+                          this.value.map(async (hash) => {
+                              return {
+                                  prop: hash.name.content,
+                                  value: evalToken(hash.value, scope),
+                              };
+                          })
+                      ).then((data) =>
+                          data.reduce((data, { prop, value }) => {
+                              data[prop] = value;
+                              return data;
+                          }, {})
+                      )
+                    : {};
+
+            return next.call(
+                this,
+                scope.environments,
+                this.name,
+                data,
+                (name, value) => (scope.bottom()[name] = value)
+            );
         },
     };
 }

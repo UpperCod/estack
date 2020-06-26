@@ -244,6 +244,14 @@ export async function createBuild(options) {
                             )
                     );
 
+                    let fetch = {};
+
+                    let assets = {};
+
+                    if (isMd(file)) {
+                        content = renderMarkdown(content);
+                    }
+
                     function addFile(childFile) {
                         if (isUrl(childFile)) return childFile;
 
@@ -272,106 +280,96 @@ export async function createBuild(options) {
                         return localScan[findFile];
                     }
 
-                    if (isMd(file)) {
-                        content = renderMarkdown(content);
-                    }
-                    /**
-                     * The following process is in charge of transforming the
-                     * fetch object to the data declared in the request
-                     */
-                    let resolveDataFetch = () =>
-                        data.fetch &&
-                        Promise.all(
-                            Object.keys(data.fetch).map(async (prop) => {
-                                let value = data.fetch[prop];
+                    async function addDataFetch(prop, value) {
+                        try {
+                            if (isUrl(value)) {
+                                cacheFetch[value] =
+                                    cacheFetch[value] || request(value);
+                                value = await cacheFetch[value];
+                            } else {
+                                /**
+                                 * If the file is local, an observer relationship will be added,
+                                 * this allows relating the data obtained from the external document
+                                 * to the template and synchronizing the changes
+                                 */
+                                let findFile = path.join(dir, value);
+
+                                fileWatcher &&
+                                    fileWatcher(findFile, file, true);
+
                                 try {
-                                    if (isUrl(value)) {
-                                        cacheFetch[value] =
-                                            cacheFetch[value] || request(value);
-                                        value = await cacheFetch[value];
-                                    } else {
-                                        /**
-                                         * If the file is local, an observer relationship will be added,
-                                         * this allows relating the data obtained from the external document
-                                         * to the template and synchronizing the changes
-                                         */
-                                        let findFile = path.join(dir, value);
+                                    value = await readFile(findFile);
 
-                                        fileWatcher &&
-                                            fileWatcher(findFile, file, true);
+                                    value = isYaml(findFile)
+                                        ? yamlParse
+                                        : isJsonContent(value)
+                                        ? JSON.parse(value)
+                                        : value;
+                                } catch (e) {}
+                            }
+                        } catch (e) {
+                            debugRoot(`FetchError: ${file} : src=${value}`);
+                        }
 
-                                        try {
-                                            value = await readFile(findFile);
+                        return (fetch[prop] = value);
+                    }
 
-                                            value = isYaml(findFile)
-                                                ? yamlParse
-                                                : isJsonContent(value)
-                                                ? JSON.parse(value)
-                                                : value;
-                                        } catch (e) {}
-                                    }
-                                } catch (e) {
-                                    debugRoot(
-                                        `FetchError: ${file} : src=${value}`
-                                    );
-                                }
-                                return {
-                                    prop,
-                                    value,
+                    async function addDataAsset(prop, value) {
+                        if (typeof value == "object") {
+                            let { src, ...config } = value;
+                            value = await addFile(src);
+                            if (value.file) {
+                                let nextConfig = {
+                                    id: prop,
+                                    share: true,
+                                    ...config,
                                 };
-                            })
-                        ).then((data) => data.reduce(mapPropToObject, {}));
+                                if (
+                                    exportCondition[value.file] &&
+                                    JSON.stringify(
+                                        exportCondition[value.file]
+                                    ) != JSON.stringify(nextConfig)
+                                ) {
+                                    deleteInput(value.file);
+                                }
+                                exportCondition[value.file] = nextConfig;
+                            }
+                            value = value.src;
+                        } else {
+                            value = (await addFile(value)).src;
+                        }
+                        assets[prop] = value;
+                    }
+
                     /**
                      * The following process allows the allocation of aliases for each file to process
                      */
                     let resolveDataAssets = () =>
-                        data.assets &&
-                        Promise.all(
-                            Object.keys(data.assets).map(async (prop) => {
-                                let value = data.assets[prop];
-                                if (typeof value == "object") {
-                                    let { src, ...config } = value;
-                                    value = await addFile(src);
-                                    if (value.file) {
-                                        let nextConfig = {
-                                            id: prop,
-                                            share: true,
-                                            ...config,
-                                        };
-                                        if (
-                                            exportCondition[value.file] &&
-                                            JSON.stringify(
-                                                exportCondition[value.file]
-                                            ) != JSON.stringify(nextConfig)
-                                        ) {
-                                            deleteInput(value.file);
-                                        }
-                                        exportCondition[
-                                            value.file
-                                        ] = nextConfig;
-                                    }
-                                    value = value.src;
-                                } else {
-                                    value = (await addFile(value)).src;
-                                }
-                                return {
-                                    prop,
-                                    value,
-                                };
-                            })
-                        ).then((files) => files.reduce(mapPropToObject, {}));
+                        data.assets
+                            ? Object.keys(data.assets).map((prop) =>
+                                  addDataAsset(prop, data.assets[prop])
+                              )
+                            : [];
+
+                    let resolveDataFetch = () =>
+                        data.fetch
+                            ? Object.keys(data.fetch).map((prop) =>
+                                  addDataFetch(prop, data.fetch[prop])
+                              )
+                            : [];
+
                     // These processes can be solved in parallel
-                    let [dataFetch, dataFiles] = await Promise.all([
-                        resolveDataFetch(),
-                        resolveDataAssets(),
+                    await Promise.all([
+                        ...resolveDataAssets(),
+                        ...resolveDataFetch(),
                     ]);
 
                     inputs[file] = {
                         data: {
                             content,
                             ...data,
-                            fetch: dataFetch,
-                            files: dataFiles,
+                            fetch,
+                            files,
                             file: normalizePath(file),
                             link,
                         },
@@ -379,6 +377,8 @@ export async function createBuild(options) {
                         fileName,
                         dest,
                         addFile,
+                        addDataAsset,
+                        addDataFetch,
                     };
                 })
         );
