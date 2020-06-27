@@ -1,6 +1,6 @@
 {
     "name": "estack",
-    "version": "0.7.3",
+    "version": "0.8.0",
     "description": "simple bundle generator",
     "module": "src/cli.js",
     "main": "cli.js",
@@ -48,7 +48,6 @@
         "log-update": "^4.0.0",
         "magic-string": "^0.25.7",
         "marked": "^0.8.1",
-        "parse5": "^5.1.1",
         "polka": "^0.5.2",
         "prismjs": "^1.19.0",
         "puppeteer": "^3.0.2",
