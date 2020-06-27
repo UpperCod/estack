@@ -1,4 +1,4 @@
-export let isYaml = (file) => /\.yaml$/.test(file);
+export let isYaml = (file) => /\.y(a){0,1}ml$/.test(file);
 
 export let isJson = (file) => /\.json$/.test(file);
 
