@@ -38,6 +38,7 @@ import {
     DATA_FRAGMENT,
     DATA_PAGE,
     DATA_LAYOUT,
+    FROM_LAYOUT,
 } from "./constants";
 
 /**
@@ -365,13 +366,12 @@ export async function createBuild(options) {
                         ...resolveDataAssets(),
                         ...resolveDataFetch(),
                     ]);
-
                     inputs[file] = {
                         data: {
                             content,
                             ...data,
                             fetch,
-                            files,
+                            assets,
                             file: normalizePath(file),
                             link,
                         },
@@ -429,7 +429,8 @@ export async function createBuild(options) {
             pages = [
                 ...pages,
                 ...archives
-                    .map(({ data }) => {
+                    .map((page) => {
+                        let { data } = page;
                         // The pages grouped according to where.limit are obtained.
                         let collection = queryPages(pagesData, data.archive);
 
@@ -463,6 +464,7 @@ export async function createBuild(options) {
 
                             // A new page is returned
                             return {
+                                ...page,
                                 data: {
                                     ...data,
                                     link,
@@ -520,14 +522,14 @@ export async function createBuild(options) {
                 };
 
                 try {
-                    content = resolvedPages[page.file] = await renderHtml(
+                    content = resolvedPages[data.file] = await renderHtml(
                         content,
                         renderData
                     );
                     renderData.page.content = content;
                     return renderData;
                 } catch (e) {
-                    debugRoot(`${ERROR_TRANSFORMING} : ${page.file}`);
+                    debugRoot(`${ERROR_TRANSFORMING} : ${data.file}`);
                 }
             });
 
@@ -552,7 +554,10 @@ export async function createBuild(options) {
                             [DATA_PAGE]: _page,
                             [DATA_LAYOUT]: _layout,
                         } = renderData;
+
                         let { content } = page;
+
+                        renderData[FROM_LAYOUT] = true;
 
                         if (layout) {
                             /**
@@ -574,7 +579,7 @@ export async function createBuild(options) {
                                 );
                             } catch (e) {
                                 debugRoot(
-                                    `${ERROR_TRANSFORMING} : ${_layout.file}`
+                                    `${ERROR_TRANSFORMING} : ${_layout.data.file}`
                                 );
                             }
                         }

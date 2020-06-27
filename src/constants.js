@@ -7,3 +7,4 @@ export const DEEP_REPLACE = /__DEEP__/g;
 export const DATA_FRAGMENT = Symbol("_fragment");
 export const DATA_LAYOUT = Symbol("_layout");
 export const DATA_PAGE = Symbol("_page");
+export const FROM_LAYOUT = Symbol("_fromLayout");

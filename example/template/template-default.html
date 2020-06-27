@@ -1,0 +1,20 @@
+---
+template: default
+---
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{page.title}}</title>
+        <link rel="stylesheet" href="{{ "template-default.css" | asset }}">
+    </head>
+    <body>
+        {% fragment "template-default-header" %}
+        <section>
+            {{page.content}}
+        </section>
+        <script type="module" src="{{ "template-default.js" | asset }}"></script>
+    </body>
+</html>

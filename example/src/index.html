@@ -1,16 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <div src="{{ "code-js.js" | asset }}"></div>
-    <a href="{{ "es" | link }}">Español</a>
-    <a href="{{ "/" | link }}">Ingles</a>
-    <img src="{{ "avatar.png" | asset }}" alt="">
+---
+title: my page
+---
 
-    {% fetch todos =  "https://jsonplaceholder.typicode.com/todos/$id" | replace: "$id", 1 %}
-</body>
-</html>
+{{page.title}}
+
+<p>
+    Lorem ipsum, dolor sit amet consectetur adipisicing elit. Adipisci neque
+    alias necessitatibus ea blanditiis. Doloremque adipisci aperiam nesciunt. Id
+    aspernatur cum nostrum eaque, aliquam minima nobis aliquid dolorum
+    reprehenderit corporis.
+</p>
+
+<h1>
+    {{ "./posts/post-1" |link}}
+</h1>

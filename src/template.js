@@ -1,7 +1,12 @@
 import { Liquid, Tokenizer, evalToken } from "liquidjs";
 import { renderMarkdown, highlighted } from "./markdown";
 import { getProp, normalizeLineSpace, resolvePath } from "./utils/utils";
-import { DATA_FRAGMENT, DATA_PAGE } from "./constants";
+import {
+    DATA_FRAGMENT,
+    DATA_PAGE,
+    DATA_LAYOUT,
+    FROM_LAYOUT,
+} from "./constants";
 
 export function createRenderHtml() {
     let cache = {};
@@ -10,6 +15,11 @@ export function createRenderHtml() {
         cache: false,
         dynamicPartials: false,
     });
+
+    function renderHtml(code, data) {
+        cache[code] = cache[code] || engine.parse(code);
+        return engine.render(cache[code], data);
+    }
 
     engine.registerFilter("group", (data, by) => {
         let groups = {};
@@ -37,11 +47,18 @@ export function createRenderHtml() {
 
     engine.registerFilter("asset", async function (file) {
         let {
-            environments: { [DATA_PAGE]: _page },
+            environments: {
+                [DATA_PAGE]: _page,
+                [DATA_LAYOUT]: _layout,
+                [FROM_LAYOUT]: fromLayout,
+            },
         } = this.context;
 
-        if (_page && _page.addFile) {
-            file = (await _page.addFile(file)).src;
+        let addFile = fromLayout
+            ? _layout && _layout.addFile
+            : _page && _page.addFile;
+        if (addFile != null) {
+            file = (await addFile(file)).src;
         }
 
         return file;
@@ -51,10 +68,13 @@ export function createRenderHtml() {
 
     engine.registerFilter("link", function (link) {
         let {
-            environments: { page },
+            environments: { page, layout, [FROM_LAYOUT]: fromLayout },
         } = this.context;
-        if (page && page.link) {
-            return resolvePath(link, page.link);
+
+        let currentLink = fromLayout ? layout.link : page && page.link;
+
+        if (currentLink != null) {
+            return resolvePath(link, currentLink);
         }
         return link;
     });
@@ -93,10 +113,7 @@ export function createRenderHtml() {
         })
     );
 
-    return function renderHtml(code, data) {
-        cache[code] = cache[code] || engine.parse(code);
-        return engine.render(cache[code], data);
-    };
+    return renderHtml;
 }
 
 /**
@@ -107,7 +124,11 @@ function createTag(next) {
     return {
         parse({ args }) {
             let tokenizer = new Tokenizer(args);
-            this.name = tokenizer.readFileName().content;
+
+            this.name = tokenizer
+                .readFileName()
+                .content.replace(/^("|')|("|')$/g, "");
+
             tokenizer.skipBlank();
             if (tokenizer.peek() === "=") {
                 this.type = "=";
