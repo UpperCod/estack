@@ -1,0 +1,1 @@
+{"version":3,"file":"code-js.js","sources":["../src/code-js.js"],"sourcesContent":["document.querySelector(\"*\");\r\n"],"names":["document"],"mappings":"AAAAA"}
