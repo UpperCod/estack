@@ -8,7 +8,7 @@
 <body>
     <div src="{{ "code-js.js" | asset }}"></div>
     <a href="{{ "es" | link }}">Español</a>
-    <a href="{{ "/" }}">Ingles</a>
+    <a href="{{ "/" | link }}">Ingles</a>
     <img src="{{ "avatar.png" | asset }}" alt="">
 
     {% fetch todos =  "https://jsonplaceholder.typicode.com/todos/$id" | replace: "$id", 1 %}

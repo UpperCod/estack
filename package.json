@@ -10,7 +10,7 @@
         "build": "rollup -c",
         "dev": "rollup -c -w",
         "build:example:watch": "node cli.js example/src/**/*.{html,md} example/dest --server --watch --sourcemap",
-        "build:example": "node cli.js example/src/**/*.{html,md} example/dest --minify --sizes  --sourcemap --silent",
+        "build:example": "node cli.js example/src/**/*.{html,md} example/dest --minify --sizes  --sourcemap --href /docs/",
         "prepare": "npm run build && npm run test"
     },
     "author": "UpperCod",

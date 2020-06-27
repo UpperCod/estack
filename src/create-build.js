@@ -83,6 +83,9 @@ export async function createBuild(options) {
     let files = await glob(options.src);
 
     let playLog = logger.load();
+
+    let getLink = (path) => normalizePath(options.href + path);
+
     /**
      * returns the write destination of the file
      * @param {string} file - file name
@@ -236,12 +239,11 @@ export async function createBuild(options) {
 
                     let dest = getDest(fileName, data.folder);
 
-                    let link = normalizePath(
-                        "/" +
-                            path.join(
-                                data.folder || "",
-                                name == "index" ? "/" : name
-                            )
+                    let link = getLink(
+                        path.join(
+                            data.folder || "",
+                            name == "index" ? "/" : name
+                        )
                     );
 
                     let fetch = {};
@@ -267,7 +269,7 @@ export async function createBuild(options) {
                                 fileWatcher && fileWatcher(findFile, file);
                                 return {
                                     file: findFile,
-                                    src: "/" + getFileName(findFile),
+                                    src: getLink(getFileName(findFile)),
                                 };
                             } catch (e) {
                                 return { src: childFile };
@@ -431,7 +433,7 @@ export async function createBuild(options) {
                         // The pages grouped according to where.limit are obtained.
                         let collection = queryPages(pagesData, data.archive);
 
-                        let folderLink = data.link;
+                        let folderLink = data.link.replace(options.href, "/");
 
                         let length = collection.length;
 
@@ -445,7 +447,7 @@ export async function createBuild(options) {
 
                             let dest = getDest(fileName + ".html");
 
-                            let link = normalizePath("/" + fileName);
+                            let link = getLink(fileName);
 
                             let position = paged - 1;
 
@@ -804,6 +806,7 @@ async function formatOptions({
     runAfterBuild,
     forceWrite,
     silent,
+    href = "/",
     ...ignore
 }) {
     if (silent) process.env.silent = true;
@@ -832,6 +835,7 @@ async function formatOptions({
         ...ignore,
         ...pkg[config],
         pkg,
+        href,
         virtual: !forceWrite && ignore.watch && ignore.server,
         runAfterBuild: pkg.scripts[runAfterBuild] ? runAfterBuild : "",
         jsx: jsx == "react" ? "React.createElement" : jsx,

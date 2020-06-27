@@ -19,8 +19,8 @@ estack [src] [dest]
 
 Where:
 
-- `src` : Asset source directory, you can point to one or multiple files, either directly or using expressions.
-- `dest` : Destination of the processed files.
+-   `src` : Asset source directory, you can point to one or multiple files, either directly or using expressions.
+-   `dest` : Destination of the processed files.
 
 ### Flags
 
@@ -96,9 +96,9 @@ title: my page
 ---
 
 <html>
-  <head>
-    <title>{{page.title}}</title>
-  </head>
+    <head>
+        <title>{{page.title}}</title>
+    </head>
 </html>
 ```
 
@@ -176,7 +176,7 @@ template: default
 <h1>{{page.title}}</h1>
 
 <div>
-  {{page.content}}
+    {{page.content}}
 </div>
 ```
 
@@ -198,7 +198,7 @@ title: i am page
 <h1>i am layout</h1>
 <h1>i am page</h1>
 <div>
-  <p>lorem...</p>
+    <p>lorem...</p>
 </div>
 ```
 
@@ -221,11 +221,11 @@ singlePage: index
 <h1>page links</h1>
 
 <nav>
-  {% for item in pages %}
-  <a href="{{item.link}}">
-    {{item.title}}
-  </a>
-  {% endfor %}
+    {% for item in pages %}
+    <a href="{{item.link}}">
+        {{item.title}}
+    </a>
+    {% endfor %}
 </nav>
 ```
 
@@ -240,7 +240,7 @@ It allows generating an import alias as a page variable, eg:
 ```markdown
 ---
 files:
-  cover: ./my-image.jpg
+    cover: ./my-image.jpg
 ---
 
 ## image
@@ -257,15 +257,15 @@ It allows to generate a request at the moment at the moment of the build, eg:
 ```html
 ---
 fetch:
-  config: ./config.yaml
-  todos: https://jsonplaceholder.typicode.com/todos
+    config: ./config.yaml
+    todos: https://jsonplaceholder.typicode.com/todos
 ---
 
 <h1>{{fetch.config.title}}</h1>
 
 {% for todo in todos %}
 <div>
-  <h3>{{todo.title}}</h3>
+    <h3>{{todo.title}}</h3>
 </div>
 {% endfor %}
 ```
@@ -295,7 +295,7 @@ This allows applying a selection on the selectors and keyframes imported by the 
 @import "my-package-2/my-buttons";
 
 .button-circle {
-  color: black;
+    color: black;
 }
 ```
 
@@ -303,9 +303,9 @@ Any selector other than `.button-circle` will be ignored but only from imports, 
 
 Types of expressions for @use:
 
-- `@use ".button"` : Any selector that starts with `.button`.
-- `@use ".button-"` : Any selector that starts with `.button-`, eg: `.button-circle` y `button-alert`.
-- `@use "button$"` : Selector only `button`
+-   `@use ".button"` : Any selector that starts with `.button`.
+-   `@use ".button-"` : Any selector that starts with `.button-`, eg: `.button-circle` y `button-alert`.
+-   `@use "button$"` : Selector only `button`
 
 ### CSS modules
 
