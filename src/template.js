@@ -2,7 +2,7 @@ import { Liquid, Tokenizer, evalToken } from "liquidjs";
 import { renderMarkdown, highlighted } from "./markdown";
 import { getProp, normalizeLineSpace, resolvePath } from "./utils/utils";
 import {
-    DATA_FRAGMENT,
+    DATA_FRAGMENTS,
     DATA_PAGE,
     DATA_LAYOUT,
     FROM_LAYOUT,
@@ -84,7 +84,7 @@ export function createRenderHtml() {
      */
     engine.registerTag(
         "fragment",
-        createTag(async ({ [DATA_FRAGMENT]: _fragments = {} }, name, data) => {
+        createTag(async ({ [DATA_FRAGMENTS]: _fragments = {} }, name, data) => {
             let fragment = _fragments[name];
             return fragment
                 ? renderHtml(fragment.content, {
@@ -105,12 +105,26 @@ export function createRenderHtml() {
 
     engine.registerTag(
         "fetch",
-        createTag(async ({ [DATA_PAGE]: _page }, name, data, set) => {
-            if (_page && _page.addDataFetch) {
-                set(name, await _page.addDataFetch(name, data));
+        createTag(
+            async (
+                {
+                    [DATA_PAGE]: _page,
+                    [DATA_LAYOUT]: _layout,
+                    [FROM_LAYOUT]: fromLayout,
+                },
+                name,
+                data,
+                set
+            ) => {
+                let addDataFetch = fromLayout
+                    ? _layout && _layout.addDataFetch
+                    : _page && _page.addDataFetch;
+                if (addDataFetch) {
+                    set(name, await addDataFetch(name, data));
+                }
+                return "";
             }
-            return "";
-        })
+        )
     );
 
     return renderHtml;

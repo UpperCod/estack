@@ -12,6 +12,10 @@ template: default
     </head>
     <body>
         {% fragment "template-default-header" %}
+        {% fetch age = "config.yaml" %}
+        <hr>
+        {{age|json}}
+        <hr>
         <section>
             {{page.content}}
         </section>

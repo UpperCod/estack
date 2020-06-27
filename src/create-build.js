@@ -35,7 +35,7 @@ import {
     MARK_ROOT,
     MARK_ROLLLUP,
     ERROR_TRANSFORMING,
-    DATA_FRAGMENT,
+    DATA_FRAGMENTS,
     DATA_PAGE,
     DATA_LAYOUT,
     FROM_LAYOUT,
@@ -73,7 +73,7 @@ export async function createBuild(options) {
     // stores the status of processed files
     let inputs = {};
 
-    let cacheFetch = {};
+    let resolveFetchCache = {};
 
     let exportCondition = {};
 
@@ -199,7 +199,9 @@ export async function createBuild(options) {
         // html files are added to this list to check if a rebuild of html files is necessary
         let rebuildHtml = [];
         // prevents a second check if the file is added again from the html
-        let localScan = {};
+        let localResolveFile = {};
+
+        let localResolveData = {};
 
         /**
          * First the html files will be obtained
@@ -263,7 +265,8 @@ export async function createBuild(options) {
                          * to optimize the process, the promise that the file looks for is
                          * cached, in order to reduce this process to only one execution between buils
                          */
-                        async function resolveChildFile() {
+
+                        async function resolveFile(file, findFile) {
                             try {
                                 await asyncFs.stat(findFile);
                                 files.push(findFile);
@@ -277,38 +280,51 @@ export async function createBuild(options) {
                             }
                         }
 
-                        localScan[findFile] =
-                            localScan[findFile] || resolveChildFile();
+                        localResolveFile[findFile] =
+                            localResolveFile[findFile] ||
+                            resolveFile(file, findFile);
 
-                        return localScan[findFile];
+                        return localResolveFile[findFile];
                     }
 
                     async function addDataFetch(prop, value) {
                         try {
                             if (isUrl(value)) {
-                                cacheFetch[value] =
-                                    cacheFetch[value] || request(value);
-                                value = await cacheFetch[value];
+                                resolveFetchCache[value] =
+                                    resolveFetchCache[value] || request(value);
+                                value = await resolveFetchCache[value];
                             } else {
-                                /**
-                                 * If the file is local, an observer relationship will be added,
-                                 * this allows relating the data obtained from the external document
-                                 * to the template and synchronizing the changes
-                                 */
-                                let findFile = path.join(dir, value);
+                                async function resolveFileContent(
+                                    file,
+                                    findFile,
+                                    value
+                                ) {
+                                    /**
+                                     * If the file is local, an observer relationship will be added,
+                                     * this allows relating the data obtained from the external document
+                                     * to the template and synchronizing the changes
+                                     */
 
-                                fileWatcher &&
-                                    fileWatcher(findFile, file, true);
+                                    fileWatcher &&
+                                        fileWatcher(findFile, file, true);
+                                    try {
+                                        value = await readFile(findFile);
 
-                                try {
-                                    value = await readFile(findFile);
-
-                                    value = isYaml(findFile)
-                                        ? yamlParse
-                                        : isJsonContent(value)
-                                        ? JSON.parse(value)
-                                        : value;
-                                } catch (e) {}
+                                        return isYaml(findFile)
+                                            ? yamlParse(value)
+                                            : isJsonContent(value)
+                                            ? JSON.parse(value)
+                                            : value;
+                                    } catch (e) {}
+                                    return {};
+                                }
+                                value = await (localResolveData[value] =
+                                    localResolveData[value] ||
+                                    resolveFileContent(
+                                        file,
+                                        path.join(dir, value),
+                                        value
+                                    ));
                             }
                         } catch (e) {
                             debugRoot(`FetchError: ${file} : src=${value}`);
@@ -516,7 +532,7 @@ export async function createBuild(options) {
                     pages: pagesData,
                     // The following properties can only be accessed
                     // from the scope of the stack and are for internal use
-                    [DATA_FRAGMENT]: fragments,
+                    [DATA_FRAGMENTS]: fragments,
                     [DATA_LAYOUT]: layout,
                     [DATA_PAGE]: page,
                 };
