@@ -64,8 +64,6 @@ export function createRenderHtml() {
         return file;
     });
 
-    /**@todo */
-
     engine.registerFilter("link", function (link) {
         let {
             environments: { page, layout, [FROM_LAYOUT]: fromLayout },

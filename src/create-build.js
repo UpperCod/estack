@@ -287,7 +287,7 @@ export async function createBuild(options) {
                         return localResolveFile[findFile];
                     }
 
-                    async function addDataFetch(prop, value) {
+                    async function addDataFetch(prop, value, unregister) {
                         try {
                             if (isUrl(value)) {
                                 resolveFetchCache[value] =
@@ -330,7 +330,7 @@ export async function createBuild(options) {
                             debugRoot(`FetchError: ${file} : src=${value}`);
                         }
 
-                        return (fetch[prop] = value);
+                        return unregister ? value : (fetch[prop] = value);
                     }
 
                     async function addDataAsset(prop, value) {
@@ -516,10 +516,7 @@ export async function createBuild(options) {
                     query = Object.keys(query)
                         .map((prop) => ({
                             prop,
-                            value: queryPages(pages, {
-                                onlyPages: true,
-                                ...query[prop],
-                            }),
+                            value: queryPages(pagesData, query[prop], true),
                         }))
                         .reduce(mapPropToObject, {});
                 }

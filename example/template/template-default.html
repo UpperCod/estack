@@ -14,7 +14,7 @@ template: default
         {% fragment "template-default-header" %}
         {% fetch age = "config.yaml" %}
         <hr>
-        {{age|json}}
+        {{age.title|json}}
         <hr>
         <section>
             {{page.content}}
