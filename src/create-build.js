@@ -171,6 +171,7 @@ export async function createBuild(options) {
     let build = {
         inputs,
         options,
+        getCache,
         readFile,
         getLink,
         getDest,

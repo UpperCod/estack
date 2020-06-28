@@ -1,4 +1,5 @@
 export const MARK_ROOT = "ESbuild";
+export const MARK_ROLLUP = "Rollup";
 export const ERROR_TRANSFORMING = "SyntaxError: Error transforming";
 export const ERROR_FETCH = "FetchError:";
 export const ERROR_FILE_NOT_FOUNT = "FileNotFound:";

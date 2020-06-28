@@ -4,7 +4,6 @@ import common from "@rollup/plugin-commonjs/dist";
 import sucrase from "@rollup/plugin-sucrase";
 import replace from "@rollup/plugin-replace";
 import { pluginTerser } from "./plugin-terser";
-import { pluginImportCss } from "./plugin-import-css";
 
 let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
@@ -17,7 +16,7 @@ let extensions = [".js", ".jsx", ".ts", ".tsx"];
  * @param {boolean} options.jsxFragment
  * @param {({dest:string,code:string,type:string})=>void} [mountFile] - mount rollup files on development server without writing
  */
-export function rollupPlugins(options, mountFile) {
+export function plugins(options, mountFile) {
     let optionalPlugins = [];
 
     if (options.minify) {
@@ -47,7 +46,6 @@ export function rollupPlugins(options, mountFile) {
     }
 
     return [
-        pluginImportCss(),
         replace({
             "process.env.NODE_ENV": JSON.stringify("production"),
         }),

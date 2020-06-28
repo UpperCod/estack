@@ -3,6 +3,7 @@ import { loadHtml } from "./load-html/load-html";
 import { loadCss } from "./load-css/load-css";
 import { isHtml, isCss, asyncFs, isJs } from "./utils/utils";
 import { MARK_ROOT } from "./constants";
+import { loadRollup } from "./load-rollup/load-rollup";
 
 /**
  * @todo separar el logger del contexto para permitir multiples ejecuciones de loadBuild
@@ -44,8 +45,13 @@ export async function loadBuild(build, files, forceBuild) {
     let cssFiles = files.filter(isCss).filter(build.preventNextLoad);
     let jsFiles = files.filter(isJs).filter(build.preventNextLoad);
 
+    jsFiles =
+        jsFiles.length || forceBuild
+            ? Object.keys(build.inputs).filter(isJs)
+            : [];
+
     let resolveCss = cssFiles.length && loadCss(build, cssFiles);
-    let resolveJs = null; //jsFiles && loadCss(build, cssFiles);
+    let resolveJs = jsFiles.length && loadRollup(build, jsFiles);
 
     await Promise.all([resolveCss, resolveJs]);
 
