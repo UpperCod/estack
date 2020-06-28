@@ -1,7 +1,7 @@
 import path from "path";
 import { loadHtml } from "./load-html/load-html";
 import { loadCss } from "./load-css/load-css";
-import { isHtml, isCss, asyncFs } from "./utils/utils";
+import { isHtml, isCss, asyncFs, isJs } from "./utils/utils";
 import { MARK_ROOT } from "./constants";
 
 /**
@@ -42,10 +42,12 @@ export async function loadBuild(build, files, forceBuild) {
     files = [...files, ...Object.keys(localResolveAsset)];
 
     let cssFiles = files.filter(isCss).filter(build.preventNextLoad);
+    let jsFiles = files.filter(isJs).filter(build.preventNextLoad);
 
-    if (cssFiles.length) {
-        loadCss(build, cssFiles);
-    }
+    let resolveCss = cssFiles.length && loadCss(build, cssFiles);
+    let resolveJs = null; //jsFiles && loadCss(build, cssFiles);
+
+    await Promise.all([resolveCss, resolveJs]);
 
     build.logger.markBuild(MARK_ROOT);
 }
