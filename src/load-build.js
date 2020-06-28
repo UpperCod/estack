@@ -45,6 +45,8 @@ export async function loadBuild(build, files, forceBuild) {
     let cssFiles = files.filter(isCss).filter(build.preventNextLoad);
     let jsFiles = files.filter(isJs).filter(build.preventNextLoad);
 
+    let staticFiles = files.filter(isNotFixLink).filter(prevenLoad);
+
     jsFiles =
         jsFiles.length || forceBuild
             ? Object.keys(build.inputs).filter(isJs)
@@ -53,7 +55,18 @@ export async function loadBuild(build, files, forceBuild) {
     let resolveCss = cssFiles.length && loadCss(build, cssFiles);
     let resolveJs = jsFiles.length && loadRollup(build, jsFiles);
 
-    await Promise.all([resolveCss, resolveJs]);
+    await Promise.all([
+        resolveCss,
+        resolveJs,
+        ...staticFiles.map(async (file) => {
+            let dest = build.getDest(build.getFileName(file));
+            if (options.virtual) {
+                build.mountFile({ dest, stream: file });
+            } else {
+                return build.copyFile(file, dest);
+            }
+        }),
+    ]);
 
     build.logger.markBuild(MARK_ROOT);
 }
