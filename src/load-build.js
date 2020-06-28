@@ -1,8 +1,11 @@
 import path from "path";
 import { loadHtml } from "./load-html/load-html";
-import { isHtml, isCss, logger } from "./utils/utils";
+import { isHtml, isCss } from "./utils/utils";
 import { MARK_ROOT } from "./constants";
+
 export async function loadBuild(build, files, forceBuild) {
+    build.logger.mark(MARK_ROOT);
+
     files = files.map(path.normalize);
 
     function filter(data, filter) {
@@ -40,6 +43,7 @@ export async function loadBuild(build, files, forceBuild) {
         });
     });
 
-    build.markBuild(MARK_ROOT);
+    build.logger.markBuild(MARK_ROOT);
+
     build.reload();
 }

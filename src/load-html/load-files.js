@@ -1,4 +1,5 @@
 import path from "path";
+
 import {
     isMd,
     request,
@@ -9,9 +10,15 @@ import {
     isJsonContent,
     getMetaPage,
 } from "../utils/utils";
+
 import { renderMarkdown } from "../markdown";
 
-import { ERROR_TRANSFORMING } from "../constants";
+import {
+    ERROR_TRANSFORMING,
+    ERROR_FILE_NOT_FOUNT,
+    ERROR_FETCH,
+    MARK_ROOT,
+} from "../constants";
 
 const resolveFetchCache = {};
 
@@ -69,8 +76,9 @@ export function loadFiles(build, htmlFiles) {
             try {
                 meta = getMetaPage(code);
             } catch (e) {
-                build.debugRoot(
-                    `${ERROR_TRANSFORMING} ${file}:${e.mark.line}:${e.mark.position}`
+                build.logger.debug(
+                    `${ERROR_TRANSFORMING} ${file}:${e.mark.line}:${e.mark.position}`,
+                    MARK_ROOT
                 );
             }
 
@@ -112,7 +120,10 @@ export function loadFiles(build, htmlFiles) {
                     nextAssets.push(childFile);
                     return childFile;
                 } catch (e) {
-                    /**@todo error por no existir el archivo */
+                    build.logger.debug(
+                        `${ERROR_FILE_NOT_FOUNT} ${file}:${e.mark.line}:${e.mark.position}`,
+                        MARK_ROOT
+                    );
                 }
             }
 
@@ -132,7 +143,10 @@ export function loadFiles(build, htmlFiles) {
                         src = await resolveDataFile(childFile);
                     }
                 } catch (e) {
-                    build.debugRoot(`FetchError: ${file} : src=${src}`);
+                    build.logger.debug(
+                        `${ERROR_FETCH} ${file} src=${src}`,
+                        MARK_ROOT
+                    );
                 }
                 return unregister ? src : (fetch[prop] = src);
             }

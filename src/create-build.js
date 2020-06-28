@@ -12,7 +12,6 @@ import {
 } from "./utils/utils";
 import { createServer } from "./create-server";
 import { watch } from "./watch";
-import { MARK_ROOT } from "./constants";
 import { loadOptions } from "./load-options";
 import { loadBuild } from "./load-build";
 
@@ -29,9 +28,18 @@ export async function createBuild(options) {
 
     let inputs = {};
 
+    let cache = {};
+
     let openCache = {};
 
-    let open = (file) => (openCache[file] = openCache[file] || readFile(file));
+    let getCache = (prop) => (cache[prop] = cache[prop] = {});
+
+    let localCacheOpen = Symbol("_open");
+
+    let open = (file) => {
+        let cache = getCache(localCacheOpen);
+        return (cache[file] = cache[file] || readFile());
+    };
 
     let getLink = (path) => normalizePath(options.href + path);
 
@@ -42,9 +50,9 @@ export async function createBuild(options) {
 
     let isNotPreventLoad = (file) => !isPreventLoad(file);
 
-    let debugRoot = (message) => logger.debug(message, MARK_ROOT);
+    //let debugRoot = (message) => logger.debug(message, MARK_ROOT);
 
-    let debugRollup = (message) => logger.debug(message, MARK_ROLLLUP);
+    //let debugRollup = (message) => logger.debug(message, MARK_ROLLLUP);
 
     let footerLog = logger.footer("");
 
@@ -64,7 +72,7 @@ export async function createBuild(options) {
     }
 
     function deleteInput(file) {
-        delete openCache[file];
+        delete getCache(localCacheOpen)[file];
         delete inputs[file];
         return file;
     }
@@ -193,10 +201,11 @@ export async function createBuild(options) {
         getFileName,
         prevenLoad,
         mountFile,
-        debugRoot,
-        debugRollup,
         footerLog,
         fileWatcher: fileWatcher,
+        logger,
+        // debugRoot,
+        // debugRollup,
     };
 
     loadReady();
