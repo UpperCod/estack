@@ -1,24 +1,13 @@
 ---
-title: my page
-query:
-    d:
-        where:
-            tag: "post"
+title: my pages
 ---
 
-{{page.title}}
+{{page.title}} lopopora ssssssss ss
+<h2>ss</h2>
+<h2>hola</h2>
 
-<p>
-    Lorem ipsum, dolor sit amet consectetur adipisicing elit. Adipisci neque
-    alias necessitatibus ea blanditiis. Doloremque adipisci aperiam nesciunt. Id
-    aspernatur cum nostrum eaque, aliquam minima nobis aliquid dolorum
-    reprehenderit corporis.
-</p>
-
-{{page.query.d|json}}
-
-<h1>
-    {{ "./posts/post-1" |link}}
-</h1>
-
-<script type="module" src="{{ "code-js.js" | asset }}"></script>
+Lorem ipsum dolor, sit amet consectetur adipisicing elit. Architecto cupiditate
+delectus eligendi, maiores officia unde explicabo tenetur corrupti libero
+perferendis quisquam corporis quaerat aliquid deleniti veritatis tempore eum
+ratione dolore. {% fetch data = "https://jsonplaceholder.typicode.com/todos" %}
+{{data|json}}
