@@ -9,6 +9,18 @@ let regValueUse = createCaptureMetaCss("use");
 let regValueImport = createCaptureMetaCss("import");
 let regValueNamespace = createCaptureMetaCss("namespace");
 
+/**
+ * preprocess the css using Stylis
+ * @param {object} context
+ * @param {string} context.file - current css file
+ * @param {string} context.code - css code to analyze
+ * @param {()=>Promise<string>} context.readFile - read a file
+ * @param {Function} context.addWatchFile - execute the callback every time a css import is generated
+ * @param {boolean} returnRules - If true it will return the rules as Array
+ * @param {RegExp[]} useRules - Regular expressions to select css rules
+ * @param {string} namespace - context prefix of file selectors
+ * @returns { string | object[] }
+ */
 export async function loadCssFile(
     { file, code, readFile, addWatchFile },
     imports = {},

@@ -21,12 +21,24 @@ import {
 } from "../constants";
 
 const resolveFetchCache = {};
-
-function resolveRequest(value) {
-    return (resolveFetchCache[value] =
-        resolveFetchCache[value] || request(value));
+/**
+ * generates a single GET type request by url
+ * @param {string} url - url associated with the request
+ * @return {Promise<any>}
+ */
+function resolveRequest(url) {
+    return (resolveFetchCache[url] = resolveFetchCache[url] || request(url));
 }
-
+/**
+ *
+ * @param {object} build
+ * @param {(file: string)=>Promise<string>} build.readFile - read a file
+ * @param {(file: string)=>string} build.getDest - retorna el destino del archivo
+ * @param {(file: string)=>string} build.getLink - retorna el destino del archivo
+ * @param {(file: string)=>string} build.deleteInput - eliminated an archive of the registers of inputs
+ * @param {{degub: (message: string, mark : string)=>Promise<any> }} build.logger - eliminated an archive of the registers of inputs
+ * @param {*} htmlFiles
+ */
 export function loadHtmlFiles(build, htmlFiles) {
     let localResolveDataFile = {};
 
@@ -69,7 +81,7 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             if (!build.options.watch && meta.draft) {
                 build.deleteInput(file);
-                return [];
+                return;
             }
 
             name = data.name || name;

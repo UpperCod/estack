@@ -30,6 +30,7 @@ export async function createBuild(options) {
 
     let cache = {};
 
+    /**@type {getCache} */
     let getCache = (prop) => (cache[prop] = cache[prop] = {});
 
     let CacheReadFile = Symbol("_cacheReadFile");
@@ -168,6 +169,8 @@ export async function createBuild(options) {
         };
     }
 
+    /**@type {Build} */
+
     let build = {
         inputs,
         options,
@@ -196,3 +199,66 @@ export async function createBuild(options) {
 
     loadBuild(build, files);
 }
+
+/**
+ * Determines the destination directory of the file
+ * @typedef {(file: string)=>string} getDest
+ */
+
+/**
+ * Create a permalink of the file
+ * @typedef {(file: string)=>string} getLink
+ */
+
+/**
+ * Object that owns the inputs observable by the build
+ * @typedef {{[index: string]: any }} inputs
+ */
+
+/**
+ * returns a cache based on the index
+ * @typedef {(index: string)=>object} getCache
+ */
+/**
+ * read the contents of a file
+ * @typedef {(file: string)=>Promise<string>} readFile
+ */
+
+/**
+ * Defines if the file is alreDy taken by a process
+ * @typedef {(file: string)=>string} isPreventLoad
+ */
+
+/**
+ *  defines if a file is not taken by a process
+ * @typedef {(file: string)=>string} isNotPreventLoad
+ */
+
+/**
+ * Delete a file from the build.inputs object
+ * @typedef {(file: string)=>file} deleteInput
+ */
+
+/**
+ * Gets the destination name in the destination folder
+ * @typedef {(file: string)=>string} getFileName
+ */
+
+/**
+ * Prevents the file from being taken for the following processes
+ * @typedef {(file: string)=>string} preventNextLoad
+ */
+
+/**
+ * @typedef {object} Build
+ * @property {getDest} Build.getDest
+ * @property {getLink} Build.getLink
+ * @property {inputs} Build.inputs
+ * @property {getCache} Build.getCache
+ * @property {readFile} Build.readFile
+ * @property {isPreventLoad} Build.isPreventLoad
+ * @property {isNotPreventLoad} Build.isNotPreventLoad
+ * @property {deleteInput} Build.deleteInput
+ * @property {getFileName} Build.getFileName
+ * @property {preventNextLoad} Build.preventNextLoad
+ */
