@@ -1,1 +1,1 @@
-document.querySelector("*");
+console.log(document.querySelector("h1"));
