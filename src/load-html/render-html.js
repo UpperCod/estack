@@ -1,12 +1,12 @@
 import { Liquid, Tokenizer, evalToken } from "liquidjs";
-import { renderMarkdown, highlighted } from "./markdown";
-import { getProp, normalizeLineSpace, resolvePath } from "./utils/utils";
+import { renderMarkdown, highlighted } from "./render-markdown";
+import { getProp, normalizeLineSpace, resolvePath } from "../utils/utils";
 import {
     DATA_FRAGMENTS,
     DATA_PAGE,
     DATA_LAYOUT,
     FROM_LAYOUT,
-} from "./constants";
+} from "../constants";
 
 let cache = {};
 
@@ -56,8 +56,9 @@ engine.registerFilter("asset", async function (file) {
     let addFile = fromLayout
         ? _layout && _layout.addFile
         : _page && _page.addFile;
+
     if (addFile != null) {
-        file = (await addFile(file)).src;
+        file = await addFile(file);
     }
 
     return file;

@@ -11,7 +11,7 @@ import {
     getMetaPage,
 } from "../utils/utils";
 
-import { renderMarkdown } from "../markdown";
+import { renderMarkdown } from "./render-markdown";
 
 import {
     ERROR_TRANSFORMING,
@@ -27,50 +27,33 @@ function resolveRequest(value) {
         resolveFetchCache[value] || request(value));
 }
 
-export function loadFiles(build, htmlFiles) {
-    let localResolveFile = {};
+export function loadHtmlFiles(build, htmlFiles) {
     let localResolveDataFile = {};
 
-    function resolveFile(file) {
-        /**
-         * to optimize the process, the promise that the file looks for is
-         * cached, in order to reduce this process to only one execution between buils
-         */
-        async function resolve(file) {
-            await asyncFs.stat(file);
-            return file;
-        }
-
-        localResolveFile[findFile] =
-            localResolveFile[findFile] || resolve(file);
-
-        return localResolveFile[findFile];
-    }
-
-    function resolveDataFile(findFile) {
+    function resolveDataFile(file) {
         /**
          * If the file is local, an observer relationship will be added,
          * this allows relating the data obtained from the external document
          * to the template and synchronizing the changes
          */
         async function resolve() {
-            let value = await build.open(findFile);
+            let value = await build.readFile(file);
 
-            return isYaml(findFile)
+            return isYaml(file)
                 ? yamlParse(value)
                 : isJsonContent(value)
                 ? JSON.parse(value)
                 : value;
         }
 
-        return (localResolveDataFile[findFile] =
-            localResolveDataFile[findFile] || resolve(findFile));
+        return (localResolveDataFile[file] =
+            localResolveDataFile[file] || resolve(file));
     }
 
     return Promise.all(
         htmlFiles.map(async (file) => {
             let { dir, name } = path.parse(file);
-            let code = await build.open(file);
+            let code = await build.readFile(file);
             let meta = [code, {}];
 
             try {
@@ -103,8 +86,6 @@ export function loadFiles(build, htmlFiles) {
 
             let assets = {};
 
-            let nextAssets = [];
-
             if (isMd(file)) {
                 content = renderMarkdown(content);
             }
@@ -115,16 +96,16 @@ export function loadFiles(build, htmlFiles) {
                 if (isUrl(src)) return src;
                 let childFile = joinChildFile(src);
                 try {
-                    childFile = await resolveFile(childFile);
+                    let link = await build.addRootAsset(childFile);
                     build.fileWatcher(childFile, file);
-                    nextAssets.push(childFile);
-                    return childFile;
+                    return link;
                 } catch (e) {
                     build.logger.debug(
-                        `${ERROR_FILE_NOT_FOUNT} ${file}:${e.mark.line}:${e.mark.position}`,
+                        `${ERROR_FILE_NOT_FOUNT} ${file} src=${childFile}`,
                         MARK_ROOT
                     );
                 }
+                return "";
             }
 
             async function addDataAsset(prop, src) {
@@ -187,8 +168,6 @@ export function loadFiles(build, htmlFiles) {
                 addDataAsset,
                 addDataFetch,
             };
-
-            return nextAssets;
         })
-    ).then((files) => files.flat());
+    );
 }

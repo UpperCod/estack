@@ -15,6 +15,8 @@ const STATUS_PENDING = "Pending";
 let play;
 let load = new Promise((r) => (play = r));
 
+let message = colors.bold("loading");
+
 let marks = {};
 
 let messageError = {
@@ -24,7 +26,6 @@ let messageError = {
     [FOOTER]: {},
 };
 
-let message = colors.bold("loading");
 let dots = 3;
 let id = 0;
 
@@ -123,7 +124,7 @@ async function log(message, type, mark, fail) {
     if (typeof message == "string" && message) {
         try {
             if (!process.env.silent) {
-                logUpdate(message);
+                //logUpdate(message);
             }
         } catch (e) {
             console.log(message);

@@ -8,10 +8,10 @@ import {
     normalizePath,
     logger,
     npmRun,
-    readFile,
+    readFile as fsReadFile,
 } from "./utils/utils";
 import { createServer } from "./create-server";
-import { watch } from "./watch";
+import { createWatch } from "./create-watch";
 import { loadOptions } from "./load-options";
 import { loadBuild } from "./load-build";
 
@@ -30,15 +30,13 @@ export async function createBuild(options) {
 
     let cache = {};
 
-    let openCache = {};
-
     let getCache = (prop) => (cache[prop] = cache[prop] = {});
 
-    let localCacheOpen = Symbol("_open");
+    let CacheReadFile = Symbol("_cacheReadFile");
 
-    let open = (file) => {
-        let cache = getCache(localCacheOpen);
-        return (cache[file] = cache[file] || readFile());
+    let readFile = (file) => {
+        let cache = getCache(CacheReadFile);
+        return (cache[file] = cache[file] || fsReadFile(file));
     };
 
     let getLink = (path) => normalizePath(options.href + path);
@@ -50,29 +48,12 @@ export async function createBuild(options) {
 
     let isNotPreventLoad = (file) => !isPreventLoad(file);
 
-    //let debugRoot = (message) => logger.debug(message, MARK_ROOT);
-
-    //let debugRollup = (message) => logger.debug(message, MARK_ROLLLUP);
-
     let footerLog = logger.footer("");
 
     let fileWatcher = () => {};
 
-    async function markBuild(mark) {
-        if (options.runAfterBuild) logger.mark(options.runAfterBuild);
-        await logger.markBuild(mark);
-        if (options.runAfterBuild) {
-            try {
-                await npmRun(options.runAfterBuild, footerLog);
-                logger.markBuild(options.runAfterBuild);
-            } catch (e) {
-                logger.markBuildError(options.runAfterBuild, footerLog);
-            }
-        }
-    }
-
     function deleteInput(file) {
-        delete getCache(localCacheOpen)[file];
+        delete getCache(CacheReadFile)[file];
         delete inputs[file];
         return file;
     }
@@ -100,7 +81,7 @@ export async function createBuild(options) {
      * prevents the file from working more than once
      * @param {string} file
      */
-    function prevenLoad(file) {
+    function preventNextLoad(file) {
         if (file in inputs) {
             return false;
         } else {
@@ -136,7 +117,7 @@ export async function createBuild(options) {
         // map defining the cross dependencies between child and parents
         let mapSubWatch = {};
 
-        let watcher = watch(options.src, (group) => {
+        let watcher = createWatch(options.src, (group) => {
             let files = [];
             let forceBuild;
 
@@ -188,24 +169,26 @@ export async function createBuild(options) {
     }
 
     let build = {
-        open,
-        reload,
         inputs,
         options,
+        readFile,
         getLink,
         getDest,
         isPreventLoad,
         isNotPreventLoad,
-        markBuild,
         deleteInput,
         getFileName,
-        prevenLoad,
+        preventNextLoad,
         mountFile,
         footerLog,
         fileWatcher: fileWatcher,
-        logger,
-        // debugRoot,
-        // debugRollup,
+        logger: {
+            ...logger,
+            markBuild(...args) {
+                logger.markBuild(...args);
+                reload();
+            },
+        },
     };
 
     loadReady();

@@ -1,5 +1,5 @@
 import { isHtml, queryPages } from "../utils/utils";
-import { renderHtml } from "../template";
+import { renderHtml } from "./render-html";
 
 import {
     ERROR_TRANSFORMING,
@@ -7,6 +7,7 @@ import {
     DATA_FRAGMENTS,
     DATA_LAYOUT,
     DATA_PAGE,
+    MARK_ROOT,
 } from "../constants";
 
 export function loadPages(build) {
@@ -145,7 +146,10 @@ export function loadPages(build) {
             pageData.page.content = content;
             return pageData;
         } catch (e) {
-            build.debugRoot(`${ERROR_TRANSFORMING} : ${data.file}`);
+            build.logger.debug(
+                `${ERROR_TRANSFORMING} : ${data.file}`,
+                MARK_ROOT
+            );
         }
     });
 
@@ -183,8 +187,9 @@ export function loadPages(build) {
                     try {
                         content = await renderHtml(layout.content, pageData);
                     } catch (e) {
-                        build.debugRoot(
-                            `${ERROR_TRANSFORMING} : ${_layout.data.file}`
+                        build.logger.debug(
+                            `${ERROR_TRANSFORMING} : ${_layout.data.file}`,
+                            MARK_ROOT
                         );
                     }
                 }
