@@ -1,7 +1,7 @@
 import path from "path";
 import { loadHtml } from "./load-html/load-html";
 import { loadCss } from "./load-css/load-css";
-import { isHtml, isCss, asyncFs, isJs } from "./utils/utils";
+import { isHtml, isCss, asyncFs, isJs, isNotFixLink } from "./utils/utils";
 import { MARK_ROOT } from "./constants";
 import { loadRollup } from "./load-rollup/load-rollup";
 
@@ -45,7 +45,7 @@ export async function loadBuild(build, files, forceBuild) {
     let cssFiles = files.filter(isCss).filter(build.preventNextLoad);
     let jsFiles = files.filter(isJs).filter(build.preventNextLoad);
 
-    let staticFiles = files.filter(isNotFixLink).filter(prevenLoad);
+    let staticFiles = files.filter(isNotFixLink).filter(build.preventNextLoad);
 
     jsFiles =
         jsFiles.length || forceBuild
@@ -60,7 +60,7 @@ export async function loadBuild(build, files, forceBuild) {
         resolveJs,
         ...staticFiles.map(async (file) => {
             let dest = build.getDest(build.getFileName(file));
-            if (options.virtual) {
+            if (build.options.virtual) {
                 build.mountFile({ dest, stream: file });
             } else {
                 return build.copyFile(file, dest);
