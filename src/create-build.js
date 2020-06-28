@@ -75,15 +75,14 @@ export async function createBuild(options) {
 
     let resolveFetchCache = {};
 
-    let exportCondition = {};
-
     // format options
     options = await formatOptions(options);
 
     // get list based on input expression
     let files = await glob(options.src);
 
-    let playLog = logger.load();
+    //
+    let logLoadComplete = logger.load();
 
     let getLink = (path) => normalizePath(options.href + path);
 
@@ -176,6 +175,8 @@ export async function createBuild(options) {
         logger.header(`Server running on http://localhost:${server.port}`);
     }
 
+    logLoadComplete();
+
     function mountFile({ dest, code, type, stream }) {
         if (options.virtual) {
             server.sources[dest] = { code, stream, type, stream };
@@ -183,8 +184,6 @@ export async function createBuild(options) {
             return writeFile(dest, code);
         }
     }
-
-    playLog();
 
     /**
      * initialize the processing queue on related files
@@ -499,7 +498,7 @@ export async function createBuild(options) {
                         .reduce(mapPropToObject, {});
                 }
 
-                let renderData = {
+                let pageScope = {
                     pkg: options.pkg,
                     build: !options.watch,
                     page: { ...data, query },
@@ -515,10 +514,10 @@ export async function createBuild(options) {
                 try {
                     content = resolvedPages[data.file] = await renderHtml(
                         content,
-                        renderData
+                        pageScope
                     );
-                    renderData.page.content = content;
-                    return renderData;
+                    pageScope.page.content = content;
+                    return pageScope;
                 } catch (e) {
                     debugRoot(`${ERROR_TRANSFORMING} : ${data.file}`);
                 }
@@ -536,19 +535,19 @@ export async function createBuild(options) {
                      * individual content, this in order to create pages that
                      * group the content of other pages already processed
                      */
-                    pages.map(async (renderData) => {
-                        if (!renderData) return;
+                    pages.map(async (pageScope) => {
+                        if (!pageScope) return;
 
                         let {
                             page,
                             layout,
                             [DATA_PAGE]: _page,
                             [DATA_LAYOUT]: _layout,
-                        } = renderData;
+                        } = pageScope;
 
                         let { content } = page;
 
-                        renderData[FROM_LAYOUT] = true;
+                        pageScope[FROM_LAYOUT] = true;
 
                         if (layout) {
                             /**
@@ -566,7 +565,7 @@ export async function createBuild(options) {
                             try {
                                 content = await renderHtml(
                                     layout.content,
-                                    renderData
+                                    pageScope
                                 );
                             } catch (e) {
                                 debugRoot(
