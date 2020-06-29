@@ -51,9 +51,9 @@ async function log(message, type, mark, fail) {
             type == FORCE
         ) {
             await load;
-
             let allMessagesDebug = Object.keys(messageError[DEBUG])
                 .map((mark) => messageError[DEBUG][mark])
+                //@ts-ignore
                 .flat()
                 .filter((message) => message)
                 .map((message) => colors.red(message));

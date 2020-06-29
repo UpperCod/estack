@@ -82,6 +82,10 @@ namespace Build {
      *
      */
     export interface logger {
+        /**
+         * Force log printing by closing build
+         */
+        markBuildError: (message: string, mark: string) => Promise<any>;
         markBuild: (mark: string) => Promise<any>;
         debug: (message: string, mark: string) => Promise<any>;
         mark: (mark: string) => Promise<any>;
@@ -89,15 +93,16 @@ namespace Build {
 
     export interface options {
         src: string | string[];
-        config: any;
-        external: string[] | string;
-        jsx: string;
-        jsxFragment: string;
-        forceWrite: boolean;
-        silent: boolean;
-        href: string;
-        server: boolean;
-        virtual: boolean;
+        dest: string;
+        config?: any;
+        external?: string[] | string;
+        jsx?: string;
+        jsxFragment?: string;
+        forceWrite?: boolean;
+        silent?: boolean;
+        href?: string;
+        server?: boolean;
+        virtual?: boolean;
         [ignore: string]: any;
     }
 

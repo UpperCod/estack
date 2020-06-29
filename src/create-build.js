@@ -180,6 +180,7 @@ export async function createBuild(options) {
     loadReady();
 
     /**@type {Build.build} */
+
     let build = {
         inputs,
         options,
@@ -204,7 +205,7 @@ export async function createBuild(options) {
         },
     };
 
-    loadBuild(build, files);
+    return loadBuild(build, files);
 }
 
 /**
