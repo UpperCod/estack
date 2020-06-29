@@ -16,7 +16,7 @@ let regValueNamespace = createCaptureMetaCss("namespace");
  * @param {string} context.file - current css file
  * @param {string} context.code - css code to analyze
  * @param {Build.readFile} [context.readFile] - read a file
- * @param {Function} context.addWatchFile - execute the callback every time a css import is generated
+ * @param {(file:string)=>void} context.addWatchFile - execute the callback every time a css import is generated
  * @param {object} [imports]
  * @param {boolean} [returnRules] - If true it will return the rules as Array
  * @param {RegExp[]} [useRules] - Regular expressions to select css rules
