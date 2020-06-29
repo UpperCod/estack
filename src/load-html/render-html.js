@@ -186,5 +186,5 @@ function createTag(next) {
  * @param {object} scope - Second parameter inherited from render, eg : render(code,scope).
  * @param {string} name  - name variable used as the first argument to the tag
  * @param {object} [data] - arguments obtained from the tag invocation
- * @param {(name:string,value:any)=>any} - define a local value as a variable
+ * @param {(name:string,value:any)=>any} [define] a local value as a variable
  */

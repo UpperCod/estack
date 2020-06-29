@@ -103,6 +103,8 @@ namespace Build {
         href?: string;
         server?: boolean;
         virtual?: boolean;
+        sourcemap?: boolean;
+        minify?: boolean;
         [ignore: string]: any;
     }
 
@@ -128,7 +130,10 @@ namespace Build {
 
 namespace Internal {
     export interface Store {
-        [index: string | Symbol]: any;
+        [index: string]: any;
+    }
+    export interface PrivateStore {
+        [index: Symbol]: any;
     }
     /**
      * reload the browser if it is in livereload mode

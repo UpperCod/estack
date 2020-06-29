@@ -5,13 +5,14 @@ import { getProp, yamlParse } from "./general";
  * @param {Object} options
  * @param {{[index:string]:any}} options.where - query to match
  * @param {number} [options.limit] - page limits per page
+ * @param {string} [options.sort] - page limits per page
  * @param {1|-1} [options.order] - page order is ascending(1) or decent(-1)
+ * @param {boolean} [onlyPages] - Avoid grouping by pages and return only the pages
  */
 export function queryPages(
     pages,
     { where, sort = "date", limit, order = -1 },
-    onlyPages,
-    mapPage
+    onlyPages
 ) {
     let keys = Object.keys(where);
     let item;
@@ -29,15 +30,12 @@ export function queryPages(
             getProp(a, sort) > getProp(b, sort) ? order : order * -1
         );
 
-    pages = mapPage ? pages.map(mapPage) : pages;
+    if (onlyPages) {
+        return limit ? pages.slice(0, limit) : pages;
+    }
 
     if (limit == null) {
-        if (onlyPages) {
-            return pages;
-        }
-
         collection[0] = pages;
-
         return collection;
     }
 

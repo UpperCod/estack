@@ -78,6 +78,8 @@ export async function loadRollup(build, jsFiles) {
             }
         });
 
+        cache.true = 10;
+
         cache.watcher.push(watcher);
     } else {
         await bundle.write(output);

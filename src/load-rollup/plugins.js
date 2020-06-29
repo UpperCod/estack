@@ -9,12 +9,8 @@ let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
 /**
  *
- * @param {Object} options
- * @param {boolean} options.minify
- * @param {boolean} options.sizes
- * @param {boolean} options.jsx
- * @param {boolean} options.jsxFragment
- * @param {({dest:string,code:string,type:string})=>void} [mountFile] - mount rollup files on development server without writing
+ * @param {Build.options} options
+ * @param {Build.mountFile} [mountFile] - mount rollup files on development server without writing
  */
 export function plugins(options, mountFile) {
     let optionalPlugins = [];
@@ -65,3 +61,6 @@ export function plugins(options, mountFile) {
         ...optionalPlugins,
     ];
 }
+/**
+ * @typeof {import("../internal") } Build
+ */

@@ -25,61 +25,63 @@ let alias = {};
 let time = Date.now();
 
 export let highlighted = (code, type) =>
-  Prism.languages[type]
-    ? Prism.highlight(code, Prism.languages[type], type)
-    : escape(code);
+    Prism.languages[type]
+        ? Prism.highlight(code, Prism.languages[type], type)
+        : escape(code);
 
 export let renderMarkdown = (code) =>
-  (cache[code] = cache[code] || marked(code));
+    (cache[code] = cache[code] || marked(code));
 
 // add an additional container prevent the table from collapsing the page
 renderer.table = (header, body) =>
-  `<div class="markdown-table-container"><table>${header + body}</table></div>`;
+    `<div class="markdown-table-container"><table>${
+        header + body
+    }</table></div>`;
 
 //  configure the container to allow language to be highlighted independently of the class
 renderer.code = (code, type) => {
-  try {
-    return `<pre class="markdown-code-container" data-code="${type}"><code class="language-${type}">${highlighted(
-      code,
-      type
-    )}</code></pre>`;
-  } catch (e) {}
+    try {
+        return `<pre class="markdown-code-container" data-code="${type}"><code class="language-${type}">${highlighted(
+            code,
+            type
+        )}</code></pre>`;
+    } catch (e) {}
 };
 
 renderer.link = (href, title, text) => {
-  href = escapeTemplate(href);
-  return `<a href="${href.recovery(escape(href.code))}">${text}</a>`;
+    href = escapeTemplate(href);
+    return `<a href="${href.recovery(escape(href.code))}">${text}</a>`;
 };
 
 renderer.image = (href, title, text) => {
-  href = escapeTemplate(href);
-  return `<img src="${href.recovery(escape(href.code))}" alt="${text}">`;
+    href = escapeTemplate(href);
+    return `<img src="${href.recovery(escape(href.code))}" alt="${text}">`;
 };
 
 marked.setOptions({
-  renderer,
+    renderer,
 });
 
 function escapeTemplate(code) {
-  let replace = [];
-  code = code.replace(/({{[^}]*}})/g, (id) => {
-    if (!alias[id]) {
-      let value =
-        time + "-" + count++ + (Math.random() + "").replace("0.", "-");
-      alias[id] = { value, reg: RegExp(value, "g") };
-    }
-    if (!replace.includes(id)) {
-      replace.push(id);
-    }
-    return alias[id].value;
-  });
-  return {
-    code,
-    recovery(code) {
-      return replace.reduce(
-        (code, id) => code.replace(alias[id].reg, id),
-        code
-      );
-    },
-  };
+    let replace = [];
+    code = code.replace(/({{[^}]*}})/g, (id) => {
+        if (!alias[id]) {
+            let value =
+                time + "-" + count++ + (Math.random() + "").replace("0.", "-");
+            alias[id] = { value, reg: RegExp(value, "g") };
+        }
+        if (!replace.includes(id)) {
+            replace.push(id);
+        }
+        return alias[id].value;
+    });
+    return {
+        code,
+        recovery(code) {
+            return replace.reduce(
+                (code, id) => code.replace(alias[id].reg, id),
+                code
+            );
+        },
+    };
 }
