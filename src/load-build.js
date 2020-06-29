@@ -1,17 +1,26 @@
 import path from "path";
 import { loadHtml } from "./load-html/load-html";
 import { loadCss } from "./load-css/load-css";
-import { isHtml, isCss, asyncFs, isJs, isNotFixLink } from "./utils/utils";
+import {
+    isHtml,
+    isCss,
+    asyncFs,
+    isJs,
+    isNotFixLink,
+    copyFile,
+} from "./utils/utils";
 import { MARK_ROOT } from "./constants";
 import { loadRollup } from "./load-rollup/load-rollup";
 
 /**
- * @todo separar el logger del contexto para permitir multiples ejecuciones de loadBuild
- * @todo asociarLoadRollup
- * @todo permitir crear una instancia del plugins de css para que este acceda a la cache de archivos y no a readFIle
- * @todo dar soporte a alias para referenciar una pagina
+ * @todo support aliases to reference a page
  */
 
+/**
+ * @param { Build.build } build
+ * @param {string[]} files
+ * @param {boolean} [forceBuild]
+ */
 export async function loadBuild(build, files, forceBuild) {
     build.logger.mark(MARK_ROOT);
 
@@ -63,10 +72,14 @@ export async function loadBuild(build, files, forceBuild) {
             if (build.options.virtual) {
                 build.mountFile({ dest, stream: file });
             } else {
-                return build.copyFile(file, dest);
+                return copyFile(file, dest);
             }
         }),
     ]);
 
     build.logger.markBuild(MARK_ROOT);
 }
+
+/**
+ * @typeof {import("./internal") } Build
+ */

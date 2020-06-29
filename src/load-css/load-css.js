@@ -1,9 +1,9 @@
 import { loadCssFile } from "./load-css-file";
+
 /**
  * Load css allows to process groups of Css files in parallel.
- * @param {object} build
- * @param {()=>Promise<string>} build.readFile - Get the content of a file
- * @param {string[]} css - files to process with stylis
+ * @param {Build.build} build
+ * @param {string[]} cssFiles  - Get the content of a file
  */
 export async function loadCss(build, cssFiles) {
     cssFiles.map(async (file) => {
@@ -22,3 +22,7 @@ export async function loadCss(build, cssFiles) {
         });
     });
 }
+
+/**
+ * @typeof {import("../internal") } Build
+ */

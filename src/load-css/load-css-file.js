@@ -1,5 +1,5 @@
 import path from "path";
-import { compile, serialize, stringify } from "stylis";
+import { compile, serialize, stringify } from "stylis/dist/stylis.esm";
 import { readFile as fsReadFile } from "../utils/utils";
 
 let createCaptureMetaCss = (type) =>
@@ -14,12 +14,13 @@ let regValueNamespace = createCaptureMetaCss("namespace");
  * @param {object} context
  * @param {string} context.file - current css file
  * @param {string} context.code - css code to analyze
- * @param {()=>Promise<string>} context.readFile - read a file
+ * @param {Build.readFile} [context.readFile] - read a file
  * @param {Function} context.addWatchFile - execute the callback every time a css import is generated
- * @param {boolean} returnRules - If true it will return the rules as Array
- * @param {RegExp[]} useRules - Regular expressions to select css rules
- * @param {string} namespace - context prefix of file selectors
- * @returns { string | object[] }
+ * @param {object} [imports]
+ * @param {boolean} [returnRules] - If true it will return the rules as Array
+ * @param {RegExp[]} [useRules] - Regular expressions to select css rules
+ * @param {string} [namespace] - context prefix of file selectors
+ * @returns { (Promise<any>) }
  */
 export async function loadCssFile(
     { file, code, readFile, addWatchFile },
@@ -34,7 +35,7 @@ export async function loadCssFile(
         namespace += (namespace ? " " : "") + value;
         return "";
     });
-
+    /**@type {any[]} */
     let rules = await Promise.all(
         compile(namespace ? `${namespace}{${code}}` : code).map(
             async (child) => {
@@ -70,7 +71,7 @@ export async function loadCssFile(
                         try {
                             let code = await (readFile || fsReadFile)(file);
                             addWatchFile(file);
-                            return readCss(
+                            return loadCssFile(
                                 { file, code, readFile, addWatchFile },
                                 imports,
                                 true,
@@ -81,7 +82,7 @@ export async function loadCssFile(
                             let file = path.join("node_modules", value);
                             try {
                                 let code = await (readFile || fsReadFile)(file);
-                                return readCss(
+                                return loadCssFile(
                                     { file, code, readFile, addWatchFile },
                                     imports,
                                     true,
@@ -97,7 +98,7 @@ export async function loadCssFile(
             }
         )
     );
-
+    // @ts-ignore
     rules = rules.flat();
 
     if (returnRules && useRules.length) {
@@ -127,3 +128,7 @@ export async function loadCssFile(
     }
     return serialize(rules, stringify);
 }
+
+/**
+ * @typeof {import("../internal") } Build
+ */

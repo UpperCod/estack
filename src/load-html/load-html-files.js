@@ -31,12 +31,7 @@ function resolveRequest(url) {
 }
 /**
  *
- * @param {object} build
- * @param {(file: string)=>Promise<string>} build.readFile - read a file
- * @param {(file: string)=>string} build.getDest - retorna el destino del archivo
- * @param {(file: string)=>string} build.getLink - retorna el destino del archivo
- * @param {(file: string)=>string} build.deleteInput - eliminated an archive of the registers of inputs
- * @param {{degub: (message: string, mark : string)=>Promise<any> }} build.logger - eliminated an archive of the registers of inputs
+ * @param {Build.build} build
  * @param {*} htmlFiles
  */
 export function loadHtmlFiles(build, htmlFiles) {
@@ -48,7 +43,7 @@ export function loadHtmlFiles(build, htmlFiles) {
          * this allows relating the data obtained from the external document
          * to the template and synchronizing the changes
          */
-        async function resolve() {
+        async function resolve(file) {
             let value = await build.readFile(file);
 
             return isYaml(file)
@@ -79,6 +74,7 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             let [content, data] = meta;
 
+            //@ts-ignore
             if (!build.options.watch && meta.draft) {
                 build.deleteInput(file);
                 return;
@@ -183,3 +179,7 @@ export function loadHtmlFiles(build, htmlFiles) {
         })
     );
 }
+
+/**
+ * @typeof {import("../internal") } Build
+ */

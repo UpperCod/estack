@@ -7,13 +7,17 @@ import {
     writeFile,
     normalizePath,
     logger,
-    npmRun,
     readFile as fsReadFile,
 } from "./utils/utils";
 import { createServer } from "./create-server";
 import { createWatch } from "./create-watch";
 import { loadOptions } from "./load-options";
 import { loadBuild } from "./load-build";
+
+/**
+ *
+ * @param {Build.options} options
+ */
 
 export async function createBuild(options) {
     options = await loadOptions(options);
@@ -22,47 +26,53 @@ export async function createBuild(options) {
 
     let files = await glob(options.src);
 
+    /**@type {Internal.server} */
     let server;
 
+    /**@type {Internal.reload} */
     let reload = () => {};
 
     let inputs = {};
 
     let cache = {};
 
-    /**@type {getCache} */
+    /**@type {Build.getCache} */
     let getCache = (prop) => (cache[prop] = cache[prop] = {});
 
     let CacheReadFile = Symbol("_cacheReadFile");
 
+    /**@type {Build.readFile} */
     let readFile = (file) => {
         let cache = getCache(CacheReadFile);
         return (cache[file] = cache[file] || fsReadFile(file));
     };
 
+    /**@type {Build.getLink} */
     let getLink = (path) => normalizePath(options.href + path);
 
+    /**@type {Build.getDest} */
     let getDest = (file, folder = "") =>
         normalizePath(path.join(options.dest, folder, file));
 
+    /**@type {Build.isPreventLoad} */
     let isPreventLoad = (file) => file in inputs;
 
+    /**@type {Build.isNotPreventLoad} */
     let isNotPreventLoad = (file) => !isPreventLoad(file);
 
     let footerLog = logger.footer("");
 
+    /**@type {Build.fileWatcher} */
     let fileWatcher = () => {};
 
+    /**@type {Build.deleteInput} */
     function deleteInput(file) {
         delete getCache(CacheReadFile)[file];
         delete inputs[file];
         return file;
     }
 
-    /**
-     * gets the file name based on its type
-     * @param {string} file
-     */
+    /**@type {Build.getFileName} */
     function getFileName(file) {
         let { name, ext } = path.parse(file);
 
@@ -78,10 +88,7 @@ export async function createBuild(options) {
         );
     }
 
-    /**
-     * prevents the file from working more than once
-     * @param {string} file
-     */
+    /**@type {Build.preventNextLoad} */
     function preventNextLoad(file) {
         if (file in inputs) {
             return false;
@@ -90,9 +97,10 @@ export async function createBuild(options) {
         }
     }
 
+    /**@type {Build.mountFile} */
     function mountFile({ dest, code, type, stream }) {
         if (options.virtual) {
-            server.sources[dest] = { code, stream, type, stream };
+            server.sources[dest] = { code, stream, type };
         } else {
             return writeFile(dest, code);
         }
@@ -169,8 +177,9 @@ export async function createBuild(options) {
         };
     }
 
-    /**@type {Build} */
+    loadReady();
 
+    /**@type {Build.build} */
     let build = {
         inputs,
         options,
@@ -188,77 +197,16 @@ export async function createBuild(options) {
         fileWatcher: fileWatcher,
         logger: {
             ...logger,
-            markBuild(...args) {
-                logger.markBuild(...args);
+            async markBuild(...args) {
+                await logger.markBuild(...args);
                 reload();
             },
         },
     };
 
-    loadReady();
-
     loadBuild(build, files);
 }
 
 /**
- * Determines the destination directory of the file
- * @typedef {(file: string)=>string} getDest
- */
-
-/**
- * Create a permalink of the file
- * @typedef {(file: string)=>string} getLink
- */
-
-/**
- * Object that owns the inputs observable by the build
- * @typedef {{[index: string]: any }} inputs
- */
-
-/**
- * returns a cache based on the index
- * @typedef {(index: string)=>object} getCache
- */
-/**
- * read the contents of a file
- * @typedef {(file: string)=>Promise<string>} readFile
- */
-
-/**
- * Defines if the file is alreDy taken by a process
- * @typedef {(file: string)=>string} isPreventLoad
- */
-
-/**
- *  defines if a file is not taken by a process
- * @typedef {(file: string)=>string} isNotPreventLoad
- */
-
-/**
- * Delete a file from the build.inputs object
- * @typedef {(file: string)=>file} deleteInput
- */
-
-/**
- * Gets the destination name in the destination folder
- * @typedef {(file: string)=>string} getFileName
- */
-
-/**
- * Prevents the file from being taken for the following processes
- * @typedef {(file: string)=>string} preventNextLoad
- */
-
-/**
- * @typedef {object} Build
- * @property {getDest} Build.getDest
- * @property {getLink} Build.getLink
- * @property {inputs} Build.inputs
- * @property {getCache} Build.getCache
- * @property {readFile} Build.readFile
- * @property {isPreventLoad} Build.isPreventLoad
- * @property {isNotPreventLoad} Build.isNotPreventLoad
- * @property {deleteInput} Build.deleteInput
- * @property {getFileName} Build.getFileName
- * @property {preventNextLoad} Build.preventNextLoad
+ * @typeof {import("./internal") } Build
  */

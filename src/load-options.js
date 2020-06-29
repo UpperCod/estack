@@ -1,19 +1,26 @@
 import builtins from "builtin-modules";
 import { getPackage, normalizePath } from "./utils/utils";
 
+/**
+ * @typeof {import("./internal") } Build
+ */
+
+/**
+ *
+ * @param {Build.options} options
+ */
 export async function loadOptions({
     src = [],
     config,
     external,
     jsx,
     jsxFragment,
-    runAfterBuild,
     forceWrite,
     silent,
     href = "/",
     ...ignore
 }) {
-    if (silent) process.env.silent = true;
+    if (silent) process.env.silent = "true";
 
     let pkg = await getPackage();
 
@@ -41,7 +48,6 @@ export async function loadOptions({
         pkg,
         href,
         virtual: !forceWrite && ignore.watch && ignore.server,
-        runAfterBuild: pkg.scripts[runAfterBuild] ? runAfterBuild : "",
         jsx: jsx == "react" ? "React.createElement" : jsx,
         jsxFragment: jsx == "react" ? "React.Fragment" : jsxFragment,
     };
