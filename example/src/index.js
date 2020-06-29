@@ -1,3 +1,5 @@
-import style from "./style.css";
+let title = document.createElement("h1");
 
-console.log(document.querySelector("h2"), style);
+title.textContent = "😃";
+
+document.body.appendChild(title);
