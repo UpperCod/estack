@@ -24,6 +24,8 @@ export async function createBuild(options) {
 
     let loadReady = logger.load();
 
+    let cycleBuild = 0;
+
     let files = await glob(options.src);
 
     /**@type {Internal.server} */
@@ -162,7 +164,7 @@ export async function createBuild(options) {
             }
 
             if (files.length || forceBuild) {
-                loadBuild(build, files, forceBuild);
+                loadBuild(build, files, cycleBuild++, forceBuild);
             }
         });
 
@@ -205,7 +207,7 @@ export async function createBuild(options) {
         },
     };
 
-    return loadBuild(build, files);
+    return loadBuild(build, files, cycleBuild++);
 }
 
 /**

@@ -6,6 +6,11 @@ import { MARK_ROLLUP } from "../constants";
 
 const CACHE_ROLLUP = Symbol("_CacheRollup");
 
+/**
+ *
+ * @param {Build.build} build
+ * @param {*} jsFiles
+ */
 export async function loadRollup(build, jsFiles) {
     const cache = build.getCache(CACHE_ROLLUP);
 
@@ -46,7 +51,9 @@ export async function loadRollup(build, jsFiles) {
         build.logger.mark(MARK_ROLLUP);
     }
 
-    let bundle = await rollup(input);
+    let bundle;
+
+    bundle = await rollup(input);
 
     cache.bundle = bundle.cache;
 
@@ -95,3 +102,7 @@ let pluginImportCss = (build) => ({
         }
     },
 });
+
+/**
+ * @typeof {import("../internal") } Build
+ */

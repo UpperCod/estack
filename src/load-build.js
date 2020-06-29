@@ -19,9 +19,10 @@ import { loadRollup } from "./load-rollup/load-rollup";
 /**
  * @param { Build.build } build
  * @param {string[]} files
+ * @param { number } cycle
  * @param {boolean} [forceBuild]
  */
-export async function loadBuild(build, files, forceBuild) {
+export async function loadBuild(build, files, cycle, forceBuild) {
     try {
         build.logger.mark(MARK_ROOT);
 
@@ -83,6 +84,9 @@ export async function loadBuild(build, files, forceBuild) {
         await build.logger.markBuild(MARK_ROOT);
     } catch (e) {
         await build.logger.markBuildError(e, MARK_ROOT);
+        if (!cycle) {
+            process.exit();
+        }
     }
 }
 

@@ -1,5 +1,6 @@
 import path from "path";
-import { compile, serialize, stringify } from "stylis/dist/stylis.esm";
+//@ts-ignore
+import { compile, serialize, stringify } from "stylis";
 import { readFile as fsReadFile } from "../utils/utils";
 
 let createCaptureMetaCss = (type) =>
