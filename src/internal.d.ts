@@ -30,16 +30,6 @@ namespace Build {
     export type readFile = (file: string) => Promise<string>;
 
     /**
-     * Returns the name of the file in the destination directory defined in `options.dest`
-     */
-    export type getDest = (file: string, folder?: string) => string;
-
-    /**
-     * returns the file permalink by concatenating `options.href`
-     */
-    export type getLink = (file: string) => string;
-
-    /**
      * check if the file has already been processed
      */
     export type isPreventLoad = (file: string) => boolean;
@@ -76,7 +66,12 @@ namespace Build {
     /**
      * get the destination name of the file
      */
-    export type getFileName = (file: string) => string;
+    export type getDestDataFile = (
+        file: string
+    ) => {
+        link: string;
+        dest: string;
+    };
 
     /**
      *
@@ -113,12 +108,10 @@ namespace Build {
         options: options;
         getCache: getCache;
         readFile: readFile;
-        getLink: getLink;
-        getDest: getDest;
+        getDestDataFile: getDestDataFile;
         isPreventLoad: isPreventLoad;
         isNotPreventLoad: isNotPreventLoad;
         deleteInput: deleteInput;
-        getFileName: getFileName;
         preventNextLoad: preventNextLoad;
         mountFile: mountFile;
         footerLog: footerLog;

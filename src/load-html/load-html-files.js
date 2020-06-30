@@ -9,6 +9,7 @@ import {
     yamlParse,
     isJsonContent,
     getMetaPage,
+    isHtml,
 } from "../utils/utils";
 
 import { renderMarkdown } from "./render-markdown";
@@ -80,14 +81,16 @@ export function loadHtmlFiles(build, htmlFiles) {
                 return;
             }
 
-            name = data.name || name;
+            name = data.slug || name;
 
-            let fileName = name + ".html";
+            let { permalink = "", folder = "" } = data;
 
-            let dest = build.getDest(fileName, data.folder);
-
-            let link = build.getLink(
-                path.join(data.folder || "", name == "index" ? "/" : name)
+            let { dest, link } = build.getDestDataFile(
+                path.join(
+                    permalink,
+                    folder,
+                    isHtml(permalink) ? "" : name + ".html"
+                )
             );
 
             let fetch = {};
@@ -104,7 +107,7 @@ export function loadHtmlFiles(build, htmlFiles) {
                 if (isUrl(src)) return src;
                 let childFile = joinChildFile(src);
                 try {
-                    let link = await build.addRootAsset(childFile);
+                    let { link } = await build.addRootAsset(childFile);
                     build.fileWatcher(childFile, file);
                     return link;
                 } catch (e) {
@@ -164,13 +167,13 @@ export function loadHtmlFiles(build, htmlFiles) {
                 data: {
                     content,
                     ...data,
+                    name: normalizePath(name),
                     fetch,
                     assets,
                     file: normalizePath(file),
                     link,
                 },
                 name,
-                fileName,
                 dest,
                 addFile,
                 addDataAsset,

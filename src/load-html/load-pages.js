@@ -1,4 +1,9 @@
-import { isHtml, queryPages } from "../utils/utils";
+import {
+    isHtml,
+    queryPages,
+    mapPropToObject,
+    normalizePath,
+} from "../utils/utils";
 import { renderHtml } from "./render-html";
 
 import {
@@ -21,6 +26,10 @@ export function loadPages(build) {
     let archives = [];
     // stores the content of the pages already resolved
     let resolvedPages = {};
+
+    let alias = {};
+
+    let cacheQuery = new Map();
 
     // The following processes separate the files according to their use
     let pages = Object.keys(build.inputs)
@@ -67,21 +76,25 @@ export function loadPages(build) {
 
                     let fileName = paged ? folderLink + name : folderLink;
 
-                    let dest = build.getDest(fileName + ".html");
-
-                    let link = build.getLink(fileName);
+                    let { dest, link } = build.getDestDataFile(
+                        fileName + ".html"
+                    );
 
                     let position = paged - 1;
 
-                    let prev = collection[position]
-                        ? folderLink + (position ? "/" + position : "")
-                        : "";
+                    let prev = normalizePath(
+                        collection[position]
+                            ? folderLink + (position ? "/" + position : "")
+                            : ""
+                    );
 
                     position = paged + 1;
 
-                    let next = collection[position]
-                        ? folderLink + (position ? "/" + position : "")
-                        : "";
+                    let next = normalizePath(
+                        collection[position]
+                            ? folderLink + (position ? "/" + position : "")
+                            : ""
+                    );
 
                     // A new page is returned
                     return {
@@ -117,12 +130,18 @@ export function loadPages(build) {
         let layout = templates[data.layout == null ? "default" : data.layout];
 
         if (query) {
-            query = Object.keys(query)
-                .map((prop) => ({
+            let nextQuery = cacheQuery.get(query);
+            // Cache is used since there are inheritances of pages that keep the query as a reference
+            if (!nextQuery) {
+                nextQuery = Object.keys(query).map((prop) => ({
                     prop,
                     value: queryPages(pagesData, query[prop], true),
-                }))
-                .reduce(mapPropToObject, {});
+                }));
+                nextQuery = mapPropToObject(nextQuery);
+                cacheQuery.set(query, nextQuery);
+            }
+            // query will take the value of the results of your query to belong to page.data
+            query = nextQuery;
         }
 
         let pageData = {

@@ -11,6 +11,7 @@ import { getPackage, normalizePath } from "./utils/utils";
  */
 export async function loadOptions({
     src = [],
+    dest,
     config,
     external,
     jsx,
@@ -42,6 +43,7 @@ export async function loadOptions({
 
     let options = {
         src,
+        dest: dest || "./",
         external,
         ...ignore,
         ...pkg[config],

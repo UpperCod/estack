@@ -40,7 +40,7 @@ sade("estack [src] [dest]")
     .example("src/index.js dist --watch")
     .example("src/*.js dist")
     .example("src/*.html")
-    .action((src, dest = "dest", options) => {
+    .action((src, dest, options) => {
         createBuild({
             ...options,
             src,

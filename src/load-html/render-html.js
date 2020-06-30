@@ -1,6 +1,11 @@
 import { Liquid, Tokenizer, evalToken } from "liquidjs";
 import { renderMarkdown, highlighted } from "./render-markdown";
-import { getProp, normalizeLineSpace, resolvePath } from "../utils/utils";
+import {
+    getProp,
+    normalizeLineSpace,
+    resolvePath,
+    mapPropToObject,
+} from "../utils/utils";
 import {
     DATA_FRAGMENTS,
     DATA_PAGE,
@@ -163,12 +168,7 @@ function createTag(next) {
                                   value: evalToken(hash.value, scope),
                               };
                           })
-                      ).then((data) =>
-                          data.reduce((data, { prop, value }) => {
-                              data[prop] = value;
-                              return data;
-                          }, {})
-                      )
+                      ).then(mapPropToObject)
                     : {};
 
             return next.call(

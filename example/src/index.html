@@ -1,8 +1,13 @@
 ---
 title: my pages
+query:
+    posts : 
+        where : 
+            tag : post
+assets : 
+    avatar : abott adorable.io.png
 ---
 
-{{page.title}} lopopora ssssssss ss
 <h2>{{page.title}}</h2>
 
 Lorem ipsum dolor, sit amet consectetur adipisicing elit. Architecto cupiditate
@@ -10,6 +15,15 @@ delectus eligendi, maiores officia unde explicabo tenetur corrupti libero
 perferendis quisquam corporis quaerat aliquid deleniti veritatis tempore eum
 ratione dolore. <link rel="stylesheet" href="{{ "style.css" | asset }}" />
 
-master?
+<h2>{{page.assets.avatar}}</h2>
+
+<img src="{{ page.assets.avatar }}"/>
+
+{% for post in page.query.posts %}
+    <article>
+        <h1>{{post.title}}</h1>
+        <h2>{{post.link}}</h2>
+    </article>
+{% endfor %}
 
 <script src="{{ "index.js" | asset }}" type="module"></script>

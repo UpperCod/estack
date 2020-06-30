@@ -37,7 +37,7 @@ export async function loadBuild(build, files, cycle, forceBuild) {
              */
             async function resolve(file) {
                 await asyncFs.stat(file);
-                return build.getLink(build.getFileName(file));
+                return build.getDestDataFile(file);
             }
 
             localResolveAsset[file] = localResolveAsset[file] || resolve(file);
@@ -72,7 +72,7 @@ export async function loadBuild(build, files, cycle, forceBuild) {
             resolveCss,
             resolveJs,
             ...staticFiles.map(async (file) => {
-                let dest = build.getDest(build.getFileName(file));
+                let { dest } = build.getDestDataFile(file);
                 if (build.options.virtual) {
                     build.mountFile({ dest, stream: file });
                 } else {
@@ -83,8 +83,9 @@ export async function loadBuild(build, files, cycle, forceBuild) {
 
         await build.logger.markBuild(MARK_ROOT);
     } catch (e) {
-        await build.logger.markBuildError(e, MARK_ROOT);
+        await build.logger.markBuildError(cycle ? e : "", MARK_ROOT);
         if (!cycle) {
+            console.error(e);
             process.exit();
         }
     }

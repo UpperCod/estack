@@ -35,7 +35,7 @@ export async function loadRollup(build, jsFiles) {
                     ((source) =>
                         build.mountFile({
                             ...source,
-                            dest: build.getDest(source.dest),
+                            dest: build.getDestDataFile(source.dest).dest,
                         }))
             ),
         ],

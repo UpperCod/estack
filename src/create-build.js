@@ -8,6 +8,7 @@ import {
     normalizePath,
     logger,
     readFile as fsReadFile,
+    isHtml,
 } from "./utils/utils";
 import { createServer } from "./create-server";
 import { createWatch } from "./create-watch";
@@ -49,13 +50,6 @@ export async function createBuild(options) {
         return (cache[file] = cache[file] || fsReadFile(file));
     };
 
-    /**@type {Build.getLink} */
-    let getLink = (path) => normalizePath(options.href + path);
-
-    /**@type {Build.getDest} */
-    let getDest = (file, folder = "") =>
-        normalizePath(path.join(options.dest, folder, file));
-
     /**@type {Build.isPreventLoad} */
     let isPreventLoad = (file) => file in inputs;
 
@@ -74,20 +68,40 @@ export async function createBuild(options) {
         return file;
     }
 
-    /**@type {Build.getFileName} */
-    function getFileName(file) {
-        let { name, ext } = path.parse(file);
+    /**@type {Build.getDestDataFile} */
+    function getDestDataFile(file) {
+        let { name, ext, dir } = path.parse(file);
 
-        return normalizePath(
-            isFixLink(ext)
-                ? name + (isJs(ext) ? ".js" : isMd(ext) ? ".html" : ext)
-                : file
-                      .split("")
-                      .reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
-                      "-" +
-                      name +
-                      ext
+        ext = isJs(ext) ? ".js" : isHtml(ext) ? ".html" : ext || ".html";
+
+        let typeHtml = ext == ".html";
+
+        let isIndex = typeHtml && name == "index";
+
+        name = isFixLink(ext)
+            ? name
+            : file
+                  .split("")
+                  .reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
+              "-" +
+              name;
+
+        let dest = normalizePath(
+            path.join(options.dest, typeHtml ? dir : "", name + ext)
         );
+
+        let link = normalizePath(
+            path.join(
+                options.href,
+                typeHtml ? dir : "",
+                isIndex ? "./" : name + (typeHtml ? "" : ext)
+            )
+        );
+
+        return {
+            link,
+            dest,
+        };
     }
 
     /**@type {Build.preventNextLoad} */
@@ -188,16 +202,14 @@ export async function createBuild(options) {
         options,
         getCache,
         readFile,
-        getLink,
-        getDest,
         isPreventLoad,
         isNotPreventLoad,
         deleteInput,
-        getFileName,
         preventNextLoad,
         mountFile,
         footerLog,
-        fileWatcher: fileWatcher,
+        fileWatcher,
+        getDestDataFile,
         logger: {
             ...logger,
             async markBuild(...args) {
