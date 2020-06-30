@@ -205,7 +205,6 @@ export async function createBuild(options) {
         deleteInput,
         preventNextLoad,
         mountFile,
-        footerLog,
         fileWatcher,
         getDestDataFile,
         logger: {
