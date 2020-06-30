@@ -114,7 +114,6 @@ namespace Build {
         deleteInput: deleteInput;
         preventNextLoad: preventNextLoad;
         mountFile: mountFile;
-        footerLog: footerLog;
         fileWatcher: fileWatcher;
         logger: logger;
         addRootAsset?: (file: string) => Promise<string>;

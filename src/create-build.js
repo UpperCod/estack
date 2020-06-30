@@ -56,8 +56,6 @@ export async function createBuild(options) {
     /**@type {Build.isNotPreventLoad} */
     let isNotPreventLoad = (file) => !isPreventLoad(file);
 
-    let footerLog = logger.footer("");
-
     /**@type {Build.fileWatcher} */
     let fileWatcher = () => {};
 
