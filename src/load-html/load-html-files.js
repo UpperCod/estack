@@ -84,13 +84,18 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             let { permalink = "", folder = "" } = data;
 
-            let { dest, link } = build.getDestDataFile(
-                path.join(
-                    permalink,
-                    folder,
-                    isHtml(permalink) ? "" : name + ".html"
-                )
-            );
+            let dataFile;
+
+            if (permalink && !data.slug) {
+                permalink += /\/$/.test(permalink) ? "index.html" : ".html";
+                dataFile = build.getDestDataFile(permalink);
+            } else {
+                dataFile = build.getDestDataFile(
+                    path.join(permalink || folder, name + ".html")
+                );
+            }
+
+            let { dest, link } = dataFile;
 
             let fetch = {};
 
