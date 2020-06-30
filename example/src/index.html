@@ -1,40 +1,21 @@
 ---
 title: my pages
-slug : post
+slug: post
 archive:
-    where : 
-        tag : post
-    limit : 2
-assets : 
-    avatar : abott adorable.io.png
+    where:
+        tag: post
+    limit: 2
 ---
 
-<div style="background:tomato;padding:100px">
-    {{alias.myPost|json}}
-</div>
-
-<h2>{{page.title}}</h2>
-
-Lorem ipsum dolor, sit amet consectetur adipisicing elit. Architecto cupiditate
-delectus eligendi, maiores officia unde explicabo tenetur corrupti libero
-perferendis quisquam corporis quaerat aliquid deleniti veritatis tempore eum
-ratione dolore. <link rel="stylesheet" href="{{ "style.css" | asset }}" />
-
-<h2>{{page.assets.avatar}}</h2>
-
-<img src="{{ page.assets.avatar }}"/>
-
 {% for post in page.archive.pages %}
-    <hr>
-    <article>
-        <h1>{{post.title}}</h1>
-        <h2>{{post.link}}</h2>
-        <a href="{{post.link}}"> go post!</a>
-    </article>
-    <hr>
+<hr />
+<article>
+    <h1>{{post.title}}</h1>
+    <img src="{{post.assets.avatar}}" />
+    <a href="{{post.link}}"> go post!</a>
+</article>
+<hr />
 {% endfor %}
-
-<script src="{{ "index.js" | asset }}" type="module"></script>
 
 <a href="{{page.archive.prev}}">prev</a>
 <a href="{{page.archive.next}}">next</a>
