@@ -9,7 +9,11 @@ export const MARK_ROLLUP = "Rollup";
 /**
  * Start message for transformation syntax errors
  */
-export const ERROR_TRANSFORMING = "SyntaxError: Error transforming";
+export const ERROR_TRANSFORMING = "SyntaxError: Transforming,";
+/**
+ *
+ */
+export const ERROR_DUPLICATE_ID = "SyntaxError: Duplicate identifier,";
 /**
  * Start message for request errors
  */

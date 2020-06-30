@@ -1,9 +1,5 @@
-import {
-    isHtml,
-    queryPages,
-    mapPropToObject,
-    normalizePath,
-} from "../utils/utils";
+import path from "path";
+import { isHtml, queryPages, normalizePath } from "../utils/utils";
 import { renderHtml } from "./render-html";
 
 import {
@@ -13,8 +9,14 @@ import {
     DATA_LAYOUT,
     DATA_PAGE,
     MARK_ROOT,
+    ERROR_DUPLICATE_ID,
 } from "../constants";
+import { throws } from "assert";
 
+/**
+ *
+ * @param {Build.build} build
+ */
 export function loadPages(build) {
     //The templates files are virtual, these can be referred
     //by a file that declares layour for use of this
@@ -25,98 +27,79 @@ export function loadPages(build) {
     //on the pages in order to create page collections
     let archives = [];
     // stores the content of the pages already resolved
-    let resolvedPages = {};
 
-    let alias = {};
+    let queries = new Map();
 
-    let cacheQuery = new Map();
+    let pages = {};
 
-    // The following processes separate the files according to their use
-    let pages = Object.keys(build.inputs)
-        .filter(isHtml)
-        .map((file) => {
+    let alias = new Proxy(pages, {
+        get(obj, prop) {
+            if (obj[prop]) {
+                return obj[prop].ref;
+            }
+        },
+    });
+
+    let pagesData = [];
+
+    let addPage = (page) => {
+        let { data } = page;
+        let id = data.alias || data.link;
+
+        if (pages[id]) {
+            build.logger.debug(
+                `${ERROR_DUPLICATE_ID} identifiers must be unique, ${pages[id].data.file} ${data.file}`,
+                MARK_ROOT
+            );
+        } else {
+            pages[id] = page;
+            page.ref = {
+                ...data,
+                id,
+                content: null,
+            };
+            pagesData.push(page.ref);
+        }
+
+        if (data.query) {
+            let query = queries.get(data.query) || [];
+            query.push(page.ref);
+            queries.set(data.query, query);
+        }
+    };
+
+    for (let file in build.inputs) {
+        if (build.inputs[file] && isHtml(file)) {
             let page = build.inputs[file];
             let { data } = page;
             if (data.fragment) {
                 fragments[data.fragment] = data;
-                return;
             } else if (data.template) {
                 templates[data.template] = page;
-                return;
             } else if (data.archive) {
                 archives.push(page);
-                return;
+            } else {
+                addPage(page);
             }
-            return page;
-        })
-        .filter((value) => value);
+        }
+    }
 
-    let pagesData = pages.map(({ data }) => ({
-        ...data,
-        get content() {
-            return resolvedPages[data.file];
-        },
-    }));
+    archives.forEach((page) => {
+        resolveArchive(build, pagesData, page, addPage);
+    });
 
-    pages = [
-        ...pages,
-        ...archives
-            .map((page) => {
-                let { data } = page;
-                // The pages grouped according to where.limit are obtained.
-                let collection = queryPages(pagesData, data.archive);
-
-                let folderLink = data.link.replace(build.options.href, "/");
-
-                let length = collection.length;
-
-                return collection.map((pages, paged) => {
-                    // Create the pages manually, they are the configuration
-                    let name = paged ? "/" + paged : "";
-
-                    let fileName = paged ? folderLink + name : folderLink;
-
-                    let { dest, link } = build.getDestDataFile(
-                        fileName + ".html"
-                    );
-
-                    let position = paged - 1;
-
-                    let prev = normalizePath(
-                        collection[position]
-                            ? folderLink + (position ? "/" + position : "")
-                            : ""
-                    );
-
-                    position = paged + 1;
-
-                    let next = normalizePath(
-                        collection[position]
-                            ? folderLink + (position ? "/" + position : "")
-                            : ""
-                    );
-
-                    // A new page is returned
-                    return {
-                        ...page,
-                        data: {
-                            ...data,
-                            link,
-                            archive: {
-                                paged,
-                                pages,
-                                next,
-                                prev,
-                                length,
-                            },
-                        },
-                        name: fileName,
-                        dest,
-                    };
-                });
-            })
-            .flat(),
-    ];
+    queries.forEach((pages, query) => {
+        let results = {};
+        for (let prop in query) {
+            let value = query[prop];
+            try {
+                results[prop] = queryPages(pagesData, value, true);
+            } catch (e) {
+                console.log(pages);
+            }
+        }
+        pages.forEach((data) => (data.query = results));
+    });
 
     /**
      * First resolve the pages independently,
@@ -124,45 +107,28 @@ export function loadPages(build) {
      * its scope page before associating the
      * nested render on the layout
      */
-    pages = pages.map(async (page) => {
-        let { data } = page;
-        let { query, content } = data;
-        let layout = templates[data.layout == null ? "default" : data.layout];
+    let pagesDataRender = pagesData.map(async (data) => {
+        let { id, layout } = data;
+        let _page = pages[id];
 
-        if (query) {
-            let nextQuery = cacheQuery.get(query);
-            // Cache is used since there are inheritances of pages that keep the query as a reference
-            if (!nextQuery) {
-                nextQuery = Object.keys(query).map((prop) => ({
-                    prop,
-                    value: queryPages(pagesData, query[prop], true),
-                }));
-                nextQuery = mapPropToObject(nextQuery);
-                cacheQuery.set(query, nextQuery);
-            }
-            // query will take the value of the results of your query to belong to page.data
-            query = nextQuery;
-        }
+        let _layout = templates[layout == null ? "default" : layout];
 
         let pageData = {
             pkg: build.options.pkg,
             build: !build.options.watch,
-            page: { ...data, query },
-            layout: layout && layout.data,
+            page: data, // for the html page is data, eg page.title
+            layout: _layout && _layout.data,
             pages: pagesData,
+            alias,
             // The following properties can only be accessed
             // from the scope of the stack and are for internal use
             [DATA_FRAGMENTS]: fragments,
-            [DATA_LAYOUT]: layout,
-            [DATA_PAGE]: page,
+            [DATA_LAYOUT]: _layout,
+            [DATA_PAGE]: _page,
         };
 
         try {
-            content = resolvedPages[data.file] = await renderHtml(
-                content,
-                pageData
-            );
-            pageData.page.content = content;
+            data.content = await renderHtml(_page.data.content, pageData);
             return pageData;
         } catch (e) {
             build.logger.debug(
@@ -172,7 +138,7 @@ export function loadPages(build) {
         }
     });
 
-    return Promise.all(pages).then((pages) =>
+    return Promise.all(pagesDataRender).then((pages) =>
         Promise.all(
             /**
              * Write the files once all have generated render of their
@@ -200,7 +166,7 @@ export function loadPages(build) {
                      * @example
                      * singlePage : index
                      */
-                    if (layout.singlePage && layout.singlePage !== data.link) {
+                    if (layout.singlePage && layout.singlePage !== page.id) {
                         return;
                     }
                     try {
@@ -223,3 +189,60 @@ export function loadPages(build) {
         )
     );
 }
+/**
+ *
+ * @param {Build.build} build
+ * @param {*} pages
+ * @param {*} page
+ * @param {*} addPage
+ */
+function resolveArchive(build, pages, page, addPage) {
+    let { data } = page;
+    // The pages grouped according to where.limit are obtained.
+    let collection = queryPages(pages, data.archive);
+
+    let length = collection.length;
+
+    collection.forEach((pages, paged) => {
+        // Create the pages manually, they are the configuration
+
+        let file = paged == 0 ? data.link : path.join(data.link, paged + "");
+
+        let { dest, link } = build.getDestDataFile(file);
+
+        let position = paged - 1;
+
+        let prev = normalizePath(
+            collection[position] && position > 0
+                ? data.link + "/" + position
+                : data.link
+        );
+
+        position = paged + 1;
+
+        let next = normalizePath(
+            collection[position] ? data.link + "/" + position : ""
+        );
+
+        // A new page is returned
+        addPage({
+            ...page,
+            data: {
+                ...data,
+                alias: paged == 0 && data.alias,
+                link,
+                archive: {
+                    paged,
+                    pages,
+                    next,
+                    prev,
+                    length,
+                },
+            },
+            dest,
+        });
+    });
+}
+/**
+ * @typeof {import("../internal") } Build
+ */

@@ -1,4 +1,5 @@
 ---
+alias: myPost
 title: my post
 tag: post
 ---

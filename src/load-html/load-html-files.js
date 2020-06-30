@@ -173,7 +173,6 @@ export function loadHtmlFiles(build, htmlFiles) {
                     file: normalizePath(file),
                     link,
                 },
-                name,
                 dest,
                 addFile,
                 addDataAsset,
