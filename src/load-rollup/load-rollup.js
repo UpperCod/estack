@@ -20,8 +20,15 @@ export async function loadRollup(build, jsFiles) {
 
     cache.watcher = [];
 
+    let inputKeys = {};
+
+    jsFiles.forEach((file) => {
+        let { name } = build.getDestDataFile(file);
+        inputKeys[name] = file;
+    });
+
     let input = {
-        input: jsFiles,
+        input: inputKeys,
         onwarn(message) {
             build.logger.markBuildError(message, MARK_ROLLUP);
         },

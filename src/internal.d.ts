@@ -64,11 +64,17 @@ namespace Build {
     export type deleteInput = (file: string) => string;
 
     /**
+     * Determines if it is a file that is copied
+     */
+    export type isForCopy = (file: string) => boolean;
+
+    /**
      * get the destination name of the file
      */
     export type getDestDataFile = (
         file: string
     ) => {
+        name: string;
         link: string;
         dest: string;
     };
@@ -100,6 +106,10 @@ namespace Build {
         virtual?: boolean;
         sourcemap?: boolean;
         minify?: boolean;
+        assetDir: string;
+        assetHashPattern: string;
+        assetsWithoutHash: RegExp;
+        assetsDir: string;
         [ignore: string]: any;
     }
 
@@ -115,6 +125,7 @@ namespace Build {
         preventNextLoad: preventNextLoad;
         mountFile: mountFile;
         fileWatcher: fileWatcher;
+        isForCopy: isForCopy;
         logger: logger;
         addRootAsset?: (file: string) => Promise<string>;
     }

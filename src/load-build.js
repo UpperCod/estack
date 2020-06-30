@@ -1,14 +1,7 @@
 import path from "path";
 import { loadHtml } from "./load-html/load-html";
 import { loadCss } from "./load-css/load-css";
-import {
-    isHtml,
-    isCss,
-    asyncFs,
-    isJs,
-    isNotFixLink,
-    copyFile,
-} from "./utils/utils";
+import { isHtml, isCss, asyncFs, isJs, copyFile } from "./utils/utils";
 import { MARK_ROOT } from "./constants";
 import { loadRollup } from "./load-rollup/load-rollup";
 
@@ -56,8 +49,8 @@ export async function loadBuild(build, files, cycle, forceBuild) {
         let cssFiles = files.filter(isCss).filter(build.preventNextLoad);
         let jsFiles = files.filter(isJs).filter(build.preventNextLoad);
 
-        let staticFiles = files
-            .filter(isNotFixLink)
+        let copyFiles = files
+            .filter(build.isForCopy)
             .filter(build.preventNextLoad);
 
         jsFiles =
@@ -71,7 +64,7 @@ export async function loadBuild(build, files, cycle, forceBuild) {
         await Promise.all([
             resolveCss,
             resolveJs,
-            ...staticFiles.map(async (file) => {
+            ...copyFiles.map(async (file) => {
                 let { dest } = build.getDestDataFile(file);
                 if (build.options.virtual) {
                     build.mountFile({ dest, stream: file });

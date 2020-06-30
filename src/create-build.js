@@ -59,6 +59,9 @@ export async function createBuild(options) {
     /**@type {Build.fileWatcher} */
     let fileWatcher = () => {};
 
+    /**@type {Build.isForCopy} */
+    let isForCopy = (file) => !options.assetsWithoutHash.test(file);
+
     /**@type {Build.deleteInput} */
     function deleteInput(file) {
         delete getCache(CacheReadFile)[file];
@@ -76,27 +79,44 @@ export async function createBuild(options) {
 
         let isIndex = typeHtml && name == "index";
 
-        name = isFixLink(ext)
-            ? name
-            : file
-                  .split("")
-                  .reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4) +
-              "-" +
-              name;
+        if (!options.assetsWithoutHash.test(ext)) {
+            let data = {
+                hash:
+                    "" +
+                    file
+                        .split("")
+                        .reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4),
+                name,
+            };
+
+            name = options.assetHashPattern.replace(
+                /\[([^\]]+)\]/g,
+                (all, prop) => data[prop] || ""
+            );
+
+            if (name.indexOf(data.hash) == -1) {
+                name = data.hash + "-" + name;
+            }
+        }
 
         let dest = normalizePath(
-            path.join(options.dest, typeHtml ? dir : "", name + ext)
+            path.join(
+                options.dest,
+                typeHtml ? dir : options.assetsDir,
+                name + ext
+            )
         );
 
         let link = normalizePath(
             path.join(
                 options.href,
-                typeHtml ? dir : "",
+                typeHtml ? dir : options.assetsDir,
                 isIndex ? "./" : name + (typeHtml ? "" : ext)
             )
         );
 
         return {
+            name,
             link,
             dest,
         };
@@ -207,6 +227,7 @@ export async function createBuild(options) {
         mountFile,
         fileWatcher,
         getDestDataFile,
+        isForCopy,
         logger: {
             ...logger,
             async markBuild(...args) {
@@ -220,5 +241,5 @@ export async function createBuild(options) {
 }
 
 /**
- * @typeof {import("./internal") } Build
+ * @typeof {import("./internal.d.ts") } Build
  */

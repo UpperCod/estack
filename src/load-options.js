@@ -1,3 +1,4 @@
+import path from "path";
 import builtins from "builtin-modules";
 import { getPackage, normalizePath } from "./utils/utils";
 
@@ -19,6 +20,9 @@ export async function loadOptions({
     forceWrite,
     silent,
     href = "/",
+    hashAllAssets,
+    assetsDir = "assets",
+    assetHashPattern = "[hash]-[name]",
     ...ignore
 }) {
     if (silent) process.env.silent = "true";
@@ -41,6 +45,14 @@ export async function loadOptions({
         ...Object.keys(pkg.peerDependencies),
     ];
 
+    let { dir, name } = path.parse(assetHashPattern);
+
+    assetHashPattern = name;
+
+    assetsDir = dir || assetsDir;
+
+    let assetsWithoutHash = hashAllAssets ? /\.html$/ : /\.(html|js|css)$/;
+
     let options = {
         src,
         dest: dest || "./",
@@ -49,6 +61,9 @@ export async function loadOptions({
         ...pkg[config],
         pkg,
         href,
+        assetsDir,
+        assetHashPattern,
+        assetsWithoutHash,
         virtual: !forceWrite && ignore.watch && ignore.server,
         jsx: jsx == "react" ? "React.createElement" : jsx,
         jsxFragment: jsx == "react" ? "React.Fragment" : jsxFragment,

@@ -1,8 +1,6 @@
 ---
 title: my post
 tag: post
-assets:
-  avatar: ../avatar.png
 ---
 
-# {{page.title}}
+# {{page.title}} - {{page.slug}}

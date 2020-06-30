@@ -1,5 +1,5 @@
 let title = document.createElement("h1");
 
-title.textContent = "😃";
+title.textContent = "[😃]";
 
 document.body.appendChild(title);

@@ -75,7 +75,6 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             let [content, data] = meta;
 
-            //@ts-ignore
             if (!build.options.watch && meta.draft) {
                 build.deleteInput(file);
                 return;
@@ -167,7 +166,7 @@ export function loadHtmlFiles(build, htmlFiles) {
                 data: {
                     content,
                     ...data,
-                    name: normalizePath(name),
+                    slug: normalizePath(name),
                     fetch,
                     assets,
                     file: normalizePath(file),

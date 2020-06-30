@@ -6,17 +6,28 @@ sade("estack [src] [dest]")
     .version("PKG.VERSION")
     .option("--watch", "Detect file changes to generate a new build", false)
     .option("--external", "Does not include dependencies in build")
-    .option(
-        "-c, --config",
-        "Allows you to export a configuration from package.json"
-    )
-    .option("--sourcemap", "Enable the use of sourcemap", false)
     .option("--server", "Create a server, by default localhost:8000", false)
     .option("--port", "Define the server port", 8000)
-    .option("--silent", "Prevents printing of logs", false)
-    .option("--forceWrite", "Force writing files in development mode", false)
     .option("--proxy", "Redirect requests that are not resolved locally", "")
     .option("--href", "add a prefix to the resolved links", "/")
+    .option(
+        "--assetsDir",
+        "define a destination directory for assets",
+        "assets"
+    )
+    .option(
+        "--hashAllAssets",
+        "all assets will be hacked including js and css",
+        false
+    )
+    .option(
+        "--assetHashPattern",
+        "customize the destination name for the assets",
+        "[hash]-[name]"
+    )
+    .option("--sourcemap", "Enable the use of sourcemap", false)
+    .option("--silent", "Prevents printing of logs", false)
+    .option("--forceWrite", "Force writing files in development mode", false)
     .option(
         "--runAfterBuild",
         "Allows to run a package script after each build cycle",
