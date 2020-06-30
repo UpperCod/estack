@@ -12,6 +12,7 @@ test.before(async () => {
         src,
         dest,
         silent: true,
+        assetsDir: "",
     });
 });
 
