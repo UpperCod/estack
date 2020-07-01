@@ -2,7 +2,6 @@ import glob from "fast-glob";
 import path from "path";
 import {
     isJs,
-    isMd,
     isFixLink,
     writeFile,
     normalizePath,
@@ -99,23 +98,22 @@ export async function createBuild(options) {
             }
         }
 
-        let dest = normalizePath(
-            path.join(
-                options.dest,
-                typeHtml ? dir : options.assetsDir,
-                name + ext
-            )
-        );
+        dir = typeHtml ? dir : options.assetsDir;
+
+        let dest = normalizePath(path.join(options.dest, dir, name + ext));
 
         let link = normalizePath(
             path.join(
                 options.href,
-                typeHtml ? dir : options.assetsDir,
+                dir,
                 isIndex ? "./" : name + (typeHtml ? "" : ext)
             )
         );
 
+        let base = name + ext;
+
         return {
+            base,
             name,
             link,
             dest,

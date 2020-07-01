@@ -92,11 +92,7 @@ export function loadPages(build) {
         let results = {};
         for (let prop in query) {
             let value = query[prop];
-            try {
-                results[prop] = queryPages(pagesData, value, true);
-            } catch (e) {
-                console.log(pages);
-            }
+            results[prop] = queryPages(pagesData, value, true);
         }
         pages.forEach((data) => (data.query = results));
     });

@@ -10,35 +10,12 @@ let extensions = [".js", ".jsx", ".ts", ".tsx"];
 /**
  *
  * @param {Build.options} options
- * @param {Build.mountFile} [mountFile] - mount rollup files on development server without writing
  */
-export function plugins(options, mountFile) {
+export function plugins(options) {
     let optionalPlugins = [];
 
     if (options.minify) {
         optionalPlugins.push(pluginTerser({ sourcemap: options.sourcemap }));
-    }
-
-    if (mountFile) {
-        optionalPlugins.push({
-            type: "mount-file",
-            generateBundle(opts, chunks) {
-                for (let file in chunks) {
-                    let { code, map } = chunks[file];
-                    if (opts.sourcemap) {
-                        let fileMap = file + ".map";
-                        mountFile({
-                            dest: fileMap,
-                            code: map + "",
-                            type: "json",
-                        });
-                        code += `\n//# sourceMappingURL=${fileMap}`;
-                    }
-                    mountFile({ dest: file, code, type: "js" });
-                    delete chunks[file];
-                }
-            },
-        });
     }
 
     return [

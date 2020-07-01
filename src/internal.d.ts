@@ -74,6 +74,7 @@ namespace Build {
     export type getDestDataFile = (
         file: string
     ) => {
+        base: string;
         name: string;
         link: string;
         dest: string;

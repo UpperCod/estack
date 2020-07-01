@@ -1,5 +1,6 @@
-import { plugins } from "./plugins";
+import path from "path";
 import { rollup, watch } from "rollup";
+import { plugins } from "./plugins";
 import { isCss } from "../utils/types";
 import { loadCssFile } from "../load-css/load-css-file";
 import { MARK_ROLLUP } from "../constants";
@@ -21,35 +22,77 @@ export async function loadRollup(build, jsFiles) {
     cache.watcher = [];
 
     let inputKeys = {};
+    let inputAlias = {};
 
     jsFiles.forEach((file) => {
-        let { name } = build.getDestDataFile(file);
-        inputKeys[name] = file;
+        let { base } = path.parse(file);
+        let dataFile = build.getDestDataFile(file);
+        inputKeys[base] = dataFile;
+        inputAlias[dataFile.base] = dataFile;
     });
 
     let input = {
-        input: inputKeys,
+        input: jsFiles, //Object.keys(inputKeys),
         onwarn(message) {
             build.logger.markBuildError(message, MARK_ROLLUP);
         },
         external: options.external,
         cache: cache.bundle,
         plugins: [
+            {
+                name: "local-estack",
+                // resolveId(id) {
+                //     if (inputKeys[id]) {
+                //         return id;
+                //     }
+                // },
+                // async load(id) {
+                //     if (inputKeys[id]) {
+                //         return build.readFile(inputKeys[id]);
+                //     }
+                // },
+                renderChunk(code, chunk) {
+                    if (inputKeys[chunk.fileName]) {
+                        chunk.fileName = inputKeys[chunk.fileName].base;
+                    }
+                },
+                generateBundle(opts, chunks) {
+                    if (!options.virtual) return;
+                    for (let file in chunks) {
+                        let { code, map, fileName } = chunks[file];
+                        let dest = file;
+                        let fileMapRelative;
+                        if (inputAlias[fileName]) {
+                            dest = inputAlias[fileName].dest;
+                            fileMapRelative =
+                                inputAlias[fileName].base + ".map";
+                        }
+
+                        if (opts.sourcemap) {
+                            let fileMap = dest + ".map";
+                            build.mountFile({
+                                dest: fileMap,
+                                code: map + "",
+                                type: "json",
+                            });
+                            code += `\n//# sourceMappingURL=${
+                                fileMapRelative || fileMap
+                            }`;
+                        }
+
+                        build.mountFile({ dest, code, type: "js" });
+
+                        delete chunks[file];
+                    }
+                },
+            },
             pluginImportCss(build),
-            ...plugins(
-                options,
-                options.virtual &&
-                    ((source) =>
-                        build.mountFile({
-                            ...source,
-                            dest: build.getDestDataFile(source.dest).dest,
-                        }))
-            ),
+            ...plugins(options),
         ],
     };
 
     let output = {
-        dir: options.dest,
+        dir: path.join(options.dest, options.assetDir),
         format: "es",
         sourcemap: options.sourcemap,
     };

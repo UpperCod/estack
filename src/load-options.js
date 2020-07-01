@@ -21,7 +21,7 @@ export async function loadOptions({
     silent,
     href = "/",
     hashAllAssets,
-    assetsDir = "assets",
+    assetsDir = "",
     assetHashPattern = "[hash]-[name]",
     ...ignore
 }) {
