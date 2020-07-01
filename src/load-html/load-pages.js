@@ -204,7 +204,10 @@ function resolveArchive(build, pages, page, addPage) {
 
         let file = paged == 0 ? data.link : path.join(data.link, paged + "");
 
-        let { dest, link } = build.getDestDataFile(file);
+        let { dest, link } =
+            paged == 0
+                ? { dest: page.dest, link: data.link }
+                : build.getDestDataFile(file);
 
         let position = paged - 1;
 
