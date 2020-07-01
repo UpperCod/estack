@@ -32,7 +32,7 @@ export function loadPages(build) {
 
     let pages = {};
 
-    let alias = new Proxy(pages, {
+    let links = new Proxy(pages, {
         get(obj, prop) {
             if (obj[prop]) {
                 return obj[prop].ref;
@@ -44,11 +44,11 @@ export function loadPages(build) {
 
     let addPage = (page) => {
         let { data } = page;
-        let id = data.alias || data.link;
+        let id = data.symlink || data.link;
 
         if (pages[id]) {
             build.logger.debug(
-                `${ERROR_DUPLICATE_ID} identifiers must be unique, ${pages[id].data.file} ${data.file}`,
+                `${ERROR_DUPLICATE_ID} identifiers [symlink] or [link] must be unique, ${pages[id].data.file} ${data.file}`,
                 MARK_ROOT
             );
         } else {
@@ -110,12 +110,12 @@ export function loadPages(build) {
         let _layout = templates[layout == null ? "default" : layout];
 
         let pageData = {
+            links,
             pkg: build.options.pkg,
             build: !build.options.watch,
             page: data, // for the html page is data, eg page.title
             layout: _layout && _layout.data,
             pages: pagesData,
-            alias,
             // The following properties can only be accessed
             // from the scope of the stack and are for internal use
             [DATA_FRAGMENTS]: fragments,
@@ -225,7 +225,7 @@ function resolveArchive(build, pages, page, addPage) {
             ...page,
             data: {
                 ...data,
-                alias: paged == 0 && data.alias,
+                symlink: paged == 0 && data.symlink,
                 link,
                 archive: {
                     paged,

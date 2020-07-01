@@ -41,16 +41,6 @@ export async function loadRollup(build, jsFiles) {
         plugins: [
             {
                 name: "local-estack",
-                // resolveId(id) {
-                //     if (inputKeys[id]) {
-                //         return id;
-                //     }
-                // },
-                // async load(id) {
-                //     if (inputKeys[id]) {
-                //         return build.readFile(inputKeys[id]);
-                //     }
-                // },
                 renderChunk(code, chunk) {
                     if (inputKeys[chunk.fileName]) {
                         chunk.fileName = inputKeys[chunk.fileName].base;
@@ -92,7 +82,7 @@ export async function loadRollup(build, jsFiles) {
     };
 
     let output = {
-        dir: path.join(options.dest, options.assetDir),
+        dir: path.join(options.dest, options.assetsDir),
         format: "es",
         sourcemap: options.sourcemap,
     };
