@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../src/index.js"],"sourcesContent":["let title = document.createElement(\"h1\");\r\n\r\ntitle.textContent = \"[😃]\";\r\n\r\ndocument.body.appendChild(title);\r\n"],"names":["title","document"],"mappings":"AAAA,uCAEAA,yBAEAC"}
