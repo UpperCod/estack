@@ -1,1 +1,0 @@
-{"version":3,"file":"template-default.js","sources":["../../template/template-default.js"],"sourcesContent":["console.log(document.body);\r\n"],"names":["console"],"mappings":"AAAAA"}

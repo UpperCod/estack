@@ -1,0 +1,46 @@
+---
+template: default
+---
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{ page.link }}</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,600;1,400&display=swap"
+            rel="stylesheet"
+        />
+
+        <link rel="stylesheet" href="{{ "./easy-doc.css" | asset }}" />
+    </head>
+
+    <body>
+        {% assign symlink = "index-" | append : page.lang %} 
+        {% assign config = links[symlink] %} 
+
+        {% fragment "easy-doc-header" with title : config.aside.title %}
+
+        <section class="c-easyDocContent">
+            <aside class="c-easyDocContent_aside">
+                <h4>My Desing System</h4>
+                <p>nulla Lorem officia et ea anim aute commodo deserunt</p>
+                <pre></pre>
+                <ul>
+                    <li>
+                        <h4>Components</h4>
+                        <ul>
+                            <li>
+                                a-router
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </aside>
+            <article class="c-easyDocContent_inner">
+                {{ page.content }}
+            </article>
+        </section>
+    </body>
+</html>

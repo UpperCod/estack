@@ -1,0 +1,37 @@
+@import "./easy-doc-base.css";
+@import "./fragments/easy-doc-header/easy-doc-header.css";
+
+body {
+    display: flex;
+    flex-flow: column;
+}
+
+.c-easyDocContent {
+    width: 100%;
+    height: auto;
+    flex: 0%;
+    display: flex;
+    flex-flow: row wrap;
+    background: var(--easyDoc-bgcolor-content);
+    &_aside {
+        flex: 0%;
+        max-width: 300px;
+        margin: 0px 0px 0px auto;
+    }
+    &_inner {
+        font-size: 0.9375rem;
+        line-height: 1.625rem;
+        padding: 0px 6.25rem;
+        box-sizing: border-box;
+        margin-right: auto;
+        max-width: var(--easyDoc-maxWidth-content);
+
+        h2 {
+            font-size: 1.75rem;
+        }
+    }
+    &_aside,
+    &_inner {
+        padding: 3.125rem 0px;
+    }
+}

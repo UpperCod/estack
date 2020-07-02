@@ -1,0 +1,32 @@
+:root {
+    font-size: 16px;
+    --easyDoc-font: "Poppins", sans-serif;
+    --easyDoc-fontColor: #707070;
+    --easyDoc-fontWeight: 400;
+    --easyDoc-fontWeight-title: 600;
+    --easyDoc-fontColor-title: black;
+    --easyDoc-bgcolor-content: #f7f8f9;
+    --easyDoc-maxWidth-content: 60rem;
+}
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+body {
+    margin: 0px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    color: var(--easyDoc-fontColor);
+    font-family: var(--easyDoc-font);
+    font-weight: var(--easyDoc-fontWeight);
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: var(--easyDoc-fontWeight-title);
+    color: var(--easyDoc-fontColor-title);
+}

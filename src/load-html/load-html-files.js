@@ -98,8 +98,6 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             let { dest, link } = dataFile;
 
-            console.log({ dest, link });
-
             let fetch = {};
 
             let assets = {};

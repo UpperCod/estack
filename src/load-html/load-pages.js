@@ -11,7 +11,6 @@ import {
     MARK_ROOT,
     ERROR_DUPLICATE_ID,
 } from "../constants";
-import { throws } from "assert";
 
 /**
  *
