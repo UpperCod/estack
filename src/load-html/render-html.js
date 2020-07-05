@@ -21,12 +21,22 @@ let engine = new Liquid({
     cache: false,
     dynamicPartials: false,
 });
-
+/**
+ * render a document using liquidjs
+ * @param {string} code
+ * @param {object} [data]
+ * @returns {Promise<string>}
+ */
 export function renderHtml(code, data) {
     cache[code] = cache[code] || engine.parse(code);
     return engine.render(cache[code], data);
 }
-
+/**
+ * Create a group array based on property defined between elements
+ * @example
+ * input : `[{tag:"a"},{tag:"b"}]`
+ * output : `["a",[{tag:"a"}],"b",[{tag:"b"}]]`
+ */
 engine.registerFilter("group", (data, by) => {
     let groups = {};
 
@@ -42,28 +52,26 @@ engine.registerFilter("group", (data, by) => {
         .sort()
         .map((prop) => ({ group: prop, items: groups[prop] }));
 });
-
+/**
+ * Apply markdown as a liquid filter
+ */
 engine.registerFilter("markdown", (string) =>
     renderMarkdown(normalizeLineSpace(string))
 );
-
+/**
+ * Apply markdown as a prismjs filter
+ */
 engine.registerFilter("highlighted", (string, type) =>
     highlighted(normalizeLineSpace(string), type)
 );
-
-engine.registerFilter("link", function (link) {
-    let {
-        environments: { page, layout, [FROM_LAYOUT]: fromLayout },
-    } = this.context;
-
-    let currentLink = fromLayout ? layout.link : page && page.link;
-
-    if (currentLink) {
-        return resolvePath(link, currentLink);
-    }
-    return link;
-});
-
+/**
+ *
+ * @param {object}  environments - render scope
+ * @param {string} name - name of the asset to register
+ * @param {object} [data] - Lets configure the asset
+ * @param {boolean} [data.tag] - return the asset as a tag, only valid for .js and .css
+ * @returns {Promise<string>}
+ */
 async function asset(
     {
         [DATA_PAGE]: _page,
