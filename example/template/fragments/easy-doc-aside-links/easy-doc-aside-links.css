@@ -1,0 +1,40 @@
+.c-easyDocAsideLinks {
+    color: var(--easyDoc-fontColor-title);
+    &_list {
+        padding: 0px;
+        list-style: none;
+        margin: 0px;
+    }
+    &_item {
+        &-active {
+            color: black;
+        }
+    }
+    &_title {
+        font-size: 0.875rem;
+        margin-bottom: 0.625rem;
+    }
+    &_link {
+        width: 100%;
+        display: block;
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        text-decoration: none;
+        color: unset;
+        padding: 0.2rem 0px;
+        &:before {
+            width: 0.3125rem;
+            height: 0.3125rem;
+            display: block;
+            content: "";
+            border-radius: 100%;
+            margin-right: 0.625rem;
+        }
+        &-active {
+            &:before {
+                background: currentColor;
+            }
+        }
+    }
+}

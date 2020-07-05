@@ -1,0 +1,14 @@
+---
+fragment: easy-doc-aside-header
+title: title?
+description: description?
+install: npm install estack?
+assets:
+    logo: ./logo.svg
+---
+<header class="c-easyDocAsideHeader">
+    <img src="{{config.assets.logo | default: assets.logo }}" width="120px" alt="Logo {{title}}">
+    <h4 class="c-easyDocAsideHeader_title">{{title}}</h4>
+    <p class="c-easyDocAsideHeader_description">{{description}}</p>
+    <pre class="c-easyDocAsideHeader_install">{{install}}</pre>
+</header>

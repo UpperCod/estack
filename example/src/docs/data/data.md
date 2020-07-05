@@ -1,6 +1,8 @@
 ---
+title: Declarar datos
 lang: en
 tag: doc
+order: 0
 ---
 
 ## My Desing System -1

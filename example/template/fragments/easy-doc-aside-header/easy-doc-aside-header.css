@@ -1,0 +1,18 @@
+.c-easyDocAsideHeader {
+    > * {
+        margin: 0.5rem 0px;
+    }
+    &_title {
+        font-size: 1.125rem;
+    }
+    &_description {
+        font-size: 0.75rem;
+    }
+    &_install {
+        font-size: 0.75rem;
+        color: var(--easyDoc-fontColor-code);
+        background: var(--easyDoc-bgcolor-code);
+        padding: 0.5rem 0.975rem;
+        border-radius: 0.3125rem;
+    }
+}

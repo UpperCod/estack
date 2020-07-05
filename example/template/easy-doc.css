@@ -1,37 +1,49 @@
 @import "./easy-doc-base.css";
 @import "./fragments/easy-doc-header/easy-doc-header.css";
-
-body {
-    display: flex;
-    flex-flow: column;
-}
+@import "./fragments/easy-doc-aside-links/easy-doc-aside-links.css";
+@import "./fragments/easy-doc-aside-header/easy-doc-aside-header.css";
+@import "https://raw.githubusercontent.com/PrismJS/prism-themes/master/themes/prism-vsc-dark-plus.css";
 
 .c-easyDocContent {
     width: 100%;
     height: auto;
     flex: 0%;
     display: flex;
-    flex-flow: row wrap;
-    background: var(--easyDoc-bgcolor-content);
     &_aside {
         flex: 0%;
-        max-width: 300px;
+        max-width: 280px;
+        height: 100vh;
         margin: 0px 0px 0px auto;
+        position: sticky;
+        top: 0;
+        padding: 3.125rem 2.5rem;
+        box-sizing: border-box;
+        border-right: 1px solid var(--easyDoc-brcolor-aside);
     }
-    &_inner {
-        font-size: 0.9375rem;
-        line-height: 1.625rem;
-        padding: 0px 6.25rem;
+    &_content {
         box-sizing: border-box;
         margin-right: auto;
+        border-right: 1px solid var(--easyDoc-brcolor-aside);
         max-width: var(--easyDoc-maxWidth-content);
-
+    }
+    &_inner {
+        padding: 2.1874rem var(--easyDoc-indentation);
+        box-sizing: border-box;
+        //font-size: 0.9375rem;
+        font-size: 1rem;
+        line-height: 1.8rem;
         h2 {
             font-size: 1.75rem;
         }
-    }
-    &_aside,
-    &_inner {
-        padding: 3.125rem 0px;
+        pre {
+            line-height: 1.5em;
+            font-size: 0.75rem;
+            padding: 1rem;
+            box-sizing: border-box;
+            color: var(--easyDoc-fontColor-code);
+            background: var(--easyDoc-bgcolor-code);
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
     }
 }

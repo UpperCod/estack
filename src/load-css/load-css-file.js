@@ -1,15 +1,21 @@
 import path from "path";
 //@ts-ignore
 import { compile, serialize, stringify } from "stylis";
-import { readFile as fsReadFile } from "../utils/utils";
+import { readFile as fsReadFile, isUrl, request } from "../utils/utils";
 
-let createCaptureMetaCss = (type) =>
-    RegExp(String.raw`@${type}\s*(?:|\"|\')([^\"\']+)(?:|\"|\');`);
+let alRule = /@(\w+)\s+(?:(?:")([^"]+)(?:")|(?:')([^']+)(?:')){0,1}(?:\s*([^;]+)){0,1}/;
 
-let regValueUse = createCaptureMetaCss("use");
-let regValueImport = createCaptureMetaCss("import");
-let regValueNamespace = createCaptureMetaCss("namespace");
+let getAlMeta = (value) => {
+    let params = value.match(alRule);
+    if (params) {
+        let [, type, valueDobleQuote, valueSingleQuote, options] = params;
+        return { type, value: valueDobleQuote || valueSingleQuote, options };
+    }
+};
 
+let templateMedia = compile(`@media print{body{red}}`)[0];
+
+let cache = {};
 /**
  * preprocess the css using Stylis
  * @param {object} context
@@ -21,6 +27,8 @@ let regValueNamespace = createCaptureMetaCss("namespace");
  * @param {boolean} [returnRules] - If true it will return the rules as Array
  * @param {RegExp[]} [useRules] - Regular expressions to select css rules
  * @param {string} [namespace] - context prefix of file selectors
+ * @param {string[]} [headers] - context prefix of file selectors
+ * @param {string} [uri]
  * @returns { (Promise<any>) }
  */
 export async function loadCssFile(
@@ -28,14 +36,12 @@ export async function loadCssFile(
     imports = {},
     returnRules,
     useRules = [],
-    namespace = ""
+    namespace = "",
+    headers = [],
+    uri
 ) {
     let { dir } = path.parse(file);
 
-    code = code.replace(regValueNamespace, (nm, value) => {
-        namespace += (namespace ? " " : "") + value;
-        return "";
-    });
     /**@type {any[]} */
     let rules = await Promise.all(
         compile(namespace ? `${namespace}{${code}}` : code).map(
@@ -51,46 +57,89 @@ export async function loadCssFile(
                  * @use ".my-class-*"; .my-class-b:not(c)
                  */
                 if (child.type == "@use") {
-                    let value = RegExp(
-                        "^" +
+                    let test = getAlMeta(child.value);
+                    let value;
+                    if (test) {
+                        value = (
                             (namespace ? namespace + "\\s+" : "") +
-                            child.value
-                                .replace(regValueUse, "$1")
-                                .replace(/^keyframes *(.+)/, "keyframes:$1")
-                                .replace(/([\.\]\[\)\(\:])/g, "\\$1")
-                    );
+                            test.value.replace(
+                                /^keyframes *(.+)/,
+                                "keyframes:$1"
+                            )
+                        ).replace(/([\.\]\[\)\(\:])/g, "\\$1");
+                        value = RegExp(value);
+                    }
 
                     if (!useRules.includes(value)) {
                         useRules.push(value);
                     }
                 }
                 if (child.type == "@import") {
-                    let value = child.value.replace(regValueImport, "$1");
-                    let file = path.join(dir, value);
-                    if (!imports[file]) {
-                        imports[file] = true;
-                        try {
-                            let code = await (readFile || fsReadFile)(file);
-                            addWatchFile(file);
-                            return loadCssFile(
-                                { file, code, readFile, addWatchFile },
-                                imports,
-                                true,
-                                useRules,
-                                namespace
-                            );
-                        } catch (e) {
-                            let file = path.join("node_modules", value);
+                    let test = getAlMeta(child.value);
+
+                    if (test) {
+                        let fromUrl = isUrl(test.value);
+                        let file = fromUrl
+                            ? test.value
+                            : path.join(uri || dir, test.value);
+
+                        if (!imports[file]) {
+                            imports[file] = true;
+                            let nextRules;
                             try {
-                                let code = await (readFile || fsReadFile)(file);
-                                return loadCssFile(
+                                let code;
+                                if (fromUrl) {
+                                    code = await (cache[file] =
+                                        cache[file] || request(file));
+                                } else {
+                                    code = await (readFile || fsReadFile)(file);
+                                }
+
+                                !fromUrl && addWatchFile(file);
+
+                                nextRules = loadCssFile(
                                     { file, code, readFile, addWatchFile },
                                     imports,
                                     true,
                                     useRules,
-                                    namespace
+                                    namespace,
+                                    headers,
+                                    fromUrl ? file : false
                                 );
-                            } catch (e) {}
+                            } catch (e) {
+                                let file = path.join(
+                                    "node_modules",
+                                    test.value
+                                );
+                                try {
+                                    let code = await (readFile || fsReadFile)(
+                                        file
+                                    );
+                                    nextRules = loadCssFile(
+                                        { file, code, readFile, addWatchFile },
+                                        imports,
+                                        true,
+                                        useRules,
+                                        namespace,
+                                        headers
+                                    );
+                                } catch (e) {}
+                            }
+                            if (nextRules) {
+                                if (test.options) {
+                                    return nextRules.then((children) => [
+                                        {
+                                            ...templateMedia,
+                                            value: `@media ${test.options}`,
+                                            props: [test.options],
+                                            children,
+                                        },
+                                    ]);
+                                }
+                                return nextRules;
+                            } else {
+                                headers.push(child);
+                            }
                         }
                     }
                     return [];
@@ -127,7 +176,7 @@ export async function loadCssFile(
     if (returnRules) {
         return rules;
     }
-    return serialize(rules, stringify);
+    return serialize([...headers, ...rules], stringify);
 }
 
 /**
