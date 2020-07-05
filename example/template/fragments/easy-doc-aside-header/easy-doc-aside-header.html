@@ -6,6 +6,9 @@ install: npm install estack?
 assets:
     logo: ./logo.svg
 ---
+
+{{"easy-doc-aside-header.css" | asset: tag:true }}
+
 <header class="c-easyDocAsideHeader">
     <img src="{{config.assets.logo | default: assets.logo }}" width="120px" alt="Logo {{title}}">
     <h4 class="c-easyDocAsideHeader_title">{{title}}</h4>

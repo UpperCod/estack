@@ -73,7 +73,7 @@ export function loadPages(build) {
             let page = build.inputs[file];
             let { data } = page;
             if (data.fragment) {
-                fragments[data.fragment] = data;
+                fragments[data.fragment] = page;
             } else if (data.template) {
                 templates[data.template] = page;
             } else if (data.archive) {

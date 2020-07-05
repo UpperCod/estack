@@ -1,7 +1,4 @@
 @import "./easy-doc-base.css";
-@import "./fragments/easy-doc-header/easy-doc-header.css";
-@import "./fragments/easy-doc-aside-links/easy-doc-aside-links.css";
-@import "./fragments/easy-doc-aside-header/easy-doc-aside-header.css";
 @import "https://raw.githubusercontent.com/PrismJS/prism-themes/master/themes/prism-vsc-dark-plus.css";
 
 .c-easyDocContent {

@@ -39,13 +39,14 @@ Si bien un sitio o aplicación puede comenzar desde un simple grupo de Ficheros 
 ---
 title: my page
 ---
+
 <h1>{{page.title}}</h1>
 
-<img src="{{ "image.jpg" | asset }}" />
+<img src="{{ 'image.jpg' | asset }}" />
 
 <a href="{{page.link}}">{{page.link}}</a>
 
-<script type="module" src="{{ "index.ts" | asset}}"></script>
+<script type="module" src="{{ 'index.ts' | asset}}"></script>
 ```
 
 ```html

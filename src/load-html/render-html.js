@@ -1,12 +1,13 @@
 import { Liquid, Tokenizer, evalToken } from "liquidjs";
 import { renderMarkdown, highlighted } from "./render-markdown";
+
 import {
     getProp,
     normalizeLineSpace,
-    resolvePath,
     mapPropToObject,
     isJs,
 } from "../utils/utils";
+
 import {
     DATA_FRAGMENTS,
     DATA_PAGE,
@@ -100,12 +101,14 @@ async function asset(
     }
 }
 
-engine.registerFilter("asset", async function (file, data) {
+engine.registerFilter("asset", async function (file, ...options) {
     let { environments } = this.context;
-    return asset(environments, file);
+    let data = {};
+    options.forEach(([prop, value]) => {
+        if (typeof prop == "string") data[prop] = value;
+    });
+    return asset(environments, file, data);
 });
-
-engine.registerTag("asset", createTag(asset));
 
 /**
  * It allows including fragments of html, these have a scope limited only to your document
@@ -113,13 +116,17 @@ engine.registerTag("asset", createTag(asset));
  */
 engine.registerTag(
     "fragment",
-    createTag(({ [DATA_FRAGMENTS]: _fragments = {} }, name, data) => {
+    createTag((pageData, name, data) => {
+        let { [DATA_FRAGMENTS]: _fragments = {} } = pageData;
         let fragment = _fragments[name];
         return fragment
-            ? renderHtml(fragment.content, {
-                  ...fragment,
+            ? renderHtml(fragment.data.content, {
+                  ...fragment.data,
                   content: null,
                   ...data,
+                  [DATA_PAGE]: fragment,
+                  [PAGE_ASSETS]: pageData[PAGE_ASSETS],
+                  [FROM_LAYOUT]: false,
               })
             : "";
     })
