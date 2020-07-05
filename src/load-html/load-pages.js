@@ -10,6 +10,7 @@ import {
     DATA_PAGE,
     MARK_ROOT,
     ERROR_DUPLICATE_ID,
+    PAGE_ASSETS,
 } from "../constants";
 
 /**
@@ -120,16 +121,14 @@ export function loadPages(build) {
             [DATA_FRAGMENTS]: fragments,
             [DATA_LAYOUT]: _layout,
             [DATA_PAGE]: _page,
+            [PAGE_ASSETS]: {},
         };
 
         try {
             data.content = await renderHtml(_page.data.content, pageData);
             return pageData;
         } catch (e) {
-            build.logger.debug(
-                `${ERROR_TRANSFORMING} : ${data.file}`,
-                MARK_ROOT
-            );
+            createErrorFromLiquid(build, data, e);
         }
     });
 
@@ -167,10 +166,7 @@ export function loadPages(build) {
                     try {
                         content = await renderHtml(layout.content, pageData);
                     } catch (e) {
-                        build.logger.debug(
-                            `${ERROR_TRANSFORMING} : ${_layout.data.file}`,
-                            MARK_ROOT
-                        );
+                        createErrorFromLiquid(build, _layout.data, e);
                     }
                 }
                 if (content != null) {
@@ -182,6 +178,20 @@ export function loadPages(build) {
                 }
             })
         )
+    );
+}
+
+function createErrorFromLiquid(build, data, e) {
+    let test = e.message.match(/line:(\d+), +col:(\d+)/);
+    let lines = [];
+    if (test) {
+        let [, line, col] = test;
+        lines = ["", data["@br"] + Number(line), col];
+    }
+
+    build.logger.debug(
+        `${ERROR_TRANSFORMING} ${data.file + lines.join(":")}`,
+        MARK_ROOT
     );
 }
 /**

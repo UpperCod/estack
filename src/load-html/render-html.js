@@ -5,12 +5,14 @@ import {
     normalizeLineSpace,
     resolvePath,
     mapPropToObject,
+    isJs,
 } from "../utils/utils";
 import {
     DATA_FRAGMENTS,
     DATA_PAGE,
     DATA_LAYOUT,
     FROM_LAYOUT,
+    PAGE_ASSETS,
 } from "../constants";
 
 let cache = {};
@@ -49,26 +51,6 @@ engine.registerFilter("highlighted", (string, type) =>
     highlighted(normalizeLineSpace(string), type)
 );
 
-engine.registerFilter("asset", async function (file) {
-    let {
-        environments: {
-            [DATA_PAGE]: _page,
-            [DATA_LAYOUT]: _layout,
-            [FROM_LAYOUT]: fromLayout,
-        },
-    } = this.context;
-
-    let addFile = fromLayout
-        ? _layout && _layout.addFile
-        : _page && _page.addFile;
-
-    if (addFile != null) {
-        file = await addFile(file);
-    }
-
-    return file;
-});
-
 engine.registerFilter("link", function (link) {
     let {
         environments: { page, layout, [FROM_LAYOUT]: fromLayout },
@@ -76,18 +58,54 @@ engine.registerFilter("link", function (link) {
 
     let currentLink = fromLayout ? layout.link : page && page.link;
 
-    if (currentLink != null) {
+    if (currentLink) {
         return resolvePath(link, currentLink);
     }
     return link;
 });
+
+async function asset(
+    {
+        [DATA_PAGE]: _page,
+        [DATA_LAYOUT]: _layout,
+        [FROM_LAYOUT]: fromLayout,
+        [PAGE_ASSETS]: _pageAssets,
+    },
+    name,
+    data
+) {
+    let addFile = fromLayout
+        ? _layout && _layout.addFile
+        : _page && _page.addFile;
+    if (addFile) {
+        let file = await addFile(name);
+        if (data && data.tag) {
+            if (!_pageAssets[file]) {
+                _pageAssets[file] = true;
+                return isJs(file)
+                    ? `<script type="module" src="${file}"></script>`
+                    : `<link rel="stylesheet" href="${file}" />`;
+            }
+            return "";
+        }
+        return file;
+    }
+}
+
+engine.registerFilter("asset", async function (file, data) {
+    let { environments } = this.context;
+    return asset(environments, file);
+});
+
+engine.registerTag("asset", createTag(asset));
+
 /**
  * It allows including fragments of html, these have a scope limited only to your document
  * the fragments will only inherit the data associated with it
  */
 engine.registerTag(
     "fragment",
-    createTag(async ({ [DATA_FRAGMENTS]: _fragments = {} }, name, data) => {
+    createTag(({ [DATA_FRAGMENTS]: _fragments = {} }, name, data) => {
         let fragment = _fragments[name];
         return fragment
             ? renderHtml(fragment.content, {
@@ -98,6 +116,7 @@ engine.registerTag(
             : "";
     })
 );
+
 /**
  * Execute the addDataFetch function associated with the page context
  * @example

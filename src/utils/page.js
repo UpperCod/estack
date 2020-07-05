@@ -64,11 +64,11 @@ export function queryPages(
 export function getMetaPage(code) {
     let meta = {};
     let metaBlock = "---";
-    let lineBreak = "\n";
+    let lines = [];
+    let data = [];
+    let body = [];
     if (!code.indexOf(metaBlock)) {
-        let data = [];
-        let lines = code.slice(3).split(lineBreak);
-        let body = [];
+        lines = code.slice(3).split(/\n+/);
         for (let i = 0; i < lines.length; i++) {
             if (!lines[i].indexOf(metaBlock)) {
                 body = lines.slice(i + 1);
@@ -77,9 +77,10 @@ export function getMetaPage(code) {
             data.push(lines[i]);
         }
         if (data.length) {
-            meta = yamlParse(data.join(lineBreak));
+            meta = yamlParse(data.join("\n"));
         }
-        code = body.join(lineBreak);
+        code = body.join("\n");
     }
+    meta["@br"] = data.length ? data.length + 2 : 0;
     return [code, meta];
 }

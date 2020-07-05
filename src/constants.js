@@ -42,3 +42,8 @@ export const DATA_PAGE = Symbol("_page");
  * It allows defining if the render instance is executed from layout
  */
 export const FROM_LAYOUT = Symbol("_fromLayout");
+/**
+ * Index to define private values in the context used by liquidjs.
+ * Allows you to create a list of assets shared between page and template
+ */
+export const PAGE_ASSETS = Symbol("_pageAssets");
