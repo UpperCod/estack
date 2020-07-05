@@ -71,6 +71,12 @@ engine.registerFilter("highlighted", (string, type) =>
  * @param {string} name - name of the asset to register
  * @param {object} [data] - Lets configure the asset
  * @param {boolean} [data.tag] - return the asset as a tag, only valid for .js and .css
+ * @param {boolean} [data.async] - define the async attribute in the tag
+ * @param {boolean} [data.defer] - define the defer attribute in the tag
+ * @param {string} [data.insert] - add a key to page Assets, to be replaced when creating the page
+ * @param {string} [data.media] - add a key to page Assets, to be replaced when creating the page
+ * @param {(boolean|string)} [data.preload] - create a secondary tag that declares the preload
+ *                                            of the resource {@link https://html.spec.whatwg.org/multipage/links.html#link-type-preload}
  * @returns {Promise<string>}
  */
 async function asset(
@@ -91,9 +97,37 @@ async function asset(
         if (data && data.tag) {
             if (!_pageAssets[file]) {
                 _pageAssets[file] = true;
-                return isJs(file)
-                    ? `<script type="module" src="${file}"></script>`
-                    : `<link rel="stylesheet" href="${file}" />`;
+                let css = !isJs(file);
+
+                let deferOrAsync = data.async
+                    ? "async"
+                    : data.defer
+                    ? "defer"
+                    : "";
+
+                let tag = css
+                    ? `<link rel="stylesheet" href="${file}" ${
+                          data.media ? `media="${data.media}"` : ""
+                      }>`
+                    : `<script type="module" src="${file}" ${deferOrAsync}></script>`;
+
+                if (data.preload) {
+                    tag =
+                        (css
+                            ? `<link rel="preload" href="${file}" as="style">`
+                            : `<link rel="${
+                                  data.preload == "preload"
+                                      ? "preload"
+                                      : "modulepreload"
+                              }" href="${file}" as="script">`) + tag;
+                }
+
+                if (data.insert) {
+                    (_pageAssets[data.insert] =
+                        _pageAssets[data.insert] || []).push(tag);
+                } else {
+                    return tag;
+                }
             }
             return "";
         }

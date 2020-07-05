@@ -147,6 +147,7 @@ export function loadPages(build) {
                     layout,
                     [DATA_PAGE]: _page,
                     [DATA_LAYOUT]: _layout,
+                    [PAGE_ASSETS]: _pageAssets,
                 } = pageData;
 
                 let { content } = page;
@@ -172,7 +173,15 @@ export function loadPages(build) {
                 if (content != null) {
                     return build.mountFile({
                         dest: _page.dest,
-                        code: content,
+                        code: content.replace(
+                            /<!-- *(\w+) *-->/,
+                            (all, type) => {
+                                if (_pageAssets[type]) {
+                                    return _pageAssets[type].join("");
+                                }
+                                return all;
+                            }
+                        ),
                         type: "html",
                     });
                 }
