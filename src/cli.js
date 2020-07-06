@@ -4,6 +4,16 @@ export { createBuild } from "./create-build";
 
 sade("estack [src] [dest]")
     .version("PKG.VERSION")
+    .option(
+        "--dev",
+        "Dev mode, equivalent to using --server --watch --hashAllAssets --assetsDir --sourcemap",
+        false
+    )
+    .option(
+        "--build",
+        "Build mode, equivalent to using --hashAllAssets --assetsDir --minify",
+        false
+    )
     .option("--watch", "Detect file changes to generate a new build", false)
     .option("--external", "Does not include dependencies in build")
     .option("--server", "Create a server, by default localhost:8000", false)

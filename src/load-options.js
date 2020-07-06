@@ -12,6 +12,8 @@ import { getPackage, normalizePath } from "./utils/utils";
  */
 export async function loadOptions({
     src = [],
+    dev,
+    build,
     dest,
     config,
     external,
@@ -25,6 +27,22 @@ export async function loadOptions({
     assetHashPattern = "[hash]-[name]",
     ...ignore
 }) {
+    let srcWithHtml = /(html|md)/.test(src);
+    if (dev) {
+        ignore.sourcemap = ignore.server = ignore.watch = true;
+        if (srcWithHtml) {
+            hashAllAssets = true;
+            assetsDir = "assets";
+        }
+    }
+    if (build) {
+        if (srcWithHtml) {
+            ignore.minify = true;
+            hashAllAssets = true;
+            assetsDir = "assets";
+        }
+    }
+
     if (silent) process.env.silent = "true";
 
     let pkg = await getPackage();

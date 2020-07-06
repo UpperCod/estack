@@ -34,17 +34,17 @@ export let renderMarkdown = (code) =>
 
 // add an additional container prevent the table from collapsing the page
 renderer.table = (header, body) =>
-    `<div class="markdown-table-container"><table>${
+    `{% raw %}<div class="markdown-table-container"><table>${
         header + body
-    }</table></div>`;
+    }</table></div>{% endraw %}`;
 
 //  configure the container to allow language to be highlighted independently of the class
 renderer.code = (code, type) => {
     try {
-        return `<pre class="markdown-code-container" data-code="${type}"><code class="language-${type}">${highlighted(
+        return `{% raw %}<pre class="markdown-code-container" data-code="${type}"><code class="language-${type}">${highlighted(
             code,
             type
-        )}</code></pre>`;
+        )}</code></pre>{% endraw %}`;
     } catch (e) {}
 };
 

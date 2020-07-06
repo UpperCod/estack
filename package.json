@@ -9,8 +9,8 @@
         "test": "npm run clear && ava",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:doc": "node cli.js example/{src,template}/**/*.{html,md} example/dest --server --watch --sourcemap --hashAllAssets --assetsDir assets",
-        "build:doc": "node cli.js example/{src,template}/**/*.{html,md} example/dest --minify --sizes  --sourcemap --hashAllAssets --assetsDir assets",
+        "dev:doc": "node cli.js example/{src,template}/**/*.{html,md} --dev",
+        "build:doc": "node cli.js example/{src,template}/**/*.{html,md} docs --build",
         "prepare": "npm run build && npm run test"
     },
     "author": "UpperCod",
