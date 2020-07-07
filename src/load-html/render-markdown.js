@@ -40,13 +40,23 @@ renderer.table = (header, body) =>
 
 //  configure the container to allow language to be highlighted independently of the class
 renderer.code = (code, type) => {
+    let isRaw;
+    if (type) {
+        [type, isRaw] = type.split(/ +/);
+        isRaw = isRaw == "raw" || type == "raw";
+    }
     try {
-        return `{% raw %}<pre class="markdown-code-container" data-code="${type}"><code class="language-${type}">${highlighted(
+        return `${
+            isRaw ? "" : "{% raw %}"
+        }<pre class="markdown-code-container" data-code="${type}"><code class="language-${type}">${highlighted(
             code,
             type
-        )}</code></pre>{% endraw %}`;
+        )}</code></pre>${isRaw ? "" : "{% endraw %}"}`;
     } catch (e) {}
 };
+
+renderer.codespan = (code) =>
+    `{% raw %}<code>${highlighted(code)}</code>{% endraw %}`;
 
 renderer.link = (href, title, text) => {
     href = escapeTemplate(href);
