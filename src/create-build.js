@@ -6,6 +6,7 @@ import {
     writeFile,
     normalizePath,
     logger,
+    request as uRequest,
     readFile as fsReadFile,
     isHtml,
 } from "./utils/utils";
@@ -14,6 +15,7 @@ import { createWatch } from "./create-watch";
 import { loadOptions } from "./load-options";
 import { loadBuild } from "./load-build";
 
+let CACHE_REQUEST = {};
 /**
  * @param {import("./internal").options} options
  */
@@ -36,7 +38,7 @@ export async function createBuild(options) {
 
     let cache = {};
 
-    /**@type {} */
+    /**@type {import("./internal").getCache} */
     let getCache = (prop) => (cache[prop] = cache[prop] = {});
 
     let CacheReadFile = Symbol("_cacheReadFile");
@@ -58,6 +60,10 @@ export async function createBuild(options) {
 
     /**@type {import("./internal").isForCopy} */
     let isForCopy = (file) => !options.assetsWithoutHash.test(file);
+
+    /**@type {import("./internal").request}*/
+    let request = (url) =>
+        (CACHE_REQUEST[url] = CACHE_REQUEST[url] || uRequest(url));
 
     /**@type {import("./internal").deleteInput} */
     function deleteInput(file) {
@@ -223,6 +229,7 @@ export async function createBuild(options) {
         fileWatcher,
         getDestDataFile,
         isForCopy,
+        request,
         logger: {
             ...logger,
             async markBuild(...args) {

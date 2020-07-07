@@ -145,6 +145,7 @@ let pluginImportCss = (build) => ({
                         code,
                         readFile: build.readFile,
                         addWatchFile: (id) => this.addWatchFile(id),
+                        request: build.request,
                     })
                 )}`,
                 map: { mappings: "" },

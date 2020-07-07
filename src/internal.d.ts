@@ -39,6 +39,12 @@ export type isPreventLoad = (file: string) => boolean;
 export type isNotPreventLoad = (file: string) => boolean;
 
 /**
+ * Generate a request that is cached globally
+ */
+
+export type request = (url: string) => Promise<any>;
+
+/**
  * Add a `file` like to the watcher and associate it to the `parentFile` for rebuilding
  */
 export type fileWatcher = (
@@ -114,6 +120,7 @@ export interface options {
 }
 
 export interface build {
+    request: request;
     inputs: inputs;
     options: options;
     getCache: getCache;

@@ -11,6 +11,7 @@ export async function loadCss(build, cssFiles) {
             code: await build.readFile(file),
             file,
             readFile: build.readFile,
+            request: build.request,
             addWatchFile: (childFile) =>
                 build.fileWatcher(childFile, file, true),
         });

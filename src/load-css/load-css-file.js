@@ -1,6 +1,6 @@
 import path from "path";
 import { compile, serialize, stringify } from "stylis";
-import { readFile as fsReadFile, isUrl, request } from "../utils/utils";
+import { readFile as fsReadFile, isUrl } from "../utils/utils";
 
 let alRule = /@(\w+)\s+(?:(?:")([^"]+)(?:")|(?:')([^']+)(?:')){0,1}(?:\s*([^;]+)){0,1}/;
 
@@ -20,6 +20,7 @@ let cache = {};
  * @param {object} context
  * @param {string} context.file - current css file
  * @param {string} context.code - css code to analyze
+ * @param {import("../internal").request} context.request - read a file
  * @param {import("../internal").readFile} [context.readFile] - read a file
  * @param {(file:string)=>void} context.addWatchFile - execute the callback every time a css import is generated
  * @param {object} [imports]
@@ -31,7 +32,7 @@ let cache = {};
  * @returns {Promise<string|object[]>}
  */
 export async function loadCssFile(
-    { file, code, readFile, addWatchFile },
+    { file, code, readFile, addWatchFile, request },
     imports = {},
     returnRules,
     useRules = [],
@@ -88,8 +89,7 @@ export async function loadCssFile(
                             try {
                                 let code;
                                 if (fromUrl) {
-                                    code = await (cache[file] =
-                                        cache[file] || request(file));
+                                    code = await request(file);
                                 } else {
                                     let fn = readFile || fsReadFile;
                                     code = await fn(file);
@@ -98,7 +98,13 @@ export async function loadCssFile(
                                 !fromUrl && addWatchFile(file);
 
                                 nextRules = loadCssFile(
-                                    { file, code, readFile, addWatchFile },
+                                    {
+                                        file,
+                                        code,
+                                        readFile,
+                                        addWatchFile,
+                                        request,
+                                    },
                                     imports,
                                     true,
                                     useRules,
@@ -115,7 +121,13 @@ export async function loadCssFile(
                                     let fn = readFile || fsReadFile;
                                     let code = await fn(file);
                                     nextRules = loadCssFile(
-                                        { file, code, readFile, addWatchFile },
+                                        {
+                                            file,
+                                            code,
+                                            readFile,
+                                            addWatchFile,
+                                            request,
+                                        },
                                         imports,
                                         true,
                                         useRules,
@@ -177,7 +189,3 @@ export async function loadCssFile(
     }
     return serialize([...headers, ...rules], stringify);
 }
-
-/**
- * @typeof {import("../internal") } Build
- */

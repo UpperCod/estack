@@ -1,8 +1,6 @@
 import path from "path";
-
 import {
     isMd,
-    request,
     isUrl,
     normalizePath,
     isYaml,
@@ -20,15 +18,6 @@ import {
     MARK_ROOT,
 } from "../constants";
 
-const resolveFetchCache = {};
-/**
- * generates a single GET type request by url
- * @param {string} url - url associated with the request
- * @return {Promise<any>}
- */
-function resolveRequest(url) {
-    return (resolveFetchCache[url] = resolveFetchCache[url] || request(url));
-}
 /**
  *
  * @param {import("../internal").build} build
@@ -130,7 +119,7 @@ export function loadHtmlFiles(build, htmlFiles) {
             async function addDataFetch(prop, src, unregister) {
                 try {
                     if (isUrl(src)) {
-                        src = await resolveRequest(src);
+                        src = await build.request(src);
                     } else {
                         let childFile = joinChildFile(src);
 
