@@ -15,7 +15,7 @@ import {
 
 /**
  *
- * @param {Build.build} build
+ * @param {import("../internal").build} build
  */
 export function loadPages(build) {
     //The templates files are virtual, these can be referred
@@ -205,7 +205,7 @@ function createErrorFromLiquid(build, data, e) {
 }
 /**
  *
- * @param {Build.build} build
+ * @param {import("../internal").build} build
  * @param {*} pages
  * @param {*} page
  * @param {*} addPage
@@ -260,6 +260,3 @@ function resolveArchive(build, pages, page, addPage) {
         });
     });
 }
-/**
- * @typeof {import("../internal") } Build
- */

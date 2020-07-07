@@ -9,7 +9,7 @@ const CACHE_ROLLUP = Symbol("_CacheRollup");
 
 /**
  *
- * @param {Build.build} build
+ * @param {import("../internal").build} build
  * @param {*} jsFiles
  */
 export async function loadRollup(build, jsFiles) {
@@ -30,15 +30,16 @@ export async function loadRollup(build, jsFiles) {
         inputKeys[base] = dataFile;
         inputAlias[dataFile.base] = dataFile;
     });
-
+    /**@type {import("rollup").RollupOptions} */
     let input = {
         input: jsFiles, //Object.keys(inputKeys),
         onwarn(message) {
-            build.logger.markBuildError(message, MARK_ROLLUP);
+            build.logger.markBuildError(message + "", MARK_ROLLUP);
         },
         external: options.external,
         cache: cache.bundle,
         plugins: [
+            /**@type {import("rollup").Plugin} */
             {
                 name: "local-estack",
                 renderChunk(code, chunk) {
@@ -80,7 +81,7 @@ export async function loadRollup(build, jsFiles) {
             ...plugins(options),
         ],
     };
-
+    /**@type {{dir:string,format:"es",sourcemap:boolean}} */
     let output = {
         dir: path.join(options.dest, options.assetsDir),
         format: "es",
@@ -98,11 +99,13 @@ export async function loadRollup(build, jsFiles) {
     cache.bundle = bundle.cache;
 
     if (options.watch) {
-        let watcher = watch({
+        /**@type import("rollup").RollupWatchOptions */
+        let optionsWatch = {
             ...input,
             output,
-            watch: { exclude: "node_modules/**" },
-        });
+            watch: { exclude: ["node_modules/**"] },
+        };
+        let watcher = watch(optionsWatch);
 
         watcher.on("event", (event) => {
             switch (event.code) {
@@ -126,10 +129,15 @@ export async function loadRollup(build, jsFiles) {
     }
 }
 
+/**
+ * @param {import("../internal").build} build
+ * @returns {import("rollup").Plugin}
+ */
 let pluginImportCss = (build) => ({
     name: "plugin-import-css",
     async transform(code, id) {
         if (isCss(id)) {
+            /**@type {import("rollup").SourceDescription} */
             return {
                 code: `export default ${JSON.stringify(
                     await loadCssFile({
@@ -144,7 +152,3 @@ let pluginImportCss = (build) => ({
         }
     },
 });
-
-/**
- * @typeof {import("../internal") } Build
- */

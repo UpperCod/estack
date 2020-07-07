@@ -8,7 +8,7 @@ import { getPackage, normalizePath } from "./utils/utils";
 
 /**
  *
- * @param {Build.options} options
+ * @param {import("./internal").options} options
  */
 export async function loadOptions({
     src = [],

@@ -10,7 +10,7 @@ import { loadRollup } from "./load-rollup/load-rollup";
  */
 
 /**
- * @param { Build.build } build
+ * @param {import("./internal").build } build
  * @param {string[]} files
  * @param { number } cycle
  * @param {boolean} [forceBuild]
@@ -83,7 +83,3 @@ export async function loadBuild(build, files, cycle, forceBuild) {
         }
     }
 }
-
-/**
- * @typeof {import("./internal") } Build
- */

@@ -15,10 +15,8 @@ import { loadOptions } from "./load-options";
 import { loadBuild } from "./load-build";
 
 /**
- *
- * @param {Build.options} options
+ * @param {import("./internal").options} options
  */
-
 export async function createBuild(options) {
     options = await loadOptions(options);
 
@@ -28,47 +26,47 @@ export async function createBuild(options) {
 
     let files = await glob(options.src);
 
-    /**@type {Internal.server} */
+    /**@type {import("./internal").server} */
     let server;
 
-    /**@type {Internal.reload} */
+    /**@type {import("./internal").reload} */
     let reload = () => {};
 
     let inputs = {};
 
     let cache = {};
 
-    /**@type {Build.getCache} */
+    /**@type {} */
     let getCache = (prop) => (cache[prop] = cache[prop] = {});
 
     let CacheReadFile = Symbol("_cacheReadFile");
 
-    /**@type {Build.readFile} */
+    /**@type {import("./internal").readFile} */
     let readFile = (file) => {
         let cache = getCache(CacheReadFile);
         return (cache[file] = cache[file] || fsReadFile(file));
     };
 
-    /**@type {Build.isPreventLoad} */
+    /**@type {import("./internal").isPreventLoad} */
     let isPreventLoad = (file) => file in inputs;
 
-    /**@type {Build.isNotPreventLoad} */
+    /**@type {import("./internal").isNotPreventLoad} */
     let isNotPreventLoad = (file) => !isPreventLoad(file);
 
-    /**@type {Build.fileWatcher} */
+    /**@type {import("./internal").fileWatcher} */
     let fileWatcher = () => {};
 
-    /**@type {Build.isForCopy} */
+    /**@type {import("./internal").isForCopy} */
     let isForCopy = (file) => !options.assetsWithoutHash.test(file);
 
-    /**@type {Build.deleteInput} */
+    /**@type {import("./internal").deleteInput} */
     function deleteInput(file) {
         delete getCache(CacheReadFile)[file];
         delete inputs[file];
         return file;
     }
 
-    /**@type {Build.getDestDataFile} */
+    /**@type {import("./internal").getDestDataFile} */
     function getDestDataFile(file) {
         let { name, ext, dir } = path.parse(file);
 
@@ -120,7 +118,7 @@ export async function createBuild(options) {
         };
     }
 
-    /**@type {Build.preventNextLoad} */
+    /**@type {import("./internal").preventNextLoad} */
     function preventNextLoad(file) {
         if (file in inputs) {
             return false;
@@ -129,7 +127,7 @@ export async function createBuild(options) {
         }
     }
 
-    /**@type {Build.mountFile} */
+    /**@type {import("./internal").mountFile} */
     function mountFile({ dest, code, type, stream }) {
         if (options.virtual) {
             server.sources[dest] = { code, stream, type };
@@ -211,8 +209,7 @@ export async function createBuild(options) {
 
     loadReady();
 
-    /**@type {Build.build} */
-
+    /**@type {import("./internal").build} */
     let build = {
         inputs,
         options,
@@ -237,7 +234,3 @@ export async function createBuild(options) {
 
     return loadBuild(build, files, cycleBuild++);
 }
-
-/**
- * @typeof {import("./internal.d.ts") } Build
- */

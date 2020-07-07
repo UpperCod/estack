@@ -9,7 +9,7 @@ let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
 /**
  *
- * @param {Build.options} options
+ * @param {import("../internal").options} options
  */
 export function plugins(options) {
     let optionalPlugins = [];

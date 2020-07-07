@@ -1,5 +1,4 @@
 import path from "path";
-//@ts-ignore
 import { compile, serialize, stringify } from "stylis";
 import { readFile as fsReadFile, isUrl, request } from "../utils/utils";
 
@@ -21,7 +20,7 @@ let cache = {};
  * @param {object} context
  * @param {string} context.file - current css file
  * @param {string} context.code - css code to analyze
- * @param {Build.readFile} [context.readFile] - read a file
+ * @param {import("../internal").readFile} [context.readFile] - read a file
  * @param {(file:string)=>void} context.addWatchFile - execute the callback every time a css import is generated
  * @param {object} [imports]
  * @param {boolean} [returnRules] - If true it will return the rules as Array
@@ -29,7 +28,7 @@ let cache = {};
  * @param {string} [namespace] - context prefix of file selectors
  * @param {string[]} [headers] - context prefix of file selectors
  * @param {string} [uri]
- * @returns { (Promise<any>) }
+ * @returns {Promise<string|object[]>}
  */
 export async function loadCssFile(
     { file, code, readFile, addWatchFile },
@@ -92,7 +91,8 @@ export async function loadCssFile(
                                     code = await (cache[file] =
                                         cache[file] || request(file));
                                 } else {
-                                    code = await (readFile || fsReadFile)(file);
+                                    let fn = readFile || fsReadFile;
+                                    code = await fn(file);
                                 }
 
                                 !fromUrl && addWatchFile(file);
@@ -112,9 +112,8 @@ export async function loadCssFile(
                                     test.value
                                 );
                                 try {
-                                    let code = await (readFile || fsReadFile)(
-                                        file
-                                    );
+                                    let fn = readFile || fsReadFile;
+                                    let code = await fn(file);
                                     nextRules = loadCssFile(
                                         { file, code, readFile, addWatchFile },
                                         imports,

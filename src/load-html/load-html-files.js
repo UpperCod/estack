@@ -9,7 +9,6 @@ import {
     yamlParse,
     isJsonContent,
     getMetaPage,
-    isHtml,
 } from "../utils/utils";
 
 import { renderMarkdown } from "./render-markdown";
@@ -32,7 +31,7 @@ function resolveRequest(url) {
 }
 /**
  *
- * @param {Build.build} build
+ * @param {import("../internal").build} build
  * @param {*} htmlFiles
  */
 export function loadHtmlFiles(build, htmlFiles) {
@@ -75,7 +74,7 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             let [content, data] = meta;
 
-            if (!build.options.watch && meta.draft) {
+            if (!build.options.watch && data.draft) {
                 build.deleteInput(file);
                 return;
             }
@@ -186,7 +185,3 @@ export function loadHtmlFiles(build, htmlFiles) {
         })
     );
 }
-
-/**
- * @typeof {import("../internal") } Build
- */

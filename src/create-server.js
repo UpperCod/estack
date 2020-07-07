@@ -10,8 +10,6 @@ import {
     normalizePath,
 } from "./utils/utils";
 
-/**@typeof {import("./internal")} Internal */
-
 let mime = {
     js: "application/javascript",
     json: "application/json; charset=utf-8",
@@ -38,7 +36,7 @@ let fileExists = async (file) =>
  * @param {number} options.port
  * @param {boolean} options.reload
  * @param {string} options.proxy
- * @returns {Promise<Internal.server>}
+ * @returns {Promise<import("./internal").server>}
  */
 export async function createServer({ root, port, reload, proxy }) {
     let nextAssets = sirv(root, {
