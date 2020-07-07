@@ -1,5 +1,5 @@
 import url from "url";
-import lexer from "es-module-lexer";
+import * as lexer from "es-module-lexer";
 import { isUrl } from "../utils/types";
 
 const REF = {};
