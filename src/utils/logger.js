@@ -124,7 +124,7 @@ async function log(message, type, mark, fail) {
     if (typeof message == "string" && message) {
         try {
             if (!process.env.silent) {
-                logUpdate(message);
+                //logUpdate(message);
             }
         } catch (e) {
             console.log(message);

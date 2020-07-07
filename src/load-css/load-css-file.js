@@ -89,7 +89,7 @@ export async function loadCssFile(
                             try {
                                 let code;
                                 if (fromUrl) {
-                                    code = await request(file);
+                                    [, code] = await request(file);
                                 } else {
                                     let fn = readFile || fsReadFile;
                                     code = await fn(file);

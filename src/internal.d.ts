@@ -42,7 +42,7 @@ export type isNotPreventLoad = (file: string) => boolean;
  * Generate a request that is cached globally
  */
 
-export type request = (url: string) => Promise<any>;
+export type request = (url: string) => Promise<[string, any]>;
 
 /**
  * Add a `file` like to the watcher and associate it to the `parentFile` for rebuilding

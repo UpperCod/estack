@@ -119,7 +119,7 @@ export function loadHtmlFiles(build, htmlFiles) {
             async function addDataFetch(prop, src, unregister) {
                 try {
                     if (isUrl(src)) {
-                        src = await build.request(src);
+                        [, src] = await build.request(src);
                     } else {
                         let childFile = joinChildFile(src);
 

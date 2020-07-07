@@ -27,7 +27,7 @@ export async function loadOptions({
     assetHashPattern = "[hash]-[name]",
     ...ignore
 }) {
-    let srcWithHtml = /(html|md)/.test(src);
+    let srcWithHtml = /(html|md)/.test(src + "");
     if (dev) {
         ignore.sourcemap = ignore.server = ignore.watch = true;
         if (srcWithHtml) {

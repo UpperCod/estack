@@ -1,9 +1,9 @@
 import path from "path";
 import { rollup, watch } from "rollup";
-import { plugins } from "./plugins";
-import { isCss } from "../utils/types";
-import { loadCssFile } from "../load-css/load-css-file";
 import { MARK_ROLLUP } from "../constants";
+import { plugins } from "./plugins";
+import { pluginImportUrl } from "./plugin-import-url";
+import { pluginImportCss } from "./plugin-css";
 
 const CACHE_ROLLUP = Symbol("_CacheRollup");
 
@@ -39,6 +39,7 @@ export async function loadRollup(build, jsFiles) {
         external: options.external,
         cache: cache.bundle,
         plugins: [
+            pluginImportUrl(build),
             /**@type {import("rollup").Plugin} */
             {
                 name: "local-estack",
@@ -128,28 +129,3 @@ export async function loadRollup(build, jsFiles) {
         await bundle.write(output);
     }
 }
-
-/**
- * @param {import("../internal").build} build
- * @returns {import("rollup").Plugin}
- */
-let pluginImportCss = (build) => ({
-    name: "plugin-import-css",
-    async transform(code, id) {
-        if (isCss(id)) {
-            /**@type {import("rollup").SourceDescription} */
-            return {
-                code: `export default ${JSON.stringify(
-                    await loadCssFile({
-                        file: id,
-                        code,
-                        readFile: build.readFile,
-                        addWatchFile: (id) => this.addWatchFile(id),
-                        request: build.request,
-                    })
-                )}`,
-                map: { mappings: "" },
-            };
-        }
-    },
-});
