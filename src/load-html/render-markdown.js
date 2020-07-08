@@ -21,6 +21,7 @@ import "prismjs/components/prism-rust";
 import "prismjs/components/prism-json";
 import "prismjs/components/prism-python";
 import "prismjs/components/prism-diff";
+import "prismjs/components/prism-bash";
 
 let cache = {};
 
