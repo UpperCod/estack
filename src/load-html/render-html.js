@@ -51,7 +51,7 @@ engine.registerFilter("group", (data, by, def) => {
 
     return Object.keys(groups)
         .sort()
-        .map((prop) => ({ group: prop, items: groups[prop] }));
+        .map((prop) => ({ title: prop, items: groups[prop] }));
 });
 /**
  * Apply markdown as a liquid filter
