@@ -38,11 +38,11 @@ export function renderHtml(code, data) {
  * input : `[{tag:"a"},{tag:"b"}]`
  * output : `["a",[{tag:"a"}],"b",[{tag:"b"}]]`
  */
-engine.registerFilter("group", (data, by) => {
+engine.registerFilter("group", (data, by, def) => {
     let groups = {};
 
     data.forEach((data) => {
-        let value = getProp(data, by);
+        let value = getProp(data, by, def);
         if (!groups[value]) {
             groups[value] = [];
         }
