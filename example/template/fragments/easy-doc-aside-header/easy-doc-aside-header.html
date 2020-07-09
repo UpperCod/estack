@@ -7,10 +7,12 @@ assets:
     logo: ./logo.svg
 ---
 
-{{"easy-doc-aside-header.css" | asset: tag:true }}
+{{"easy-doc-aside-header.css" | asset: tag:true, insert: "head", preload:true }}
 
 <header class="c-easyDocAsideHeader">
-    <img src="{{config.assets.logo | default: assets.logo }}" width="120px" alt="Logo {{title}}">
+    <a href="{{home}}">
+        <img src="{{config.assets.logo | default: assets.logo }}" width="80%" alt="Logo {{title}}">
+    </a>
     <h4 class="c-easyDocAsideHeader_title">{{title}}</h4>
     <p class="c-easyDocAsideHeader_description">{{description}}</p>
     <pre class="c-easyDocAsideHeader_install">{{install}}</pre>

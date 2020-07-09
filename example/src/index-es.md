@@ -1,64 +1,76 @@
 ---
-title: EStack cree sitios estaticos a la velosidad de la luz
-description: una sola herramienta <strong>zero-configuracion</strong> para sincronziación de datos, sistema de plantilla y gestión de assets de forma inteligente.
-menu: Introduccion
-slug: index
+title: EStack "{}"
+description: En entorno productivo basado en una pila de herramientas perfectamente sincornizadas
+linkTitle: Introduccion
+link: /
 symlink: index-es
 lang: es
 tag: doc
 order: -1
 assets:
-  logo: ./logo.svg
+    logo: ./logo.svg
 aside:
-  title: My Desing System
-  install: npm install my-ds
-  description: |
-    nulla Lorem officia et ea anim 
-    aute commodo deserunt
-  links:
-    - prop: docs
-      title: Documentacion
+    title: EStack
+    install: npm install my-ds
+    description: |
+        nulla Lorem officia et ea anim 
+        aute commodo deserunt
+    links:
+        - prop: docs
+          title: Documentacion
 query:
-  docs:
-    where:
-      lang: es
-      tag: doc
-    sort: order
-    order: 1
+    docs:
+        where:
+            lang: es
+            tag: doc
+        sort: order
+        order: 1
+fetch:
+    todo: https://jsonplaceholder.typicode.com/todos
 ---
 
-Si bien un sitio o aplicación puede comenzar desde un simple grupo de Ficheros HTML, CSS y JS enfrentaremos grandes preguntas al momento de escalarlo de forma estática ¿Como seccionarlo? ¿Como hacerlo multilenguaje? ¿ Como gestionar assets ? ¿Como hacerlo dinámico? **EStack responde a estas preguntas entregando en una sola herramienta sincronziación de datos, sistema de plantilla y gestión de assets.**
+<script src="{{ 'index.js' | asset }}"></script>
 
-### Con EStack podras:
+## go [{{page.title}}]({{page.link}})
 
-{% raw %}
+Todo desarrollo web require un gran grupo de herramientas solo para comenzar a crear,
 
-<easy-doc-rows columns="1fr 1fr">
+Lograr una configuracion eficiente y escalable es un tema complejo que EStack busca solucionar, respondiendo a objetivos esenciales.
 
-```html
----
-title: my page
----
+Elejir, configurar y escalar estas herramientas es un tema complejo, pero todas conberjen en las mismas necesidades.
+Empaquetar Javascrit, Procesar Html y Manejar assets
 
-<h1>{{page.title}}</h1>
+elejir una o muchas de estas herramientas esta sugeto, EStack busca agrupar estas herramientas y vincularlas en un entorno perfectamente sincronizado con zero-congiguracion para una web moderna.
 
-<img src="{{ 'image.jpg' | asset }}" />
+1. Un Servidor de desarrollo con livereload que peude exporner uno o mas dodumentos html.
 
-<a href="{{page.link}}">{{page.link}}</a>
+## Comenzando
 
-<script type="module" src="{{ 'index.ts' | asset}}"></script>
+### Instalacion
+
+```raw
+npm install -D {{pkg.name}}
 ```
 
+### Crear un documento html
+
 ```html
-<h1>my page</h1>
-
-<img src="/2123-image.jpg" />
-
-<a href="/">/</a>
-
-<script type="module" src="index.js"></script>
+<!DOCTYPE html>
+<html>
+    <head></head>
+    <body>
+        <!--
+    <script type="module" src="./src/app.js"></script>
+    -->
+        <script type="module" src="{{ './src/app.js' | asset }}"></script>
+    </body>
+</html>
 ```
 
-</easy-doc-rows>
+Donde :
 
-{% endraw %}
+1. `{{ './src/app.js' | asset }}` : EStack sincroniza la captura de asset usando liquidjs, lo enseñado es solo una parte de las utilidades que posee la importacion inteligente de asset de EStack.
+
+```bash
+npx estack index.html --dev
+```

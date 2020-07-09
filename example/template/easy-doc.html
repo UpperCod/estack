@@ -9,16 +9,16 @@ template: default
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{{ page.title }}</title>
         <meta name="description" content="{{page.description}}"> 
-        <link rel="stylesheet" href="{{ "./easy-doc.css" | asset }}" />
-        <script async src="{{ "./components/easy-doc-rows/easy-doc-rows.js" | asset }}"></script>
+        {{ "./easy-doc.css" | asset: tag: true, preload:true }}
+        {{ "./components/easy-doc-rows/easy-doc-rows.js" | asset: preload:true, tag:true, async:true }}
+        <!--head-->
     </head>
-
     <body>
         {% assign symlink = "index-" | append : page.lang %} 
         {% assign config = links[symlink] %} 
         <section class="c-easyDocContent">
             <aside class="c-easyDocContent_aside">
-                {% fragment "easy-doc-aside-header" with title : config.aside.title, description: config.aside.description, install:config.aside.install %}
+                {% fragment "easy-doc-aside-header" with title : config.aside.title, description: config.aside.description, install:config.aside.install, home: config.link %}
                 {% for item in config.aside.links %} 
                     {% fragment "easy-doc-aside-links" with title : item.title, items: config.query[item.prop], currentLink : page.link %} 
                 {% endfor %}
@@ -30,5 +30,6 @@ template: default
                 </div>
             </article>
         </section>
+        <!--footer-->
     </body>
 </html>
