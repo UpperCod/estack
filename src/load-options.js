@@ -1,6 +1,6 @@
 import path from "path";
 import builtins from "builtin-modules";
-import { getPackage, normalizePath } from "./utils/utils";
+import { getPackage } from "./utils/utils";
 
 /**
  * @typeof {import("./internal") } Build
@@ -88,7 +88,7 @@ export async function loadOptions({
     };
 
     // normalize routes for fast-glob
-    options.src = options.src.map(normalizePath);
+    options.src = options.src.map((str) => str.replace(/[\\\/]+/g, "/"));
 
     return options;
 }

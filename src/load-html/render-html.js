@@ -6,6 +6,7 @@ import {
     normalizeLineSpace,
     mapPropToObject,
     isJs,
+    normalizePath,
 } from "../utils/utils";
 
 import {
@@ -59,6 +60,10 @@ engine.registerFilter("group", (data, by, def) => {
 engine.registerFilter("markdown", (string) =>
     renderMarkdown(normalizeLineSpace(string))
 );
+/**
+ * Apply markdown as a liquid filter
+ */
+engine.registerFilter("slug", normalizePath);
 /**
  * Apply markdown as a prismjs filter
  */

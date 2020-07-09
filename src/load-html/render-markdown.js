@@ -22,6 +22,7 @@ import "prismjs/components/prism-json";
 import "prismjs/components/prism-python";
 import "prismjs/components/prism-diff";
 import "prismjs/components/prism-bash";
+import { normalizePath } from "../utils/utils";
 
 let cache = {};
 
@@ -62,8 +63,7 @@ renderer.code = (code, type) => {
     } catch (e) {}
 };
 
-renderer.codespan = (code) =>
-    `{% raw %}<code>${highlighted(code)}</code>{% endraw %}`;
+renderer.codespan = (code) => `{% raw %}<code>${code}</code>{% endraw %}`;
 
 renderer.link = (href, title, text) => {
     href = escapeTemplate(href);
@@ -73,6 +73,13 @@ renderer.link = (href, title, text) => {
 renderer.image = (href, title, text) => {
     href = escapeTemplate(href);
     return `<img src="${href.recovery(escape(href.code))}" alt="${text}">`;
+};
+
+renderer.heading = (text, lvl, raw, slugger) => {
+    let id = /{/.test(raw)
+        ? `{% capture __md_slug__ %}${raw}{% endcapture%}{{ __md_slug__ | slug }}`
+        : slugger.slug(text);
+    return `<h${lvl} id="${id}">${text}</h${lvl}>`;
 };
 
 marked.setOptions({
