@@ -19,8 +19,9 @@ let pkgDefault = {
 export let normalizePath = (str) =>
     str
         .replace(/[\\\/]+/g, "/")
-        .replace(/\s+/g, "-")
-        .replace(/\-+/g, "-");
+        .replace(/[\s\(\)\[\]\$\#\?\&\=\¿\!\¡\"\'\{\}\@\<\>\´\`]+/g, "-")
+        .replace(/\-+/g, "-")
+        .toLowerCase();
 
 /**
  * read from file asynchronously
