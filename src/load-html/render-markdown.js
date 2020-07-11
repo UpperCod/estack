@@ -22,7 +22,6 @@ import "prismjs/components/prism-json";
 import "prismjs/components/prism-python";
 import "prismjs/components/prism-diff";
 import "prismjs/components/prism-bash";
-import { normalizePath } from "../utils/utils";
 
 let cache = {};
 
