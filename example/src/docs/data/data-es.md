@@ -1,6 +1,6 @@
 ---
 title: EStack
-description: En entorno productivo basado en una pila de herramientas perfectamente sincornizadas
+description: Entorno productivo basado en una pila de herramientas perfectamente sincornizadas
 link: es/frontmatter
 linkTitle: Frontmatter
 lang: es
@@ -78,7 +78,7 @@ Esta porpiedad permite associar recursos a la pagina, estos recursos pueden ser 
 ```html
 ---
 assets:
-  banner: ./banner.jpg
+    banner: ./banner.jpg
 ---
 
 <img src="{{page.assets.banner}}" alt="my banner" />
@@ -92,21 +92,21 @@ declara las consultas que el documento realiza sobre todas las paginas, estas co
 
 ```yaml
 query:
-  post:
-    where:
-      tag: post
-    limit: 5
-    sort: date
-    order: -1
+    post:
+        where:
+            tag: post
+        limit: 5
+        sort: date
+        order: -1
 ```
 
 Donde:
 
 1. `query.post` : agrupara los resultados de la query, para luego ser usados en el documento, eg `{{ page.query.post | json }}`
-   - `query.post.where` : define la consulta por incluir igualdad, el where enseñado retornara todas las paginas que declaren la propiedad `tag : post`
-   - `query.post.limit` : Limita los resultados de la query a maximo 5
-   - `query.post.sort` : ordena la quiery a base de la propeidad date declarada en la pagina.
-   - `query.post.order` : oderna los resultados de mayor a menor.
+    - `query.post.where` : define la consulta por incluir igualdad, el where enseñado retornara todas las paginas que declaren la propiedad `tag : post`
+    - `query.post.limit` : Limita los resultados de la query a maximo 5
+    - `query.post.sort` : ordena la quiery a base de la propeidad date declarada en la pagina.
+    - `query.post.order` : oderna los resultados de mayor a menor.
 
 ### Fetch
 
@@ -114,11 +114,11 @@ Declara request o asociacion de documentos local como fuentes de datos observabl
 
 ```yaml
 fetch:
-  # Los request son cachados por cada instancia del EStack
-  todo: https://jsonplaceholder.typicode.com/todos
-  # Cada edición genera una nueva lectura de los documentos legales vinculados
-  config: ./my-config.yaml
-  users: ./my-users.json
+    # Los request son cachados por cada instancia del EStack
+    todo: https://jsonplaceholder.typicode.com/todos
+    # Cada edición genera una nueva lectura de los documentos legales vinculados
+    config: ./my-config.yaml
+    users: ./my-users.json
 ```
 
 Ud podra usar los resultados de fetch a travez de la propiedad `page.fetch.<prop>`, ej:

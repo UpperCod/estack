@@ -1,6 +1,6 @@
 ---
-title: EStack "{}"
-description: En entorno productivo basado en una pila de herramientas perfectamente sincornizadas
+title: EStack todo en uno
+description: Generador de sitios estaticos, servidor de desarrollo, bundle,  zero configuracion y más.
 linkTitle: Introduccion
 link: /
 symlink: index-es
@@ -8,43 +8,31 @@ lang: es
 tag: doc
 order: -1
 assets:
-    logo: ./logo.svg
+  logo: ./logo.svg
 aside:
-    title: EStack
-    install: npm install my-ds
-    description: |
-        nulla Lorem officia et ea anim 
-        aute commodo deserunt
-    links:
-        - prop: docs
-          title: Documentacion
+  title: EStack
+  install: npm install my-ds
+  description: |
+    nulla Lorem officia et ea anim 
+    aute commodo deserunt
+  links:
+    - prop: docs
+      title: Documentacion
 query:
-    docs:
-        where:
-            lang: es
-            tag: doc
-        sort: order
-        order: 1
+  docs:
+    where:
+      lang: es
+      tag: doc
+    sort: order
+    order: 1
 fetch:
-    todo: https://jsonplaceholder.typicode.com/todos
+  todo: https://jsonplaceholder.typicode.com/todos
+  js: ./index.js
 ---
 
-<script src="{{ 'index.js' | asset }}"></script>
+### Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una con zero configuracion, logrando sincronizando eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.
 
-## go [{{page.title}}]({{page.link}})
-
-Todo desarrollo web require un gran grupo de herramientas solo para comenzar a crear,
-
-Lograr una configuracion eficiente y escalable es un tema complejo que EStack busca solucionar, respondiendo a objetivos esenciales.
-
-Elejir, configurar y escalar estas herramientas es un tema complejo, pero todas conberjen en las mismas necesidades.
-Empaquetar Javascrit, Procesar Html y Manejar assets
-
-elejir una o muchas de estas herramientas esta sugeto, EStack busca agrupar estas herramientas y vincularlas en un entorno perfectamente sincronizado con zero-congiguracion para una web moderna.
-
-1. Un Servidor de desarrollo con livereload que peude exporner uno o mas dodumentos html.
-
-## Comenzando
+## Implementacion
 
 ### Instalacion
 
@@ -52,25 +40,78 @@ elejir una o muchas de estas herramientas esta sugeto, EStack busca agrupar esta
 npm install -D {{pkg.name}}
 ```
 
-### Crear un documento html
+### ejemplo de directorio
+
+```
++-src
+  |- index.js
+  |- index.css
+  |- index.html
+
+```
+
+**src/index.html**
 
 ```html
 <!DOCTYPE html>
 <html>
-    <head></head>
-    <body>
-        <!--
-    <script type="module" src="./src/app.js"></script>
-    -->
-        <script type="module" src="{{ './src/app.js' | asset }}"></script>
-    </body>
+  <head>
+    <link rel="stylesheet" href="{{ 'index.css' | asset }}" />
+  </head>
+  <body>
+    <script type="module" src="{{ 'index.js' | asset }}"></script>
+  </body>
 </html>
 ```
 
-Donde :
-
-1. `{{ './src/app.js' | asset }}` : EStack sincroniza la captura de asset usando liquidjs, lo enseñado es solo una parte de las utilidades que posee la importacion inteligente de asset de EStack.
+`{{ './src/app.js' | asset }}` asset es un filtro personalizado para liquidjs que permite capturar los assets de una pagina o mas paginas, los assets capturados son enviados a distintis proceso segun su tipo, este al ser de tipo JS sera enviado a Rollup.
 
 ```bash
-npx estack index.html --dev
+npx estack src/index.html --dev
 ```
+
+El flag --dev lanza un servidor de desarrollo que obserba los cambios de los assets o el HTML para recargar la pagina, **los documentos servidos no son escritos en Disco**.
+
+Estack permite usar expreciones, para capturar y observar multiples archivos, eg:
+
+```bash
+# npx estack src/index.html --dev
+npx estack src/**/*.html --dev
+```
+
+## Manejo de archivos
+
+EStack permite los archivos en carpetas para asi abstraer el contenido que necesita la pagina, este contenido debe ser declarado por la pagina de forma relativa a su origen, estack luego resolvera los nombre de los assets hacheandolos para evitar coliciones de archivos.
+
+```bash
++-src
+  |- index.js
+  |- index.css
+  |- index.html
+  +- client
+     |- index.js
+     |- index.css
+     |- client.html
+
++-localhost:8000
+  |-index.html
+  |-client.html
+  +-assets
+    |-123-index.js
+    |-123-index.css
+    |-234-index.js
+    |-234-index.css
+```
+
+La distribucion de carpeta asociada a la extraccio de los archivos procesar por EStack no impera al momento de crear el documento HTML. para evitar esto EStack añade frontmatter, que permite modificar el comportamiento de la pagina, ej:
+
+```html
+---
+title: Mi pagina
+link: mi-carpeta/mi-pagina
+---
+
+<h1>{{page.title}}</h1>
+```
+
+la pagina del ejemplo seria indexada por el servidor de desarrollo como: `localhost:8000/mi-carpeta/mi-pagina`.

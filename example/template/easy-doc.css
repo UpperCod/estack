@@ -32,9 +32,15 @@
         h2 {
             font-size: 1.75rem;
         }
+        code {
+            background: var(--easyDoc-bgcolor-codespan);
+            color: var(--easyDoc-fontColor-code);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8em;
+        }
         pre {
             line-height: 1.5em;
-            font-size: 0.75rem;
             padding: 1rem;
             box-sizing: border-box;
             color: var(--easyDoc-fontColor-code);
@@ -43,4 +49,9 @@
             overflow-x: auto;
         }
     }
+}
+
+.markdown-table-container {
+    text-align: left;
+    font-size: 0.9rem;
 }

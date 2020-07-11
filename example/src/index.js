@@ -1,2 +1,14 @@
-import { html } from "https://unpkg.com/lit-html@1.2.1/lit-html.js";
-console.log(html);
+/**
+ * ### X
+ * markdownb ??? JSDOC MAGIC??
+ * @param {string} name - name??
+ */
+function x(name) {}
+
+/**
+ * ### B
+ * markdownb ??? JSDOC MAGIC??
+ * @param {({name:string,age:number})=>void} name - name??
+ *                        master plop
+ */
+function B(name) {}

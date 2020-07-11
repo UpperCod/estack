@@ -12,6 +12,7 @@
     --easyDoc-bgcolor-header: white;
     --easyDoc-bgcolor-content: #f7f8f9;
     --easyDoc-bgcolor-code: #151718;
+    --easyDoc-bgcolor-codespan: #151718;
     --easyDoc-maxWidth-content: 67.5rem;
     --easyDoc-indentation: 3.75rem;
 }
