@@ -40,10 +40,11 @@ export let renderMarkdown = (code) =>
     (cache[code] = cache[code] || marked(code));
 
 // add an additional container prevent the table from collapsing the page
-renderer.table = (header, body) =>
-    `{% raw %}<div class="markdown-table-container"><table>${
+renderer.table = (header, body) => {
+    return `<div class="markdown-table-container"><table>${
         header + body
-    }</table></div>{% endraw %}`;
+    }</table></div>`;
+};
 
 //  configure the container to allow language to be highlighted independently of the class
 renderer.code = (code, type) => {

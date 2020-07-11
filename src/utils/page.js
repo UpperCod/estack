@@ -63,22 +63,21 @@ export function queryPages(
  * lorem...
  */
 export function getMetaPage(code) {
-    let meta = {};
+    let meta = { __br: 0 };
     let [fragment] = getFragments(code, {
         open: /^---/,
         closed: /^---/,
         limit: 1,
     });
-
     if (fragment) {
-        let [open] = fragment;
+        let [open, closed] = fragment;
         if (!open.start) {
             code = replaceFragments(code, [fragment], ({ value }) => {
                 meta = yamlParse(value);
                 return "";
             });
         }
+        meta.__br = closed.line;
     }
-
     return [code, meta];
 }

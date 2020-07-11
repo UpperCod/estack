@@ -195,7 +195,7 @@ function createErrorFromLiquid(build, data, e) {
     let lines = [];
     if (test) {
         let [, line, col] = test;
-        lines = ["", data["@br"] + Number(line), col];
+        lines = ["", data.__br + Number(line), col];
     }
 
     build.logger.debug(
