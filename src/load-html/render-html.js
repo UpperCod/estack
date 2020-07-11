@@ -70,9 +70,10 @@ engine.registerFilter("slug", normalizePath);
 engine.registerFilter("highlighted", (string, type) =>
     highlighted(normalizeLineSpace(string), type)
 );
+
 /**
  *
- * @param {object}  environments - render scope
+ * @param {object} environments - render scope
  * @param {string} name - name of the asset to register
  * @param {object} [data] - Lets configure the asset
  * @param {boolean} [data.tag] - return the asset as a tag, only valid for .js and .css
