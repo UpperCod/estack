@@ -1,4 +1,5 @@
 import { getProp, yamlParse } from "./general";
+import { getFragments, replaceFragments } from "str-fragment";
 /**
  *
  * @param {Object[]} pages - collection of pages
@@ -63,24 +64,21 @@ export function queryPages(
  */
 export function getMetaPage(code) {
     let meta = {};
-    let metaBlock = "---";
-    let lines = [];
-    let data = [];
-    let body = [];
-    if (!code.indexOf(metaBlock)) {
-        lines = code.slice(3).split(/\n+/);
-        for (let i = 0; i < lines.length; i++) {
-            if (!lines[i].indexOf(metaBlock)) {
-                body = lines.slice(i + 1);
-                break;
-            }
-            data.push(lines[i]);
+    let [fragment] = getFragments(code, {
+        open: /^---/,
+        closed: /^---/,
+        limit: 1,
+    });
+
+    if (fragment) {
+        let [open] = fragment;
+        if (!open.start) {
+            code = replaceFragments(code, [fragment], ({ value }) => {
+                meta = yamlParse(value);
+                return "";
+            });
         }
-        if (data.length) {
-            meta = yamlParse(data.join("\n"));
-        }
-        code = body.join("\n");
     }
-    meta["@br"] = data.length ? data.length + 2 : 0;
+
     return [code, meta];
 }
