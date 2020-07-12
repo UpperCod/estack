@@ -83,6 +83,7 @@ export type getDestDataFile = (
     name: string;
     link: string;
     dest: string;
+    raw: { file: string; dir: string; base: string };
 };
 
 /**

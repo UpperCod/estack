@@ -74,7 +74,7 @@ export async function createBuild(options) {
 
     /**@type {import("./internal").getDestDataFile} */
     function getDestDataFile(file) {
-        let { name, ext, dir } = path.parse(file);
+        let { name, ext, dir, base } = path.parse(file);
 
         ext = isJs(ext) ? ".js" : isHtml(ext) ? ".html" : ext || ".html";
 
@@ -102,25 +102,28 @@ export async function createBuild(options) {
             }
         }
 
-        dir = typeHtml ? dir : options.assetsDir;
+        let destDir = typeHtml ? dir : options.assetsDir;
 
-        let dest = normalizePath(path.join(options.dest, dir, name + ext));
+        let dest = normalizePath(path.join(options.dest, destDir, name + ext));
 
         let link = normalizePath(
             path.join(
                 options.href,
-                dir,
+                destDir,
                 isIndex ? "./" : name + (typeHtml ? "" : ext)
             )
         );
 
-        let base = name + ext;
-
         return {
-            base,
+            base: name + ext,
             name,
             link,
             dest,
+            raw: {
+                base,
+                file: normalizePath(file),
+                dir,
+            },
         };
     }
 
