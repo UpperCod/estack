@@ -57,7 +57,8 @@ export async function loadRollup(build, jsFiles) {
                         return build.readFile(aliasLoad[id].raw.file);
                     }
                 },
-                generateBundle(opts, chunks) {
+                async generateBundle(opts, chunks) {
+                    let parallel = [];
                     for (let file in chunks) {
                         let { code, map, isEntry, fileName } = chunks[file];
                         let dest = file;
@@ -75,18 +76,23 @@ export async function loadRollup(build, jsFiles) {
                         }
 
                         if (opts.sourcemap && map) {
-                            build.mountFile({
-                                dest: dest + ".map",
-                                code: map + "",
-                                type: "json",
-                            });
+                            parallel.push(
+                                build.mountFile({
+                                    dest: dest + ".map",
+                                    code: map + "",
+                                    type: "json",
+                                })
+                            );
                             code += `\n//# sourceMappingURL=${fileMap}`;
                         }
 
-                        build.mountFile({ dest, code, type: "js" });
+                        parallel.push(
+                            build.mountFile({ dest, code, type: "js" })
+                        );
 
                         delete chunks[file];
                     }
+                    await Promise.all(parallel);
                 },
             },
             pluginImportCss(build),
@@ -138,6 +144,6 @@ export async function loadRollup(build, jsFiles) {
 
         cache.watcher.push(watcher);
     } else {
-        // await bundle.write(output);
+        await bundle.write(output);
     }
 }
