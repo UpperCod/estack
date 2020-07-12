@@ -16,6 +16,7 @@ export function pluginTerser({ sourcemap }) {
                 if (!cache[code]) {
                     cache[code] = terser.minify(code, {
                         sourceMap: sourcemap,
+                        module: true,
                     });
                 }
                 return cache[code];

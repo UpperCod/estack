@@ -1,6 +1,6 @@
 {
     "name": "estack",
-    "version": "0.13.0",
+    "version": "0.13.1",
     "description": "simple bundle generator",
     "module": "src/cli.js",
     "main": "cli.js",
@@ -59,7 +59,7 @@
         "sirv": "^0.4.2",
         "str-fragment": "^1.1.2",
         "stylis": "^4.0.1",
-        "terser": "^4.6.13"
+        "terser": "^4.8.0"
     },
     "optionalDependencies": {
         "fsevents": "~2.1.2"
