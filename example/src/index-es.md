@@ -8,26 +8,25 @@ lang: es
 tag: doc
 order: -1
 assets:
-  logo: ./logo.svg
+    logo: ./logo.svg
 aside:
-  title: EStack
-  install: npm install my-ds
-  description: |
-    nulla Lorem officia et ea anim 
-    aute commodo deserunt
-  links:
-    - prop: docs
-      title: Documentacion
+    title: EStack
+    install: npm install my-ds
+    description: |
+        nulla Lorem officia et ea anim 
+        aute commodo deserunt
+    links:
+        - prop: docs
+          title: Documentacion
 query:
-  docs:
-    where:
-      lang: es
-      tag: doc
-    sort: order
-    order: 1
+    docs:
+        where:
+            lang: es
+            tag: doc
+        sort: order
+        order: 1
 fetch:
-  todo: https://jsonplaceholder.typicode.com/todos
-  js: ./index.js
+    todo: https://jsonplaceholder.typicode.com/todos
 ---
 
 ### Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una con zero configuracion, logrando sincronizando eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.
@@ -55,12 +54,12 @@ npm install -D {{pkg.name}}
 ```html
 <!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="{{ 'index.css' | asset }}" />
-  </head>
-  <body>
-    <script type="module" src="{{ 'index.js' | asset }}"></script>
-  </body>
+    <head>
+        <link rel="stylesheet" href="{{ 'index.css' | asset }}" />
+    </head>
+    <body>
+        <script type="module" src="{{ 'index.js' | asset }}"></script>
+    </body>
 </html>
 ```
 

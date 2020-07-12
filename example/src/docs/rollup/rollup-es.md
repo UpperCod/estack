@@ -23,10 +23,10 @@ Los assets a porcessar por rollup seran listado sen un array, esto permite que r
 
 | plugin                      |     |
 | --------------------------- | --- |
-| @rollup/plugin-node-resolve |     |
+| @rollup/plugin-node-resolve |
 | @rollup/plugin-json         |     |
 | @rollup/plugin-commonjs     |     |
-| @rollup/plugin-sucrase      |     |
+| `@rollup/plugin-sucrase`    |     |
 
 ### Plugins de uso internos
 

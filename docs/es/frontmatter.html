@@ -1,0 +1,136 @@
+
+
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>EStack</title>
+        <meta name="description" content="Entorno productivo basado en una pila de herramientas perfectamente sincornizadas"> 
+        <link rel="preload" href="/assets/3080-easy-doc.css" as="style"><link rel="stylesheet" href="/assets/3080-easy-doc.css" >
+        <link rel="modulepreload" href="/assets/6111-easy-doc-rows.js" as="script"><script type="module" src="/assets/6111-easy-doc-rows.js" async></script>
+        <link rel="preload" href="/assets/7598-easy-doc-aside-header.css" as="style"><link rel="stylesheet" href="/assets/7598-easy-doc-aside-header.css" ><link rel="preload" href="/assets/7438-easy-doc-aside-links.css" as="style"><link rel="stylesheet" href="/assets/7438-easy-doc-aside-links.css" ><link rel="preload" href="/assets/6472-easy-doc-header.css" as="style"><link rel="stylesheet" href="/assets/6472-easy-doc-header.css" >
+    </head>
+    <body>
+         
+         
+        <section class="c-easyDocContent">
+            <aside class="c-easyDocContent_aside">
+                
+
+
+
+<header class="c-easyDocAsideHeader">
+    <a href="/">
+        <img src="/assets/5992-logo.svg" width="80%" alt="Logo EStack">
+    </a>
+    <h4 class="c-easyDocAsideHeader_title">EStack</h4>
+    <p class="c-easyDocAsideHeader_description">nulla Lorem officia et ea anim 
+aute commodo deserunt
+</p>
+    <pre class="c-easyDocAsideHeader_install">npm install my-ds</pre>
+</header>
+                 
+                    
+
+
+
+<div class="c-easyDocAsideLinks">
+    <h4 class="c-easyDocAsideLinks_title">Documentacion</h4>
+    <ul class="c-easyDocAsideLinks_list">
+        
+            <li class="c-easyDocAsideLinks_item">
+                <a class="c-easyDocAsideLinks_link c-easyDocAsideLinks_link-" href="/">Introduccion</a>
+            </li>
+        
+            <li class="c-easyDocAsideLinks_item">
+                <a class="c-easyDocAsideLinks_link c-easyDocAsideLinks_link-active" href="/es/frontmatter">Frontmatter</a>
+            </li>
+        
+            <li class="c-easyDocAsideLinks_item">
+                <a class="c-easyDocAsideLinks_link c-easyDocAsideLinks_link-" href="/es/liquid">Liquid</a>
+            </li>
+        
+            <li class="c-easyDocAsideLinks_item">
+                <a class="c-easyDocAsideLinks_link c-easyDocAsideLinks_link-" href="/es/rollup">Rollup</a>
+            </li>
+        
+    </ul>
+</div>
+ 
+                
+            </aside>
+            <article class="c-easyDocContent_content">
+                
+
+
+
+<header class="c-easyDocHeader">
+    <div class="c-easyDocHeader_banner">
+        <div class="c-easyDocHeader_content">
+            <h1 class="c-easyDocHeader_title">EStack</h1>
+            <p class="c-easyDocHeader_text">Entorno productivo basado en una pila de herramientas perfectamente sincornizadas</p>
+        </div>
+    </div>
+</header>
+ 
+                <div class="c-easyDocContent_inner">
+                    <h2 id="frontmatter-yaml">Frontmatter yaml</h2><p>permite declarar fragmento de datos en la cabezera del documento en formato yaml para ser procesados por EStack y luegos enviados a liquid para la generacion del HTML final, ej:</p>
+<pre class="markdown-code-container" data-code=""><code class="language-">---
+title : my page
+---
+
+## {{ page.title }}
+</code></pre><h2 id="prorpiedades-especiales">Prorpiedades especiales</h2><h3 id="draft">draft</h3><pre class="markdown-code-container" data-code="yaml"><code class="language-yaml"><span class="token key atrule">draft</span><span class="token punctuation">:</span> <span class="token boolean important">true</span></code></pre><p>declara que este documento es un borrador, por lo que sera ignorado al momento de realizar la build.</p>
+<h3 id="slug">slug</h3><pre class="markdown-code-container" data-code="yaml"><code class="language-yaml"><span class="token key atrule">slug</span><span class="token punctuation">:</span> my<span class="token punctuation">-</span>page</code></pre><p>declara el nombre del documento a fijar como destino</p>
+<h3 id="folder">folder</h3><pre class="markdown-code-container" data-code="yaml"><code class="language-yaml"><span class="token key atrule">folder</span><span class="token punctuation">:</span> posts</code></pre><p>declara la carpeta a usar como destino del documento</p>
+<h3 id="link">link</h3><pre class="markdown-code-container" data-code="yaml"><code class="language-yaml"><span class="token key atrule">link</span><span class="token punctuation">:</span> posts/my<span class="token punctuation">-</span>page</code></pre><p>Declara de forma conjunta slug y folder</p>
+<h3 id="symlink">symlink</h3><pre class="markdown-code-container" data-code="yaml"><code class="language-yaml"><span class="token key atrule">symlink</span><span class="token punctuation">:</span> home</code></pre><p>declara un link simbolico que permite referencia este documento a través de la propiedad links, ej:</p>
+<pre class="markdown-code-container" data-code="markdown"><code class="language-markdown">Esta es mi pagina principal [{{ links.home.title }}]({{ links.home.link }})</code></pre><p><strong>Considere synlink una poderosa utilidad ya que permite acceder a toda la informacion declarada del documento referenciado, como las query, fetch o assets.</strong></p>
+<blockquote>
+<p><strong>Los synlink y links deben ser únicos</strong>, EStack enseñara un mensaje de error cuando un alias o link este duplicado.</p>
+</blockquote>
+<h3 id="assets">assets</h3><p>Esta porpiedad permite associar recursos a la pagina, estos recursos pueden ser usados por la pagina sin la necesidad de declarar el tag assets, utilizelos para compartir contenido local con el template, sea por ejemplo una imagen de cabezera, eg:</p>
+<pre class="markdown-code-container" data-code="html"><code class="language-html">---
+assets:
+    banner: ./banner.jpg
+---
+
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>img</span> <span class="token attr-name">src</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{{page.assets.banner}}<span class="token punctuation">"</span></span> <span class="token attr-name">alt</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>my banner<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span></code></pre><p><strong>Recurede las resoluciones de assets son relativas al archivo que lo demanda, esto mejora enormemente el nivel de abtraccion de los recursos asociados a la pagina</strong>.</p>
+<h3 id="query">query</h3><p>declara las consultas que el documento realiza sobre todas las paginas, estas consultas deben ser agrupadas a base de un indice y deben declarar un objeto tipo query, ej:</p>
+<pre class="markdown-code-container" data-code="yaml"><code class="language-yaml"><span class="token key atrule">query</span><span class="token punctuation">:</span>
+    <span class="token key atrule">post</span><span class="token punctuation">:</span>
+        <span class="token key atrule">where</span><span class="token punctuation">:</span>
+            <span class="token key atrule">tag</span><span class="token punctuation">:</span> post
+        <span class="token key atrule">limit</span><span class="token punctuation">:</span> <span class="token number">5</span>
+        <span class="token key atrule">sort</span><span class="token punctuation">:</span> date
+        <span class="token key atrule">order</span><span class="token punctuation">:</span> <span class="token number">-1</span></code></pre><p>Donde:</p>
+<ol>
+<li><code>query.post</code> : agrupara los resultados de la query, para luego ser usados en el documento, eg <code>{{ page.query.post | json }}</code><ul>
+<li><code>query.post.where</code> : define la consulta por incluir igualdad, el where enseñado retornara todas las paginas que declaren la propiedad <code>tag : post</code></li>
+<li><code>query.post.limit</code> : Limita los resultados de la query a maximo 5</li>
+<li><code>query.post.sort</code> : ordena la quiery a base de la propeidad date declarada en la pagina.</li>
+<li><code>query.post.order</code> : oderna los resultados de mayor a menor.</li>
+</ul>
+</li>
+</ol>
+<h3 id="fetch">Fetch</h3><p>Declara request o asociacion de documentos local como fuentes de datos observable, ej</p>
+<pre class="markdown-code-container" data-code="yaml"><code class="language-yaml"><span class="token key atrule">fetch</span><span class="token punctuation">:</span>
+    <span class="token comment"># Los request son cachados por cada instancia del EStack</span>
+    <span class="token key atrule">todo</span><span class="token punctuation">:</span> https<span class="token punctuation">:</span>//jsonplaceholder.typicode.com/todos
+    <span class="token comment"># Cada edición genera una nueva lectura de los documentos legales vinculados</span>
+    <span class="token key atrule">config</span><span class="token punctuation">:</span> ./my<span class="token punctuation">-</span>config.yaml
+    <span class="token key atrule">users</span><span class="token punctuation">:</span> ./my<span class="token punctuation">-</span>users.json</code></pre><p>Ud podra usar los resultados de fetch a travez de la propiedad <code>page.fetch.&lt;prop&gt;</code>, ej:</p>
+<pre class="markdown-code-container" data-code="html"><code class="language-html">{% for todo in page.fetch.todos %}
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>h2</span><span class="token punctuation">></span></span>{{ todo.title }}<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>h2</span><span class="token punctuation">></span></span>
+{% endfor %}</code></pre><blockquote>
+<p>Las asociaciones de documentos sincronizan los cambios del docuemto interno con quien lo associa.</p>
+</blockquote>
+<h3 id="archive">archive</h3><p>Esta propiedad permite crear paginas de archivo.</p>
+
+                </div>
+            </article>
+        </section>
+        <!--footer-->
+    </body>
+</html>
