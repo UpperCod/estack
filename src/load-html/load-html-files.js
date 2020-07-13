@@ -86,6 +86,8 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             let { dest, link } = dataFile;
 
+            let links = {};
+
             let fetch = {};
 
             let assets = {};
@@ -95,6 +97,36 @@ export function loadHtmlFiles(build, htmlFiles) {
             }
 
             let joinChildFile = (file) => path.join(dir, file);
+            /**
+             * redefines the root scope links variable,
+             * allows creating link lists based on relative paths that point
+             * to the file, the getter allows access to the final link of the file
+             * The objective is to reference abtracted pages in the relative
+             * path, as translations or page versions
+             * @param {string} prop
+             * @param {*} value
+             */
+            async function addDataLink(prop, value) {
+                if (typeof value == "string") {
+                    value = await addDataFetch(null, value, true);
+                }
+                let createProxy = ({ link, linkTitle }) => {
+                    /**@todo Add error for not respecting link interface */
+                    let file = path.join(dir, link);
+                    return {
+                        get link() {
+                            return build.inputs[file]
+                                ? build.inputs[file].data.link
+                                : "";
+                        },
+                        linkTitle,
+                    };
+                };
+
+                links[prop] = Array.isArray(value)
+                    ? value.map(createProxy)
+                    : createProxy(value);
+            }
 
             async function addFile(src) {
                 if (isUrl(src)) return src;
@@ -153,8 +185,19 @@ export function loadHtmlFiles(build, htmlFiles) {
                       )
                     : [];
 
+            let resolveDataLinks = () =>
+                data.links
+                    ? Object.keys(data.links).map((prop) =>
+                          addDataLink(prop, data.links[prop])
+                      )
+                    : [];
+
             // These processes can be solved in parallel
-            await Promise.all([...resolveDataAssets(), ...resolveDataFetch()]);
+            await Promise.all([
+                ...resolveDataLinks(),
+                ...resolveDataAssets(),
+                ...resolveDataFetch(),
+            ]);
 
             build.inputs[file] = {
                 data: {
@@ -165,6 +208,7 @@ export function loadHtmlFiles(build, htmlFiles) {
                     assets,
                     file: normalizePath(file),
                     link,
+                    links,
                 },
                 dest,
                 addFile,
