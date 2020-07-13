@@ -44,18 +44,19 @@ export function loadPages(build) {
 
     let addPage = (page) => {
         let { data } = page;
-        let id = data.symlink || data.link;
+        let { link, symlink } = data;
 
-        if (pages[id]) {
+        if (pages[link] || pages[symlink]) {
+            let refPage = pages[link] || pages[link];
             build.logger.debug(
-                `${ERROR_DUPLICATE_ID} identifiers [symlink] or [link] must be unique, ${pages[id].data.file} ${data.file}`,
+                `${ERROR_DUPLICATE_ID} identifiers [symlink] or [link] must be unique, ${refPage.data.file} ${data.file}`,
                 MARK_ROOT
             );
         } else {
-            pages[id] = page;
+            pages[link] = page;
+            if (symlink) pages[symlink] = page;
             page.ref = {
                 ...data,
-                id,
                 content: null,
             };
             pagesData.push(page.ref);
@@ -104,8 +105,8 @@ export function loadPages(build) {
      * nested render on the layout
      */
     let pagesDataRender = pagesData.map(async (data) => {
-        let { id, layout } = data;
-        let _page = pages[id];
+        let { link, layout } = data;
+        let _page = pages[link];
 
         let _layout = templates[layout == null ? "default" : layout];
 
@@ -161,7 +162,8 @@ export function loadPages(build) {
                      * @example
                      * singlePage : index
                      */
-                    if (layout.singlePage && layout.singlePage !== page.id) {
+                    let id = page.symlink || page.link;
+                    if (layout.singlePage && layout.singlePage !== id) {
                         return;
                     }
                     try {
