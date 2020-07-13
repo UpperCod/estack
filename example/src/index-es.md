@@ -1,6 +1,6 @@
 ---
 title: EStack todo en uno
-description: Generador de sitios estaticos, servidor de desarrollo, bundle,  zero configuracion y más.
+description: zero configuracion, generador de sitios estaticos, servidor de desarrollo, bundle y más.
 linkTitle: Introduccion
 link: /
 symlink: index-es
@@ -29,7 +29,7 @@ fetch:
     todo: https://jsonplaceholder.typicode.com/todos
 ---
 
-### Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una con zero configuracion, logrando sincronizando eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.
+### Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una de zero configuracion que sincroniza eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.
 
 ## Implementacion
 
@@ -80,7 +80,7 @@ npx estack src/**/*.html --dev
 
 ## Manejo de archivos
 
-EStack permite los archivos en carpetas para asi abstraer el contenido que necesita la pagina, este contenido debe ser declarado por la pagina de forma relativa a su origen, estack luego resolvera los nombre de los assets hacheandolos para evitar coliciones de archivos.
+EStack permite abstraer el contenido que necesita la pagina, este contenido debe ser declarado por la pagina de forma relativa a su origen, estack luego resolvera los nombre de los assets hacheandolos para evitar coliciones de archivos.
 
 ```bash
 +-src
@@ -102,7 +102,7 @@ EStack permite los archivos en carpetas para asi abstraer el contenido que neces
     |-234-index.css
 ```
 
-La distribucion de carpeta asociada a la extraccio de los archivos procesar por EStack no impera al momento de crear el documento HTML. para evitar esto EStack añade frontmatter, que permite modificar el comportamiento de la pagina, ej:
+La distribucion de carpeta asociada a la extraccio de los archivos procesar por EStack no impera al momento de crear el documento HTML. Esto obliga aque si ud quiere mantener 2 index.html declare dentro de estos index el link o carpeta de uso para asi evitar colicion de vinculo.
 
 ```html
 ---

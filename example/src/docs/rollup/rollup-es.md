@@ -6,6 +6,8 @@ linkTitle: Rollup
 lang: es
 tag: doc
 order: 3
+links:
+    langs: ./links.yaml
 ---
 
 EStack captura los assets asociados a cada pagina y los ditribuye entre procesos, Rollup se encarga de procesar los assets tipo Javasript y Typescript

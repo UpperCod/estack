@@ -45,7 +45,7 @@ declara el nombre del documento a fijar como destino
 folder: posts
 ```
 
-declara la carpeta a usar como destino del documento
+declara la carpeta a usar como destino para el documento
 
 ### link
 
@@ -61,7 +61,7 @@ Declara de forma conjunta slug y folder
 symlink: home
 ```
 
-declara un link simbolico que permite referencia este documento a través de la propiedad links, ej:
+declara un link simbolico que permite referencia este documento a través de la variable global links, ej:
 
 ```markdown
 Esta es mi pagina principal [{{ links.home.title }}]({{ links.home.link }})
@@ -69,7 +69,7 @@ Esta es mi pagina principal [{{ links.home.title }}]({{ links.home.link }})
 
 **Considere synlink una poderosa utilidad ya que permite acceder a toda la informacion declarada del documento referenciado, como las query, fetch o assets.**
 
-> **Los synlink y links deben ser únicos**, EStack enseñara un mensaje de error cuando un alias o link este duplicado.
+> **Los synlink y links deben ser únicos**, EStack enseñara un mensaje de error cuando un symlink o link este duplicado.
 
 ### assets
 
@@ -116,7 +116,7 @@ Declara request o asociacion de documentos local como fuentes de datos observabl
 fetch:
     # Los request son cachados por cada instancia del EStack
     todo: https://jsonplaceholder.typicode.com/todos
-    # Cada edición genera una nueva lectura de los documentos legales vinculados
+    # Archivos locales, sincronizados al documento
     config: ./my-config.yaml
     users: ./my-users.json
 ```
@@ -129,7 +129,68 @@ Ud podra usar los resultados de fetch a travez de la propiedad `page.fetch.<prop
 {% endfor %}
 ```
 
-> Las asociaciones de documentos sincronizan los cambios del docuemto interno con quien lo associa.
+### links
+
+Permite crear un objeto capas de recuperar los links finales a base de origenes relativos de archivos, esta propeidad es util para contruccion de variaciones de pagina o paginas relacionadas.
+
+```yaml
+links:
+    prev:
+        link: ./paso-0.md
+        linkTitle: comenzando
+    next:
+        link: ./paso-2.md
+        linkTitle: paso 2
+    langs: ./langs.yaml ## Los linsk pueden probenir de un documento en comun
+    recommend:
+        - link: ../tutorial-2/tutorial-2.md
+          linkTitle: Aprendiendo algo similar
+        - link: ../tutorial-3/tutorial-3.md
+          linkTitle: Aprendiendo algo similar
+```
+
+> `page.links` contendra los links finales de los archivos asociados al archivo.
+
+### template
+
+```yaml
+template: post
+```
+
+Declara que el documento es un template, los template pueden ser usados por otros documentos mediante la propiedad `layout`, Ud puede definir `template: default` para definir el documento template como por defecto para las contrucciones de pagina que no declaren layout.
+
+**las pagina tipo template pueden hacer uso de todo el frontmatter, la data asociada a un tempalte se asocia a la variable global `layout`, esta puede ser usada por la pagina que aplica el o el mismo template**.
+
+**Los template escapan de la variable global `links`**
+
+```html
+---
+title: mi template
+color: black
+---
+
+<!DOCTYPE html>
+<html lang="{{page.lang}}">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{page.title}}</title>
+        <link rel="stylesheet" href="{{ './my-template.css' | asset }}" />
+    </head>
+    <body style="background:{{layout.color}}">
+        <main>{{page.content}}</main>
+        <footer>{{layout.title}}</footer>
+    </body>
+</html>
+```
+
+### layout
+
+```yaml
+layout: post
+```
+
+Declara que `template` usara el documento para su reprecentacion como pagina. Puede definir `layout: false` para escapar del template definido como default
 
 ### archive
 

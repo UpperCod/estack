@@ -47,6 +47,9 @@
             background: var(--easyDoc-bgcolor-code);
             border-radius: 0.5rem;
             overflow-x: auto;
+            code {
+                padding: 0px;
+            }
         }
     }
 }
