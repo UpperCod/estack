@@ -109,7 +109,7 @@ export interface options {
     forceWrite?: boolean;
     silent?: boolean;
     href?: string;
-    server?: boolean;
+    server?: boolean | string;
     virtual?: boolean;
     sourcemap?: boolean;
     minify?: boolean;

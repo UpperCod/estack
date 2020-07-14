@@ -2,21 +2,11 @@ import sade from "sade";
 import { createBuild } from "./create-build";
 export { createBuild } from "./create-build";
 
-sade("estack [src] [dest]")
+sade("estack <mode> <src> [dest]")
     .version("PKG.VERSION")
-    .option(
-        "--dev",
-        "Dev mode, equivalent to using --server --watch --hashAllAssets --assetsDir --sourcemap",
-        false
-    )
-    .option(
-        "--build",
-        "Build mode, equivalent to using --hashAllAssets --assetsDir --minify",
-        false
-    )
     .option("--watch", "Detect file changes to generate a new build", false)
     .option("--external", "Does not include dependencies in build")
-    .option("--server", "Create a server, by default localhost:8000", false)
+    .option("--server", "Create a server, by default localhost:8000")
     .option("--port", "Define the server port", 8000)
     .option("--proxy", "Redirect requests that are not resolved locally", "")
     .option("--href", "add a prefix to the resolved links", "/")
@@ -35,11 +25,6 @@ sade("estack [src] [dest]")
     .option("--silent", "Prevents printing of logs", false)
     .option("--forceWrite", "Force writing files in development mode", false)
     .option(
-        "--runAfterBuild",
-        "Allows to run a package script after each build cycle",
-        ""
-    )
-    .option(
         "--sizes",
         "Displays the sizes of the files associated with rollup",
         false
@@ -51,15 +36,17 @@ sade("estack [src] [dest]")
         "Minify the code only if the flag --watch is not used",
         false
     )
-    .example("src/index.html public --watch --server")
-    .example("src/index.html public --external")
-    .example("src/index.html public --external react,react-dom")
-    .example("src/index.js dist --watch")
-    .example("src/*.js dist")
-    .example("src/*.html")
-    .action((src, dest, options) => {
+    .example("dev src/index.html")
+    .example("dev src/**/*.{html,md}")
+    .example("dev src/app.js")
+    .example("build src/index.html public")
+    .example("build src/*.js dist")
+    .example("build src/*.js dist --external")
+    .example("build src/*.js dist --external package_1,package_2,package_3")
+    .action((mode, src, dest, options) => {
         createBuild({
             ...options,
+            mode,
             src,
             dest,
         }).catch((e) => console.log("" + e));

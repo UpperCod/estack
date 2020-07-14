@@ -3,19 +3,15 @@ import builtins from "builtin-modules";
 import { getPackage } from "./utils/utils";
 
 /**
- * @typeof {import("./internal") } Build
- */
-
-/**
  *
  * @param {import("./internal").options} options
  */
 export async function loadOptions({
+    mode,
     src = [],
     dev,
     build,
     dest,
-    config,
     external,
     jsx,
     jsxFragment,
@@ -25,29 +21,49 @@ export async function loadOptions({
     hashAllAssets,
     assetsDir = "",
     assetHashPattern = "[hash]-[name]",
+    server,
+    watch,
+    sourcemap,
+    minify,
     ...ignore
 }) {
-    let srcWithHtml = /(html|md)/.test(src + "");
-    if (dev) {
-        ignore.sourcemap = ignore.server = ignore.watch = true;
-        if (srcWithHtml) {
-            hashAllAssets = true;
-            assetsDir = "assets";
-        }
-    }
-    if (build) {
-        if (srcWithHtml) {
-            ignore.minify = true;
-            hashAllAssets = true;
-            assetsDir = "assets";
-        }
-    }
-
     if (silent) process.env.silent = "true";
 
     let pkg = await getPackage();
 
     src = Array.isArray(src) ? src : src.split(/ *; */g);
+
+    let testHtml = (value) => value.split(/ *, */).includes("html", "md");
+    let withHtml = src.some((exp) =>
+        /\!/.test(exp)
+            ? false
+            : [/{([^}]+)}$/, /\.(\w+)$/].some((regExp) => {
+                  let test = exp.match(regExp);
+                  if (test) {
+                      let [, value] = test;
+
+                      return testHtml(value);
+                  }
+              })
+    );
+
+    if (withHtml) {
+        assetsDir = assetsDir || "assets";
+        hashAllAssets = true;
+    }
+
+    if (mode == "dev") {
+        server = server ? server == "true" || server == true : true;
+        watch = true;
+        sourcemap = true;
+        dest = dest || "public";
+    }
+    if (mode == "build") {
+        watch = false;
+        sourcemap = sourcemap || false;
+        minify = minify != null ? minify : true;
+        dest = dest || "dest";
+    }
 
     if (external) {
         external = Array.isArray(external)
@@ -76,13 +92,14 @@ export async function loadOptions({
         dest: dest || "./",
         external,
         ...ignore,
-        ...pkg[config],
         pkg,
         href,
         assetsDir,
         assetHashPattern,
         assetsWithoutHash,
-        virtual: !forceWrite && ignore.watch && ignore.server,
+        watch,
+        server,
+        virtual: !forceWrite && watch && server,
         jsx: jsx == "react" ? "React.createElement" : jsx,
         jsxFragment: jsx == "react" ? "React.Fragment" : jsxFragment,
     };
