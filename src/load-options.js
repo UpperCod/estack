@@ -9,8 +9,6 @@ import { getPackage } from "./utils/utils";
 export async function loadOptions({
     mode,
     src = [],
-    dev,
-    build,
     dest,
     external,
     jsx,
@@ -99,7 +97,7 @@ export async function loadOptions({
         assetsWithoutHash,
         watch,
         server,
-        virtual: !forceWrite && watch && server,
+        virtual: !forceWrite && watch && server ? true : false,
         jsx: jsx == "react" ? "React.createElement" : jsx,
         jsxFragment: jsx == "react" ? "React.Fragment" : jsxFragment,
     };

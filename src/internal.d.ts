@@ -101,23 +101,27 @@ export interface logger {
 
 export interface options {
     src: string | string[];
-    dest: string;
+    dest?: string;
+    mode?: string;
     config?: any;
+    watch?: boolean;
     external?: string[] | string;
     jsx?: string;
     jsxFragment?: string;
     forceWrite?: boolean;
     silent?: boolean;
     href?: string;
+    proxy?: string;
     server?: boolean | string;
     virtual?: boolean;
     sourcemap?: boolean;
     minify?: boolean;
-    assetDir: string;
-    assetHashPattern: string;
-    assetsWithoutHash: RegExp;
-    assetsDir: string;
-    [ignore: string]: any;
+    hashAllAssets?: boolean;
+    assetDir?: string;
+    assetHashPattern?: string;
+    assetsWithoutHash?: RegExp;
+    assetsDir?: string;
+    port: number;
 }
 
 export interface build {
