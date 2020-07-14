@@ -1,6 +1,5 @@
 import sade from "sade";
 import { createBuild } from "./create-build";
-export { createBuild } from "./create-build";
 
 sade("estack <mode> <src> [dest]")
     .version("PKG.VERSION")

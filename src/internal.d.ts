@@ -100,6 +100,7 @@ export interface logger {
 }
 
 export interface options {
+    pkg: object;
     src: string | string[];
     dest?: string;
     mode?: string;
@@ -121,7 +122,7 @@ export interface options {
     assetHashPattern?: string;
     assetsWithoutHash?: RegExp;
     assetsDir?: string;
-    port: number;
+    port?: number;
 }
 
 export interface build {

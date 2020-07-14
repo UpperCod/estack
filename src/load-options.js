@@ -17,13 +17,13 @@ export async function loadOptions({
     silent,
     href = "/",
     hashAllAssets,
-    assetsDir = "",
+    assetsDir,
     assetHashPattern = "[hash]-[name]",
     server,
     watch,
     sourcemap,
     minify,
-    ...ignore
+    proxy,
 }) {
     if (silent) process.env.silent = "true";
 
@@ -46,8 +46,8 @@ export async function loadOptions({
     );
 
     if (withHtml) {
-        assetsDir = assetsDir || "assets";
-        hashAllAssets = true;
+        assetsDir = assetsDir == null ? "assets" : assetsDir;
+        hashAllAssets = hashAllAssets == null ? true : hashAllAssets;
     }
 
     if (mode == "dev") {
@@ -59,7 +59,7 @@ export async function loadOptions({
     if (mode == "build") {
         watch = false;
         sourcemap = sourcemap || false;
-        minify = minify != null ? minify : true;
+        minify = minify == null ? true : minify;
         dest = dest || "dest";
     }
 
@@ -77,19 +77,19 @@ export async function loadOptions({
         ...Object.keys(pkg.peerDependencies),
     ];
 
-    let { dir, name } = path.parse(assetHashPattern);
+    let { name } = path.parse(assetHashPattern);
 
     assetHashPattern = name;
-
-    assetsDir = dir || assetsDir;
 
     let assetsWithoutHash = hashAllAssets ? /\.html$/ : /\.(html|js|css)$/;
 
     let options = {
         src,
         dest: dest || "./",
+        proxy,
         external,
-        ...ignore,
+        minify,
+        sourcemap,
         pkg,
         href,
         assetsDir,
