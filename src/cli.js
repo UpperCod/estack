@@ -9,7 +9,7 @@ sade("estack <mode> <src> [dest]")
     .option("--port", "Define the server port", 8000)
     .option("--proxy", "Redirect requests that are not resolved locally", "")
     .option("--href", "add a prefix to the resolved links", "/")
-    .option("--assetsDir", "define a destination directory for assets", "")
+    .option("--assetsDir", "define a destination directory for assets")
     .option(
         "--hashAllAssets",
         "all assets will be hacked including js and css",
