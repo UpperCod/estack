@@ -1,7 +1,7 @@
-const test = require("ava");
-const { createBuild } = require("../cli");
-const puppeteer = require("puppeteer");
-const utils = require("./utils");
+import test from "ava";
+import { createBuild } from "../src/create-build";
+import puppeteer from "puppeteer";
+import utils from "./utils";
 
 let src = "./test/basic/index.html";
 let dest = "./test/basic/public";
@@ -15,6 +15,7 @@ test.before(async () => {
         port,
         silent: true,
         assetsDir: "",
+        hashAllAssets: false,
     });
 });
 
