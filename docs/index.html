@@ -1,0 +1,125 @@
+
+
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>EStack todo en uno</title>
+        <meta name="description" content="zero configuracion, generador de sitios estaticos, servidor de desarrollo, bundle y más."> 
+        <link rel="preload" href="/assets/easy-doc.css" as="style"><link rel="stylesheet" href="/assets/easy-doc.css" >
+        <link rel="modulepreload" href="/assets/easy-doc-rows.js" as="script"><script type="module" src="/assets/easy-doc-rows.js" async></script>
+        <link rel="preload" href="/assets/easy-doc-aside-header.css" as="style"><link rel="stylesheet" href="/assets/easy-doc-aside-header.css" ><link rel="preload" href="/assets/easy-doc-aside-links.css" as="style"><link rel="stylesheet" href="/assets/easy-doc-aside-links.css" ><link rel="preload" href="/assets/easy-doc-header.css" as="style"><link rel="stylesheet" href="/assets/easy-doc-header.css" >
+    </head>
+    <body>
+         
+         
+        <section class="c-easyDocContent">
+            <aside class="c-easyDocContent_aside">
+                
+
+
+
+<header class="c-easyDocAsideHeader">
+    <a href="/">
+        <img src="/assets/5992-logo.svg" width="80%" alt="Logo EStack">
+    </a>
+    <h4 class="c-easyDocAsideHeader_title">EStack</h4>
+    <p class="c-easyDocAsideHeader_description">nulla Lorem officia et ea anim 
+aute commodo deserunt
+</p>
+    <pre class="c-easyDocAsideHeader_install">npm install my-ds</pre>
+</header>
+                 
+                    
+
+
+
+<div class="c-easyDocAsideLinks">
+    <h4 class="c-easyDocAsideLinks_title">Documentacion</h4>
+    <ul class="c-easyDocAsideLinks_list">
+        
+            <li class="c-easyDocAsideLinks_item">
+                <a class="c-easyDocAsideLinks_link c-easyDocAsideLinks_link-active" href="/">Introduccion</a>
+            </li>
+        
+            <li class="c-easyDocAsideLinks_item">
+                <a class="c-easyDocAsideLinks_link c-easyDocAsideLinks_link-" href="/es/frontmatter">Frontmatter</a>
+            </li>
+        
+            <li class="c-easyDocAsideLinks_item">
+                <a class="c-easyDocAsideLinks_link c-easyDocAsideLinks_link-" href="/es/liquid">Liquid</a>
+            </li>
+        
+            <li class="c-easyDocAsideLinks_item">
+                <a class="c-easyDocAsideLinks_link c-easyDocAsideLinks_link-" href="/es/rollup">Rollup</a>
+            </li>
+        
+    </ul>
+</div>
+ 
+                
+            </aside>
+            <article class="c-easyDocContent_content">
+                
+
+
+
+<header class="c-easyDocHeader">
+    <div class="c-easyDocHeader_banner">
+        <div class="c-easyDocHeader_content">
+            <h1 class="c-easyDocHeader_title">EStack todo en uno</h1>
+            <p class="c-easyDocHeader_text">zero configuracion, generador de sitios estaticos, servidor de desarrollo, bundle y más.</p>
+        </div>
+    </div>
+</header>
+ 
+                <div class="c-easyDocContent_inner">
+                    <h3 id="todo-proyecto-recurre-a-una-gran-cantidad-de-herramientas-con-configuracion-individual-solo-para-comenzar-a-desarrollar-estack-reduce-ese-numero-de-herramientas-a-solo-una-de-zero-configuracion-que-sincroniza-eficientemente-servidor-de-desarrollo-generador-de-sitios-estaticos-incremental-bundlerollup-y-manejador-de-assets">Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una de zero configuracion que sincroniza eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.</h3><h2 id="implementacion">Implementacion</h2><h3 id="instalacion">Instalacion</h3><pre class="markdown-code-container" data-code="raw"><code class="language-raw">npm install -D estack</code></pre><h3 id="ejemplo-de-directorio">ejemplo de directorio</h3><pre class="markdown-code-container" data-code=""><code class="language-">+-src
+  |- index.js
+  |- index.css
+  |- index.html
+</code></pre><p><strong>src/index.html</strong></p>
+<pre class="markdown-code-container" data-code="html"><code class="language-html"><span class="token doctype">&lt;!DOCTYPE html></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>link</span> <span class="token attr-name">rel</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>stylesheet<span class="token punctuation">"</span></span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{{ 'index.css' | asset }}<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>script</span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>module<span class="token punctuation">"</span></span> <span class="token attr-name">src</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{{ 'index.js' | asset }}<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>script</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span></code></pre><p><code>{{ &#39;./src/app.js&#39; | asset }}</code> asset es un filtro personalizado para liquidjs que permite capturar los assets de una pagina o mas paginas, los assets capturados son enviados a distintis proceso segun su tipo, este al ser de tipo JS sera enviado a Rollup.</p>
+<pre class="markdown-code-container" data-code="bash"><code class="language-bash">npx estack src/index.html --dev</code></pre><p>El flag --dev lanza un servidor de desarrollo que obserba los cambios de los assets o el HTML para recargar la pagina, <strong>los documentos servidos no son escritos en Disco</strong>.</p>
+<p>Estack permite usar expreciones, para capturar y observar multiples archivos, eg:</p>
+<pre class="markdown-code-container" data-code="bash"><code class="language-bash"><span class="token comment"># npx estack src/index.html --dev</span>
+npx estack src/**/*.html --dev</code></pre><h2 id="manejo-de-archivos">Manejo de archivos</h2><p>EStack permite abstraer el contenido que necesita la pagina, este contenido debe ser declarado por la pagina de forma relativa a su origen, estack luego resolvera los nombre de los assets hacheandolos para evitar coliciones de archivos.</p>
+<pre class="markdown-code-container" data-code="bash"><code class="language-bash">+-src
+  <span class="token operator">|</span>- index.js
+  <span class="token operator">|</span>- index.css
+  <span class="token operator">|</span>- index.html
+  +- client
+     <span class="token operator">|</span>- index.js
+     <span class="token operator">|</span>- index.css
+     <span class="token operator">|</span>- client.html
+
++-localhost:8000
+  <span class="token operator">|</span>-index.html
+  <span class="token operator">|</span>-client.html
+  +-assets
+    <span class="token operator">|</span>-123-index.js
+    <span class="token operator">|</span>-123-index.css
+    <span class="token operator">|</span>-234-index.js
+    <span class="token operator">|</span>-234-index.css</code></pre><p>La distribucion de carpeta asociada a la extraccio de los archivos procesar por EStack no impera al momento de crear el documento HTML. Esto obliga aque si ud quiere mantener 2 index.html declare dentro de estos index el link o carpeta de uso para asi evitar colicion de vinculo.</p>
+<pre class="markdown-code-container" data-code="html"><code class="language-html">---
+title: Mi pagina
+link: mi-carpeta/mi-pagina
+---
+
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>h1</span><span class="token punctuation">></span></span>{{page.title}}<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>h1</span><span class="token punctuation">></span></span></code></pre><p>la pagina del ejemplo seria indexada por el servidor de desarrollo como: <code>localhost:8000/mi-carpeta/mi-pagina</code>.</p>
+
+                </div>
+            </article>
+        </section>
+        <!--footer-->
+    </body>
+</html>
