@@ -24,6 +24,7 @@ export async function loadOptions({
     sourcemap,
     minify,
     proxy,
+    port,
 }) {
     if (silent) process.env.silent = "true";
 
@@ -87,6 +88,7 @@ export async function loadOptions({
         src,
         dest: dest || "./",
         proxy,
+        port,
         external,
         minify,
         sourcemap,

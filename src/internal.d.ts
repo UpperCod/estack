@@ -100,8 +100,8 @@ export interface logger {
 }
 
 export interface options {
-    pkg: object;
     src: string | string[];
+    pkg?: object;
     dest?: string;
     mode?: string;
     config?: any;
