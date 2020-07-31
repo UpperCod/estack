@@ -16,7 +16,6 @@ export async function loadOptions({
     forceWrite,
     silent,
     href = "/",
-    hashAllAssets,
     assetsDir,
     assetHashPattern = "[hash]-[name]",
     server,
@@ -26,6 +25,7 @@ export async function loadOptions({
     proxy,
     port,
 }) {
+    let hashAllAssets;
     if (silent) process.env.silent = "true";
 
     let pkg = await getPackage();
@@ -45,10 +45,9 @@ export async function loadOptions({
                   }
               })
     );
-
     if (withHtml) {
         assetsDir = assetsDir == null ? "assets" : assetsDir;
-        hashAllAssets = hashAllAssets == null ? true : hashAllAssets;
+        hashAllAssets = true;
     }
 
     if (mode == "dev") {

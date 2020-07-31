@@ -33,10 +33,10 @@ let cache = {};
  */
 export async function loadCssFile(
     { file, code, readFile, addWatchFile, request },
+    namespace = "",
     imports = {},
     returnRules,
     useRules = [],
-    namespace = "",
     headers = [],
     uri
 ) {
@@ -105,10 +105,10 @@ export async function loadCssFile(
                                         addWatchFile,
                                         request,
                                     },
+                                    namespace,
                                     imports,
                                     true,
                                     useRules,
-                                    namespace,
                                     headers,
                                     fromUrl ? file : false
                                 );
@@ -128,10 +128,10 @@ export async function loadCssFile(
                                             addWatchFile,
                                             request,
                                         },
+                                        namespace,
                                         imports,
                                         true,
                                         useRules,
-                                        namespace,
                                         headers
                                     );
                                 } catch (e) {}
