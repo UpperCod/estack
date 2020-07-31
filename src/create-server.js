@@ -57,6 +57,7 @@ export async function createServer({ root, port, reload, proxy }) {
             }));
 
     let fallback = normalizePath(path.join(root, "index.html"));
+    let notFound = normalizePath(path.join(root, "404.html"));
 
     let responses = [];
 
@@ -91,7 +92,9 @@ export async function createServer({ root, port, reload, proxy }) {
 
                 file = normalizePath(path.join(root, file));
 
-                let virtualSource = sources[file];
+                let virtualSource =
+                    sources[file] ||
+                    (isHtml(file) ? sources[fallback] : sources[notFound]);
 
                 let [
                     resolveHtml,
