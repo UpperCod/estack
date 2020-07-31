@@ -23,8 +23,8 @@ export async function loadOptions({
     minify,
     proxy,
     port,
+    hashAllAssets,
 }) {
-    let hashAllAssets;
     let watch;
 
     if (silent) process.env.silent = "true";
@@ -47,7 +47,7 @@ export async function loadOptions({
     );
     if (withHtml) {
         assetsDir = assetsDir == null ? "assets" : assetsDir;
-        hashAllAssets = true;
+        hashAllAssets = hashAllAssets == null ? true : hashAllAssets;
     } else {
         assetsDir = "";
     }
