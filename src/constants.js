@@ -1,7 +1,7 @@
 /**
  * Logger marker for the build process used by the core
  */
-export const MARK_ROOT = "ESbuild";
+export const MARK_ROOT = "EStack";
 /**
  * Logger marker for the build process used by Rollup
  */

@@ -6,7 +6,6 @@ import {
     writeFile,
     normalizePath,
     logger,
-    request as uRequest,
     readFile as fsReadFile,
     isHtml,
 } from "./utils/utils";
@@ -14,6 +13,7 @@ import { createServer } from "./create-server";
 import { createWatch } from "./create-watch";
 import { loadOptions } from "./load-options";
 import { loadBuild } from "./load-build";
+import { request as uRequest } from "@uppercod/request";
 
 let CACHE_REQUEST = {};
 /**

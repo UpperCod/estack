@@ -29,6 +29,9 @@ fetch:
     todo: https://jsonplaceholder.typicode.com/todos
 ---
 
+<script src="{{'a.js'|asset}}"></script>
+<script src="{{'b.js'|asset}}"></script>
+
 ### Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una de zero configuracion que sincroniza eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.
 
 ## Implementacion
