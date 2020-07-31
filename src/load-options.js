@@ -19,15 +19,15 @@ export async function loadOptions({
     assetsDir,
     assetHashPattern = "[hash]-[name]",
     server,
-    watch,
     sourcemap,
     minify,
     proxy,
     port,
 }) {
     let hashAllAssets;
-    if (silent) process.env.silent = "true";
+    let watch;
 
+    if (silent) process.env.silent = "true";
     let pkg = await getPackage();
 
     src = Array.isArray(src) ? src : src.split(/ *; */g);
@@ -48,10 +48,12 @@ export async function loadOptions({
     if (withHtml) {
         assetsDir = assetsDir == null ? "assets" : assetsDir;
         hashAllAssets = true;
+    } else {
+        assetsDir = "";
     }
 
     if (mode == "dev") {
-        server = server ? server == "true" || server == true : true;
+        server = withHtml || server;
         watch = true;
         sourcemap = true;
         dest = dest || "public";

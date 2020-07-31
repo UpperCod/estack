@@ -3,7 +3,6 @@ import { createBuild } from "./create-build";
 
 sade("estack <mode> <src> [dest]")
     .version("PKG.VERSION")
-    .option("--watch", "Detect file changes to generate a new build", false)
     .option("--external", "Does not include dependencies in build")
     .option("--server", "Create a server, by default localhost:8000")
     .option("--port", "Define the server port", 8000)

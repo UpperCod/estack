@@ -5,5 +5,5 @@ console.log(scope(".age"));
 console.log(inject(".age"));
 
 export default function a() {
-    return 10;
+    return 100;
 }
