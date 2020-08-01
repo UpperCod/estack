@@ -37,7 +37,11 @@ export async function loadRollup(build, jsFiles) {
     let input = {
         input: entries,
         onwarn(message) {
-            build.logger.markBuildError(message + "", MARK_ROLLUP);
+            let strmessage = message + "";
+            if (!/circular dependencies/i.test(strmessage)) {
+                build.logger.markBuildError(strmessage, MARK_ROLLUP);
+            }
+            return;
         },
         //@ts-ignore
         external: options.external,
