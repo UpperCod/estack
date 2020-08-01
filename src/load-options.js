@@ -1,5 +1,7 @@
-import path from "path";
+//@ts-ignore
 import builtins from "builtin-modules";
+
+import path from "path";
 import { getPackage } from "./utils/utils";
 
 /**
