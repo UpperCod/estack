@@ -39,6 +39,7 @@ export async function loadRollup(build, jsFiles) {
         onwarn(message) {
             build.logger.markBuildError(message + "", MARK_ROLLUP);
         },
+        //@ts-ignore
         external: options.external,
         cache: cache.bundle,
         plugins: [
@@ -60,6 +61,7 @@ export async function loadRollup(build, jsFiles) {
                 async generateBundle(opts, chunks) {
                     let parallel = [];
                     for (let file in chunks) {
+                        //@ts-ignore
                         let { code, map, isEntry, fileName } = chunks[file];
                         let dest = file;
                         let fileMap = fileName + ".map";
@@ -123,7 +125,7 @@ export async function loadRollup(build, jsFiles) {
             output,
             watch: { exclude: ["node_modules/**"] },
         };
-
+        //@ts-ignore
         let watcher = watch(optionsWatch);
 
         watcher.on("event", (event) => {

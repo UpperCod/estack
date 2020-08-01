@@ -1,7 +1,10 @@
+//@ts-ignore
+import sirv from "sirv";
+
 import path from "path";
 import net from "net";
 import polka from "polka";
-import sirv from "sirv";
+
 import httpProxy from "http-proxy";
 import {
     asyncFs,
