@@ -18,6 +18,7 @@ export async function loadCss(build, cssFiles) {
 
         return build.mountFile({
             dest: build.getDestDataFile(file).dest,
+            //@ts-ignore
             code,
             type: "css",
         });

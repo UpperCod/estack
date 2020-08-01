@@ -27,7 +27,7 @@ let cache = {};
  * @param {boolean} [returnRules] - If true it will return the rules as Array
  * @param {RegExp[]} [useRules] - Regular expressions to select css rules
  * @param {string} [namespace] - context prefix of file selectors
- * @param {string[]} [headers] - context prefix of file selectors
+ * @param {any[]} [headers] - context prefix of file selectors
  * @param {string} [uri]
  * @returns {Promise<string|object[]>}
  */
