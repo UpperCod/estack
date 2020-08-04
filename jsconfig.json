@@ -5,9 +5,7 @@
         "jsx": "preserve"
     },
     "include": [
-        "src/**/*", "core.js", "html/html.js"
-    ],
-    "exclude":  [
-        "node_modules/**/*.test.js"
+        "src/**/*",
+        "example/**/*"
     ]
 }
