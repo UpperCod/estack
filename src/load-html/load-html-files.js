@@ -110,23 +110,25 @@ export function loadHtmlFiles(build, htmlFiles) {
                 if (typeof value == "string") {
                     value = await addDataFetch(null, value, true);
                 }
-                let createProxy = (data) => {
-                    let { link, linkTitle = "", ...meta } =
-                        typeof data == "string" ? { link: data } : data;
+                let createProxy = ({ link, linkTitle, ...meta }) => {
                     /**@todo Add error for not respecting link interface */
                     let file = path.join(dir, link);
+                    let getData = (openData) =>
+                        build.inputs[file]
+                            ? openData(build.inputs[file].data)
+                            : "";
                     return {
                         ...meta,
                         get link() {
-                            return build.inputs[file]
-                                ? build.inputs[file].data.link
-                                : "";
+                            return getData(({ link }) => link);
                         },
                         get linkTitle() {
                             return (
                                 linkTitle ||
-                                build.inputs[file].linkTitle ||
-                                build.inputs[file].title
+                                getData(
+                                    ({ linkTitle, title }) =>
+                                        linkTitle || title || ""
+                                )
                             );
                         },
                     };

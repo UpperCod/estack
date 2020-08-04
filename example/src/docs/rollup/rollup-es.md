@@ -7,8 +7,18 @@ lang: es
 tag: doc
 order: 3
 links:
-    langs: ./links.yaml
+    langs:
+        link: ./rollup.md
+        linkTitle: ingles
 ---
+
+```raw
+{{page.links.langs.linkTitle}}
+```
+
+{% for item in page.links.langs %}
+[{{item.linkTitle}}]({{item.link}})
+{% endfor %}
 
 EStack captura los assets asociados a cada pagina y los ditribuye entre procesos, Rollup se encarga de procesar los assets tipo Javasript y Typescript
 La configuracion de rollup esta pensada para entornos modernos, ya que no trabaja los ficheros js de forma independiente los asocia en un array, eg:
