@@ -19,7 +19,7 @@ export let promiseErrorToNull = async (promise) => promise.catch((e) => null);
  */
 export function getProp(value, prop, optionValue) {
     value = value || {};
-    let parts = prop.match(/([^\[\]\.]+)/g);
+    let parts = prop.match(/([^\[\](\.|\/)]+)/g);
     for (let i = 0; i < parts.length; i++) {
         if (typeof value === "object" && parts[i] in value) {
             value = value[parts[i]];
