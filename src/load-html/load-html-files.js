@@ -250,24 +250,33 @@ export function loadHtmlFiles(build, htmlFiles) {
     );
 }
 
+const isNextObject = (value) => value && typeof value == "object";
+
 async function mapRef(data, map, root) {
     for (let prop in data) {
         if (prop == "$ref") {
             let value = await map(data[prop], root);
-            if (value && typeof value == "object") {
+            if (isNextObject(value)) {
                 let nextData = { ...data };
                 delete nextData.$ref;
                 let nextValue = { ...value, ...nextData };
-                return mapRef(
-                    nextValue,
-                    map,
-                    root == data ? nextValue : root || nextValue
-                );
+                let nextRoot = root == data ? nextValue : root || nextValue;
+                if (Array.isArray(value)) {
+                    return Promise.all(
+                        value.map((value) =>
+                            isNextObject(value)
+                                ? mapRef(value, map, nextRoot)
+                                : value
+                        )
+                    );
+                } else {
+                    return await mapRef(nextValue, map, nextRoot);
+                }
             } else {
                 return value;
             }
         } else {
-            if (data[prop] && typeof data[prop] == "object") {
+            if (isNextObject(data[prop])) {
                 data[prop] = await mapRef(data[prop], map, root || data[prop]);
             }
         }

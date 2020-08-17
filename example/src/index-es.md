@@ -26,11 +26,14 @@ query:
             tag: doc
         sort: order
         order: 1
+links:
+    age:
+        $ref: ~langs
 toc:
     $ref: base.yaml~sub.age
 ---
 
-<h1>text : {{page.toc}}</h1>
+<h1>text : {{page.langs|json}}</h1>
 <h1>text : {{page.title}}</h1>
 
 ### Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una de zero configuracion que sincroniza eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.

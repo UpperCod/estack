@@ -1,4 +1,3 @@
-lalala: lololo
-todo: https://jsonplaceholder.typicode.com/todos
-sub:
-    age: 100
+langs:
+    - link: ./docs/stylis/stylis.md
+    - link: ./docs/rollup/rollup.md
