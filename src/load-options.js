@@ -34,7 +34,7 @@ export async function loadOptions({
 
     src = Array.isArray(src) ? src : src.split(/ *; */g);
 
-    let testHtml = (value) => value.split(/ *, */).includes("html", "md");
+    let testHtml = (value) => ["html", "md"].some((ext) => value.includes(ext));
     let withHtml = src.some((exp) =>
         /\!/.test(exp)
             ? false
@@ -43,7 +43,7 @@ export async function loadOptions({
                   if (test) {
                       let [, value] = test;
 
-                      return testHtml(value);
+                      return testHtml(value.split(/ *, */));
                   }
               })
     );
