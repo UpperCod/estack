@@ -9,7 +9,7 @@
         "test": "npm run clear && ava",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:doc": "node cli.js dev example/{src,template}/**/*.{html,md}",
+        "dev:doc": "node cli.js dev example/src/index-es.md",
         "dev:js": "node cli.js dev example/{src,template}/**/*.{css,js} --server",
         "build:doc": "node cli.js build example/{src,template}/**/*.{html,md} docs",
         "prepare": "npm run build && npm run test"

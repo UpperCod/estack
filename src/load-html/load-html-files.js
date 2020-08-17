@@ -7,6 +7,7 @@ import {
     yamlParse,
     isJsonContent,
     getMetaPage,
+    getProp,
 } from "../utils/utils";
 
 import { renderMarkdown } from "./render-markdown";
@@ -78,14 +79,15 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             let assets = {};
 
-            let { link: _link = "", folder = "", extends: _extends } = data;
+            data = await mapRef(data, async (value, root) => {
+                let [, src, prop] = value.match(/([^~]*)(?:~(.+)){0,1}/);
+                if (src) {
+                    root = await addDataFetch(null, src);
+                }
+                return prop ? getProp(root, prop) : src ? root : null;
+            });
 
-            if (_extends) {
-                data = {
-                    ...(await addDataFetch(null, _extends)),
-                    ...data,
-                };
-            }
+            let { link: _link = "", folder = "" } = data;
 
             let dataFile;
 
@@ -189,7 +191,6 @@ export function loadHtmlFiles(build, htmlFiles) {
                         src = await resolveDataFile(childFile);
                     }
                 } catch (e) {
-                    console.log({ e });
                     build.logger.debug(
                         `${ERROR_FETCH} ${file} src=${src}`,
                         MARK_ROOT
@@ -247,4 +248,29 @@ export function loadHtmlFiles(build, htmlFiles) {
             };
         })
     );
+}
+
+async function mapRef(data, map, root) {
+    for (let prop in data) {
+        if (prop == "$ref") {
+            let value = await map(data[prop], root);
+            if (value && typeof value == "object") {
+                let nextData = { ...data };
+                delete nextData.$ref;
+                let nextValue = { ...value, ...nextData };
+                return mapRef(
+                    nextValue,
+                    map,
+                    root == data ? nextValue : root || nextValue
+                );
+            } else {
+                return value;
+            }
+        } else {
+            if (data[prop] && typeof data[prop] == "object") {
+                data[prop] = await mapRef(data[prop], map, root || data[prop]);
+            }
+        }
+    }
+    return data;
 }
