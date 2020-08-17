@@ -70,7 +70,22 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             name = data.slug || name;
 
-            let { link: _link = "", folder = "" } = data;
+            let joinChildFile = (file) => path.join(dir, file);
+
+            let links = {};
+
+            let fetch = {};
+
+            let assets = {};
+
+            let { link: _link = "", folder = "", extends: _extends } = data;
+
+            if (_extends) {
+                data = {
+                    ...(await addDataFetch(null, _extends)),
+                    ...data,
+                };
+            }
 
             let dataFile;
 
@@ -86,17 +101,10 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             let { dest, link } = dataFile;
 
-            let links = {};
-
-            let fetch = {};
-
-            let assets = {};
-
             if (isMd(file)) {
                 content = renderMarkdown(content);
             }
 
-            let joinChildFile = (file) => path.join(dir, file);
             /**
              * redefines the root scope links variable,
              * allows creating link lists based on relative paths that point
@@ -108,7 +116,7 @@ export function loadHtmlFiles(build, htmlFiles) {
              */
             async function addDataLink(prop, value) {
                 if (typeof value == "string") {
-                    value = await addDataFetch(null, value, true);
+                    value = await addDataFetch(null, value);
                 }
                 let createProxy = ({ link, linkTitle, ...meta }) => {
                     /**@todo Add error for not respecting link interface */
@@ -154,12 +162,22 @@ export function loadHtmlFiles(build, htmlFiles) {
                 }
                 return "";
             }
-
+            /**
+             *
+             * @param {string} prop
+             * @param {string} src
+             */
             async function addDataAsset(prop, src) {
                 assets[prop] = await addFile(src);
             }
 
-            async function addDataFetch(prop, src, unregister) {
+            /**
+             *
+             * @param {null|string} prop
+             * @param {string} src
+             * @returns {Promise<any>}
+             */
+            async function addDataFetch(prop, src) {
                 try {
                     if (isUrl(src)) {
                         [, src] = await build.request(src);
@@ -171,12 +189,13 @@ export function loadHtmlFiles(build, htmlFiles) {
                         src = await resolveDataFile(childFile);
                     }
                 } catch (e) {
+                    console.log({ e });
                     build.logger.debug(
                         `${ERROR_FETCH} ${file} src=${src}`,
                         MARK_ROOT
                     );
                 }
-                return unregister ? src : (fetch[prop] = src);
+                return prop == null ? src : (fetch[prop] = src);
             }
 
             /**

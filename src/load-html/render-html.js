@@ -197,7 +197,7 @@ engine.registerTag(
                 ? _layout && _layout.addDataFetch
                 : _page && _page.addDataFetch;
             if (addDataFetch) {
-                set(name, await addDataFetch(name, data));
+                set(name, await addDataFetch(null, data));
             }
             return "";
         }

@@ -1,4 +1,5 @@
 ---
+extends: base.yaml
 title: EStack todo en uno
 description: zero configuracion, generador de sitios estaticos, servidor de desarrollo, bundle y más.
 linkTitle: Introduccion
@@ -32,6 +33,8 @@ fetch:
 ### Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una de zero configuracion que sincroniza eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.
 
 ## Implementacion
+
+[mi]({{ page.links.userInterface.link }})
 
 ### Instalacion
 
