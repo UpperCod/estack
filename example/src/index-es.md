@@ -34,6 +34,7 @@ toc:
 ---
 
 <h1>text : {{page.langs|json}}</h1>
+<h1>text : {{page.message}}</h1>
 <h1>text : {{page.title}}</h1>
 
 ### Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una de zero configuracion que sincroniza eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.

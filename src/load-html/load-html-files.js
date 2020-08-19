@@ -52,9 +52,21 @@ export function loadHtmlFiles(build, htmlFiles) {
             let { dir, name } = path.parse(file);
             let code = await build.readFile(file);
             let meta = [code, {}];
-
             try {
-                meta = getMetaPage(code);
+                meta = await getMetaPage(
+                    file.replace(/\.\w+/, ".yaml"),
+                    code,
+                    async (src) => {
+                        if (isUrl(src)) {
+                            let [, code] = await build.request(src);
+                            return code;
+                        } else {
+                            let code = await build.readFile(src);
+                            build.fileWatcher(src, file, true);
+                            return code;
+                        }
+                    }
+                );
             } catch (e) {
                 build.logger.debug(
                     `${ERROR_TRANSFORMING} ${file}:${e.mark.line}:${e.mark.position}`,

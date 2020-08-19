@@ -1,3 +1,5 @@
+message:
+    $ref: message.txt
 langs:
     - link: ./docs/stylis/stylis.md
     - link: ./docs/rollup/rollup.md

@@ -45,6 +45,7 @@ export async function createBuild(options) {
 
     /**@type {import("./internal").readFile} */
     let readFile = (file) => {
+        console.log(file);
         let cache = getCache(CacheReadFile);
         return (cache[file] = cache[file] || fsReadFile(file));
     };

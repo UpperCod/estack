@@ -1,5 +1,4 @@
-import { getProp, yamlParse } from "./general";
-import { getFragments, replaceFragments } from "@uppercod/str-fragment";
+import { getProp } from "./general";
 /**
  *
  * @param {Object[]} pages - collection of pages
@@ -51,33 +50,4 @@ export function queryPages(
         }
     }
     return collection;
-}
-
-/**
- * Extract the meta snippet header
- * @param {string} code
- * @example
- * ---
- * name
- * ---
- * lorem...
- */
-export function getMetaPage(code) {
-    let meta = { __br: 0 };
-    let [fragment] = getFragments(code, {
-        open: /^---/m,
-        end: /^---/m,
-        equal: true,
-    });
-    if (fragment) {
-        let { open, end } = fragment;
-        if (!open.indexOpen) {
-            code = replaceFragments(code, [fragment], ({ content }) => {
-                meta = yamlParse(content);
-                return "";
-            });
-        }
-        meta.__br = code.slice(0, end.indexEnd).split("\n").length;
-    }
-    return [code, meta];
 }

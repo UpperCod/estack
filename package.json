@@ -9,7 +9,7 @@
         "test": "npm run clear && ava",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:doc": "node cli.js dev example/src/index-es.md",
+        "dev:doc": "node cli.js dev example/src/index-es.md --silent",
         "dev:js": "node cli.js dev example/{src,template}/**/*.{css,js} --server",
         "build:doc": "node cli.js build example/{src,template}/**/*.{html,md} docs",
         "prepare": "npm run build && npm run test"
@@ -38,6 +38,7 @@
         "@rollup/plugin-sucrase": "^3.0.2",
         "@uppercod/request": "^1.0.1",
         "@uppercod/str-fragment": "^1.1.0",
+        "@uppercod/yaml": "^1.0.3",
         "atomico": "^0.23.3",
         "ava": "^3.10.1",
         "builtin-modules": "^3.1.0",
