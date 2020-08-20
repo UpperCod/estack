@@ -1,12 +1,12 @@
 import glob from "fast-glob";
 import path from "path";
 import {
+    writeFile as fsWriteFile,
+    readFile as fsReadFile,
+    copyFile as fsCopyFile,
     isJs,
-    isFixLink,
-    writeFile,
     normalizePath,
     logger,
-    readFile as fsReadFile,
     isHtml,
 } from "./utils/utils";
 import { createServer } from "./create-server";
@@ -14,136 +14,131 @@ import { createWatch } from "./create-watch";
 import { loadOptions } from "./load-options";
 import { loadBuild } from "./load-build";
 import { request as uRequest } from "@uppercod/request";
+import createTree from "@uppercod/index-tree";
+import createCache from "@uppercod/cache";
 
-let CACHE_REQUEST = {};
 /**
  * @param {import("./internal").options} options
  */
 export async function createBuild(options) {
-    options = await loadOptions(options);
-
-    let loadReady = logger.load();
-
     let cycleBuild = 0;
-
-    let files = await glob(options.src);
-
-    /**@type {import("./internal").server} */
+    let watcher;
     let server;
 
-    /**@type {import("./internal").reload} */
-    let reload = () => {};
+    options = await loadOptions(options);
 
-    let inputs = {};
+    const tree = createTree();
+    const cache = createCache();
+    const getDataDest = createDataDest(options);
 
-    let cache = {};
+    const refCache = {};
+    const getRefCache = (id) => (refCache[id] = refCache[id] || {});
 
-    /**@type {import("./internal").getCache} */
-    let getCache = (prop) => (cache[prop] = cache[prop] = {});
+    const loadReady = logger.load();
 
-    let CacheReadFile = Symbol("_cacheReadFile");
+    const files = await glob(options.src);
 
-    /**@type {import("./internal").readFile} */
-    let readFile = (file) => {
-        console.log(file);
-        let cache = getCache(CacheReadFile);
-        return (cache[file] = cache[file] || fsReadFile(file));
-    };
+    const addFile = (src) => tree.add(src);
 
-    /**@type {import("./internal").isPreventLoad} */
-    let isPreventLoad = (file) => file in inputs;
-
-    /**@type {import("./internal").isNotPreventLoad} */
-    let isNotPreventLoad = (file) => !isPreventLoad(file);
-
-    /**@type {import("./internal").fileWatcher} */
-    let fileWatcher = () => {};
-
-    /**@type {import("./internal").isForCopy} */
-    let isForCopy = (file) => !options.assetsWithoutHash.test(file);
-
-    /**@type {import("./internal").request}*/
-    let request = (url) =>
-        (CACHE_REQUEST[url] = CACHE_REQUEST[url] || uRequest(url));
-
-    /**@type {import("./internal").deleteInput} */
-    function deleteInput(file) {
-        delete getCache(CacheReadFile)[file];
-        delete inputs[file];
-        return file;
-    }
-
-    /**@type {import("./internal").getDestDataFile} */
-    function getDestDataFile(file) {
-        let { name, ext, dir, base } = path.parse(file);
-
-        ext = isJs(ext) ? ".js" : isHtml(ext) ? ".html" : ext || ".html";
-
-        let typeHtml = ext == ".html";
-
-        let isIndex = typeHtml && name == "index";
-
-        if (!options.assetsWithoutHash.test(ext)) {
-            let data = {
-                hash:
-                    "" +
-                    file
-                        .split("")
-                        .reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4),
-                name,
-            };
-
-            name = options.assetHashPattern.replace(
-                /\[([^\]]+)\]/g,
-                (all, prop) => data[prop] || ""
-            );
-
-            if (name.indexOf(data.hash) == -1) {
-                name = data.hash + "-" + name;
-            }
-        }
-
-        let destDir = typeHtml ? dir : options.assetsDir;
-
-        let dest = normalizePath(path.join(options.dest, destDir, name + ext));
-
-        let link = normalizePath(
-            path.join(
-                options.href,
-                destDir,
-                isIndex ? "./" : name + (typeHtml ? "" : ext)
-            )
-        );
-
-        return {
-            base: name + ext,
-            name,
-            link,
-            dest,
-            raw: {
-                base,
-                file: normalizePath(file),
-                dir,
-            },
-        };
-    }
-
-    /**@type {import("./internal").preventNextLoad} */
-    function preventNextLoad(file) {
-        if (file in inputs) {
-            return false;
-        } else {
-            return (inputs[file] = true);
-        }
-    }
-
-    /**@type {import("./internal").mountFile} */
-    function mountFile({ dest, code, type, stream }) {
-        if (options.virtual) {
+    const writeFile = ({ dest, code, type, stream }) => {
+        if (options.virtual && server) {
             server.sources[dest] = { code, stream, type };
         } else {
-            return writeFile(dest, code);
+            return fsWriteFile(dest, code);
         }
+    };
+
+    const copyFile = (from, to) => fsCopyFile(from, to);
+
+    const addChildFile = (src, childSrc) => {
+        tree.addChild(src, childSrc);
+        watcher.add(childSrc);
+    };
+
+    const removeFile = (src) => tree.remove(src);
+
+    const getFile = (src) => tree.get(src);
+
+    const getFiles = () => Object.keys(tree.tree).map((src) => tree.tree[src]);
+
+    const readFile = (src, cache = true) => {
+        const file = tree.get(src);
+        const conent = (cache ? file.content : false) || fsReadFile(src);
+        return (file.content = conent);
+    };
+
+    const hasFile = (src) => tree.has(src);
+
+    const reserveFile = (src) => {
+        const file = tree.get(src);
+        const prevent = file.prevent;
+        file.prevent = true;
+        return !prevent;
+    };
+
+    const isReservedFile = (src) => !!tree.get(src).prevent;
+
+    const isNotReservedFile = (src) => !isReservedFile(src);
+
+    const isAsset = (src) => !options.assetsWithoutHash.test(src);
+
+    const getDest = (src) => cache(getDataDest, src);
+
+    const request = (src) => cache(uRequest, src);
+
+    const build = {
+        options,
+        getFile,
+        addFile,
+        request,
+        writeFile,
+        readFile,
+        hasFile,
+        addChildFile,
+        removeFile,
+        getFiles,
+        reserveFile,
+        isReservedFile,
+        isNotReservedFile,
+        isAsset,
+        getDest,
+        getRefCache,
+        logger: {
+            ...logger,
+            async markBuild(...args) {
+                await logger.markBuild(...args);
+                server.reload();
+            },
+        },
+    };
+
+    if (options.watch) {
+        watcher = createWatch(options.src, (group) => {
+            let files = group.add || [];
+            let forceBuild;
+
+            if (group.unlink) {
+                group.unlink.forEach(tree.remove);
+                forceBuild = true;
+            }
+            if (group.change) {
+                group.change
+                    .filter((src) => !isJs(src))
+                    .map((src) => {
+                        const parents = tree.getParents(src);
+                        tree.remove(src);
+                        return parents;
+                    })
+                    .flat()
+                    .forEach((src) => {
+                        tree.remove(src);
+                        files.push(src);
+                    });
+            }
+            if (files.length || forceBuild) {
+                loadBuild(build, files, cycleBuild++, forceBuild);
+            }
+        });
     }
 
     if (options.server) {
@@ -154,94 +149,67 @@ export async function createBuild(options) {
                 reload: options.watch,
                 proxy: options.proxy,
             });
-            reload = server.reload;
         } catch (e) {
             console.log(e);
         }
-
         logger.header(`Server running on http://localhost:${server.port}`);
-    }
-
-    if (options.watch) {
-        // map defining the cross dependencies between child and parents
-        let mapSubWatch = {};
-
-        let watcher = createWatch(options.src, (group) => {
-            let files = [];
-            let forceBuild;
-
-            if (group.add) {
-                let groupFiles = group.add
-                    .filter(isFixLink)
-                    .filter(isNotPreventLoad);
-                files = [...files, ...groupFiles];
-            }
-            if (group.change) {
-                let groupChange = group.change.filter((file) => !isJs(file)); // ignore js file changes
-
-                let groupFiles = [
-                    ...groupChange, // keep files that have changed in the queue
-                    ...groupChange // add new files based on existing ones in the queue
-                        .filter((file) => mapSubWatch[file])
-                        .map((file) =>
-                            Object.keys(mapSubWatch[file]).filter(
-                                (subFile) => mapSubWatch[file][subFile]
-                            )
-                        )
-                        .flat(),
-                ]
-                    .filter(isPreventLoad)
-                    .map(deleteInput);
-
-                files = [...files, ...groupFiles];
-            }
-
-            if (group.unlink) {
-                group.unlink.forEach(deleteInput);
-                forceBuild = true;
-            }
-
-            if (files.length || forceBuild) {
-                loadBuild(build, files, cycleBuild++, forceBuild);
-            }
-        });
-
-        fileWatcher = (file, parentFile, rebuild) => {
-            if (!mapSubWatch[file]) {
-                mapSubWatch[file] = {};
-                watcher.add(file);
-            }
-            if (parentFile) {
-                mapSubWatch[file][parentFile] = rebuild;
-            }
-        };
     }
 
     loadReady();
 
-    /**@type {import("./internal").build} */
-    let build = {
-        inputs,
-        options,
-        getCache,
-        readFile,
-        isPreventLoad,
-        isNotPreventLoad,
-        deleteInput,
-        preventNextLoad,
-        mountFile,
-        fileWatcher,
-        getDestDataFile,
-        isForCopy,
-        request,
-        logger: {
-            ...logger,
-            async markBuild(...args) {
-                await logger.markBuild(...args);
-                reload();
-            },
-        },
-    };
-
     return loadBuild(build, files, cycleBuild++);
 }
+
+const createDataDest = (options) => (file) => {
+    let { name, ext, dir, base } = path.parse(file);
+
+    ext = isJs(ext) ? ".js" : isHtml(ext) ? ".html" : ext || ".html";
+
+    const typeHtml = ext == ".html";
+
+    const isIndex = typeHtml && name == "index";
+
+    if (!options.assetsWithoutHash.test(ext)) {
+        const data = {
+            hash:
+                "" +
+                file
+                    .split("")
+                    .reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4),
+            name,
+        };
+
+        name = options.assetHashPattern.replace(
+            /\[([^\]]+)\]/g,
+            (all, prop) => data[prop] || ""
+        );
+
+        if (name.indexOf(data.hash) == -1) {
+            name = data.hash + "-" + name;
+        }
+    }
+
+    const destDir = typeHtml ? dir : options.assetsDir;
+
+    const dest = normalizePath(path.join(options.dest, destDir, name + ext));
+
+    const link = normalizePath(
+        path.join(
+            options.href,
+            destDir,
+            isIndex ? "./" : name + (typeHtml ? "" : ext)
+        )
+    );
+
+    return {
+        base: name + ext,
+        name,
+        link,
+        dest,
+        raw: {
+            base,
+            file: normalizePath(file),
+            dir,
+        },
+    };
+};

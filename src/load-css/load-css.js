@@ -12,12 +12,11 @@ export async function loadCss(build, cssFiles) {
             file,
             readFile: build.readFile,
             request: build.request,
-            addWatchFile: (childFile) =>
-                build.fileWatcher(childFile, file, true),
+            addChildFile: (childFile) => build.addChildFile(file, childFile),
         });
 
-        return build.mountFile({
-            dest: build.getDestDataFile(file).dest,
+        return build.writeFile({
+            dest: build.getDest(file).dest,
             //@ts-ignore
             code,
             type: "css",

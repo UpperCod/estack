@@ -1,7 +1,7 @@
 import path from "path";
 import { loadHtml } from "./load-html/load-html";
 import { loadCss } from "./load-css/load-css";
-import { isHtml, isCss, asyncFs, isJs, copyFile } from "./utils/utils";
+import { isHtml, isCss, asyncFs, isJs } from "./utils/utils";
 import { MARK_ROOT } from "./constants";
 import { loadRollup } from "./load-rollup/load-rollup";
 
@@ -21,55 +21,59 @@ export async function loadBuild(build, files, cycle, forceBuild) {
 
         files = files.map(path.normalize);
 
-        let localResolveAsset = {};
+        files.forEach(build.addFile);
 
-        build.addRootAsset = (file) => {
+        const queueFiles = {};
+
+        build.addFileToQueque = (file) => {
             /**
              * to optimize the process, the promise that the file looks for is
              * cached, in order to reduce this process to only one execution between buils
              */
             async function resolve(file) {
                 await asyncFs.stat(file);
-                return build.getDestDataFile(file);
+                return build.getDest(file);
             }
 
-            localResolveAsset[file] = localResolveAsset[file] || resolve(file);
+            queueFiles[file] = queueFiles[file] || resolve(file);
 
-            return localResolveAsset[file];
+            return queueFiles[file];
         };
 
-        let htmlFiles = files.filter(isHtml).filter(build.preventNextLoad);
+        const htmlFiles = files.filter(isHtml).filter(build.reserveFile);
 
         if (htmlFiles.length) {
             await loadHtml(build, htmlFiles);
         }
 
-        files = [...files, ...Object.keys(localResolveAsset)];
+        files = [...files, ...Object.keys(queueFiles)];
 
-        let cssFiles = files.filter(isCss).filter(build.preventNextLoad);
-        let jsFiles = files.filter(isJs).filter(build.preventNextLoad);
+        const cssFiles = files.filter(isCss).filter(build.reserveFile);
 
-        let copyFiles = files
-            .filter(build.isForCopy)
-            .filter(build.preventNextLoad);
+        let jsFiles = files.filter(isJs).filter(build.reserveFile);
+
+        const copyFiles = files.filter(build.isAsset).filter(build.reserveFile);
 
         jsFiles =
             jsFiles.length || forceBuild
-                ? Object.keys(build.inputs).filter(isJs)
+                ? build
+                      .getFiles()
+                      .filter(({ src }) => isJs(src))
+                      .map(({ src }) => src)
                 : [];
 
-        let resolveCss = cssFiles.length && loadCss(build, cssFiles);
-        let resolveJs = jsFiles.length && loadRollup(build, jsFiles);
+        const resolveCss = cssFiles.length && loadCss(build, cssFiles);
+        const resolveJs = jsFiles.length && loadRollup(build, jsFiles);
 
         await Promise.all([
             resolveCss,
             resolveJs,
             ...copyFiles.map(async (file) => {
-                let { dest } = build.getDestDataFile(file);
+                let { dest } = build.getDest(file);
                 if (build.options.virtual) {
-                    build.mountFile({ dest, stream: file });
+                    build.writeFile({ dest, stream: file });
                 } else {
-                    return copyFile(file, dest);
+                    return build.copyFile(file, dest);
                 }
             }),
         ]);

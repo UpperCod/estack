@@ -20,19 +20,19 @@ import {
 export function loadPages(build) {
     //The templates files are virtual, these can be referred
     //by a file that declares layour for use of this
-    let templates = {};
+    const templates = {};
 
-    let fragments = {};
+    const fragments = {};
     //The files are virtual and it allows to generate a query
     //on the pages in order to create page collections
-    let archives = [];
+    const archives = [];
     // stores the content of the pages already resolved
 
-    let queries = new Map();
+    const queries = new Map();
 
-    let pages = {};
+    const pages = {};
 
-    let links = new Proxy(pages, {
+    const links = new Proxy(pages, {
         get(obj, prop) {
             if (obj[prop]) {
                 return obj[prop].ref;
@@ -40,11 +40,11 @@ export function loadPages(build) {
         },
     });
 
-    let pagesData = [];
+    const pagesData = [];
 
-    let addPage = (page) => {
-        let { data } = page;
-        let { link, symlink } = data;
+    const addPage = (page) => {
+        const { data } = page;
+        const { link, symlink } = data;
 
         if (pages[link] || pages[symlink]) {
             let refPage = pages[link] || pages[link];
@@ -69,10 +69,11 @@ export function loadPages(build) {
         }
     };
 
-    for (let file in build.inputs) {
-        if (build.inputs[file] && isHtml(file)) {
-            let page = build.inputs[file];
-            let { data } = page;
+    build
+        .getFiles()
+        .filter(({ src }) => isHtml(src))
+        .forEach(({ page }) => {
+            const { data } = page;
             if (data.fragment) {
                 fragments[data.fragment] = page;
             } else if (data.template) {
@@ -82,8 +83,7 @@ export function loadPages(build) {
             } else {
                 addPage(page);
             }
-        }
-    }
+        });
 
     archives.forEach((page) => {
         resolveArchive(build, pagesData, page, addPage);
@@ -104,7 +104,7 @@ export function loadPages(build) {
      * its scope page before associating the
      * nested render on the layout
      */
-    let pagesDataRender = pagesData.map(async (data) => {
+    const pagesDataRender = pagesData.map(async (data) => {
         let { link, layout } = data;
         let _page = pages[link];
 
@@ -173,7 +173,7 @@ export function loadPages(build) {
                     }
                 }
                 if (content != null) {
-                    return build.mountFile({
+                    return build.writeFile({
                         dest: _page.dest,
                         code: content.replace(
                             /<!-- *(\w+) *-->/,
@@ -222,16 +222,16 @@ function resolveArchive(build, pages, page, addPage) {
     collection.forEach((pages, paged) => {
         // Create the pages manually, they are the configuration
 
-        let file = paged == 0 ? data.link : path.join(data.link, paged + "");
+        const file = paged == 0 ? data.link : path.join(data.link, paged + "");
 
-        let { dest, link } =
+        const { dest, link } =
             paged == 0
                 ? { dest: page.dest, link: data.link }
-                : build.getDestDataFile(file);
+                : build.getDest(file);
 
         let position = paged - 1;
 
-        let prev = normalizePath(
+        const prev = normalizePath(
             collection[position] && position > 0
                 ? data.link + "/" + position
                 : data.link
@@ -239,7 +239,7 @@ function resolveArchive(build, pages, page, addPage) {
 
         position = paged + 1;
 
-        let next = normalizePath(
+        const next = normalizePath(
             collection[position] ? data.link + "/" + position : ""
         );
 

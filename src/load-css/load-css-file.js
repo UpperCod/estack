@@ -22,7 +22,7 @@ let cache = {};
  * @param {string} context.code - css code to analyze
  * @param {import("../internal").request} context.request - read a file
  * @param {import("../internal").readFile} [context.readFile] - read a file
- * @param {(file:string)=>void} context.addWatchFile - execute the callback every time a css import is generated
+ * @param {(file:string)=>void} context.addChildFile - execute the callback every time a css import is generated
  * @param {object} [imports]
  * @param {boolean} [returnRules] - If true it will return the rules as Array
  * @param {RegExp[]} [useRules] - Regular expressions to select css rules
@@ -32,7 +32,7 @@ let cache = {};
  * @returns {Promise<string|object[]>}
  */
 export async function loadCssFile(
-    { file, code, readFile, addWatchFile, request },
+    { file, code, readFile, addChildFile, request },
     namespace = "",
     imports = {},
     returnRules,
@@ -95,14 +95,14 @@ export async function loadCssFile(
                                     code = await fn(file);
                                 }
 
-                                !fromUrl && addWatchFile(file);
+                                !fromUrl && addChildFile(file);
 
                                 nextRules = loadCssFile(
                                     {
                                         file,
                                         code,
                                         readFile,
-                                        addWatchFile,
+                                        addChildFile,
                                         request,
                                     },
                                     namespace,
@@ -113,6 +113,7 @@ export async function loadCssFile(
                                     fromUrl ? file : false
                                 );
                             } catch (e) {
+                                console.log(e);
                                 let file = path.join(
                                     "node_modules",
                                     test.value
@@ -125,7 +126,7 @@ export async function loadCssFile(
                                             file,
                                             code,
                                             readFile,
-                                            addWatchFile,
+                                            addChildFile,
                                             request,
                                         },
                                         namespace,

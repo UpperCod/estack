@@ -116,6 +116,7 @@ export async function createServer({ root, port, reload, proxy }) {
                       ]);
 
                 res.setHeader("Access-Control-Allow-Origin", "*");
+                res.setHeader("Cache-Control", "no-cache");
 
                 // mirror files to server without writing
                 if (virtualSource) {

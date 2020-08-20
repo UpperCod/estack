@@ -8,8 +8,6 @@ symlink: index-es
 lang: es
 tag: doc
 order: -1
-assets:
-    logo: ./logo.svg
 aside:
     title: EStack
     install: npm install my-ds
@@ -33,8 +31,9 @@ toc:
     $ref: base.yaml~sub.age
 ---
 
-<h1>text : {{page.langs|json}}</h1>
-<h1>text : {{page.message}}</h1>
+<h1>text : {{page.user[0].address|json}}</h1>
+<h1>text : {{page.message1}}</h1>
+<h1>text : {{page.message2}}</h1>
 <h1>text : {{page.title}}</h1>
 
 ### Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una de zero configuracion que sincroniza eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.

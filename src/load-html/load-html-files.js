@@ -1,21 +1,11 @@
 import path from "path";
-import {
-    isMd,
-    isUrl,
-    normalizePath,
-    isYaml,
-    yamlParse,
-    isJsonContent,
-    getMetaPage,
-    getProp,
-} from "../utils/utils";
+import { isMd, isUrl, normalizePath, getMetaPage } from "../utils/utils";
 
 import { renderMarkdown } from "./render-markdown";
 
 import {
     ERROR_TRANSFORMING,
     ERROR_FILE_NOT_FOUNT,
-    ERROR_FETCH,
     MARK_ROOT,
 } from "../constants";
 
@@ -25,32 +15,10 @@ import {
  * @param {*} htmlFiles
  */
 export function loadHtmlFiles(build, htmlFiles) {
-    let localResolveDataFile = {};
-
-    function resolveDataFile(file) {
-        /**
-         * If the file is local, an observer relationship will be added,
-         * this allows relating the data obtained from the external document
-         * to the template and synchronizing the changes
-         */
-        async function resolve(file) {
-            let value = await build.readFile(file);
-
-            return isYaml(file)
-                ? yamlParse(value)
-                : isJsonContent(value)
-                ? JSON.parse(value)
-                : value;
-        }
-
-        return (localResolveDataFile[file] =
-            localResolveDataFile[file] || resolve(file));
-    }
-
     return Promise.all(
         htmlFiles.map(async (file) => {
             let { dir, name } = path.parse(file);
-            let code = await build.readFile(file);
+            const code = await build.readFile(file);
             let meta = [code, {}];
             try {
                 meta = await getMetaPage(
@@ -62,7 +30,7 @@ export function loadHtmlFiles(build, htmlFiles) {
                             return code;
                         } else {
                             let code = await build.readFile(src);
-                            build.fileWatcher(src, file, true);
+                            build.addChildFile(file, src);
                             return code;
                         }
                     }
@@ -77,27 +45,19 @@ export function loadHtmlFiles(build, htmlFiles) {
             let [content, data] = meta;
 
             if (!build.options.watch && data.draft) {
-                build.deleteInput(file);
+                build.removeFile(file);
                 return;
             }
 
             name = data.slug || name;
 
-            let joinChildFile = (file) => path.join(dir, file);
+            const joinChildFile = (file) => path.join(dir, file);
 
-            let links = {};
+            const links = {};
 
-            let fetch = {};
+            const fetch = {};
 
-            let assets = {};
-
-            data = await mapRef(data, async (value, root) => {
-                let [, src, prop] = value.match(/([^~]*)(?:~(.+)){0,1}/);
-                if (src) {
-                    root = await addDataFetch(null, src);
-                }
-                return prop ? getProp(root, prop) : src ? root : null;
-            });
+            const assets = {};
 
             let { link: _link = "", folder = "" } = data;
 
@@ -106,14 +66,12 @@ export function loadHtmlFiles(build, htmlFiles) {
             if (_link) {
                 _link +=
                     /\/$/.test(_link) || _link == "/" ? "index.html" : ".html";
-                dataFile = build.getDestDataFile(_link);
+                dataFile = build.getDest(_link);
             } else {
-                dataFile = build.getDestDataFile(
-                    path.join(folder, name + ".html")
-                );
+                dataFile = build.getDest(path.join(folder, name + ".html"));
             }
 
-            let { dest, link } = dataFile;
+            const { dest, link } = dataFile;
 
             if (isMd(file)) {
                 content = renderMarkdown(content);
@@ -129,15 +87,12 @@ export function loadHtmlFiles(build, htmlFiles) {
              * @param {*} value
              */
             async function addDataLink(prop, value) {
-                if (typeof value == "string") {
-                    value = await addDataFetch(null, value);
-                }
-                let createProxy = ({ link, linkTitle, ...meta }) => {
+                const createProxy = ({ link, linkTitle, ...meta }) => {
                     /**@todo Add error for not respecting link interface */
-                    let file = path.join(dir, link);
-                    let getData = (openData) =>
-                        build.inputs[file]
-                            ? openData(build.inputs[file].data)
+                    const file = path.join(dir, link);
+                    const getData = (openData) =>
+                        build.hasFile(file)
+                            ? openData(build.getFile(file).page.data)
                             : "";
                     return {
                         ...meta,
@@ -165,8 +120,8 @@ export function loadHtmlFiles(build, htmlFiles) {
                 if (isUrl(src)) return src;
                 let childFile = joinChildFile(src);
                 try {
-                    let { link } = await build.addRootAsset(childFile);
-                    build.fileWatcher(childFile, file);
+                    let { link } = await build.addFileToQueque(childFile);
+                    build.addChildFile(file, childFile);
                     return link;
                 } catch (e) {
                     build.logger.debug(
@@ -186,45 +141,12 @@ export function loadHtmlFiles(build, htmlFiles) {
             }
 
             /**
-             *
-             * @param {null|string} prop
-             * @param {string} src
-             * @returns {Promise<any>}
-             */
-            async function addDataFetch(prop, src) {
-                try {
-                    if (isUrl(src)) {
-                        [, src] = await build.request(src);
-                    } else {
-                        let childFile = joinChildFile(src);
-
-                        build.fileWatcher(childFile, file, true);
-
-                        src = await resolveDataFile(childFile);
-                    }
-                } catch (e) {
-                    build.logger.debug(
-                        `${ERROR_FETCH} ${file} src=${src}`,
-                        MARK_ROOT
-                    );
-                }
-                return prop == null ? src : (fetch[prop] = src);
-            }
-
-            /**
              * The following process allows the allocation of aliases for each file to process
              */
             let resolveDataAssets = () =>
                 data.assets
                     ? Object.keys(data.assets).map((prop) =>
                           addDataAsset(prop, data.assets[prop])
-                      )
-                    : [];
-
-            let resolveDataFetch = () =>
-                data.fetch
-                    ? Object.keys(data.fetch).map((prop) =>
-                          addDataFetch(prop, data.fetch[prop])
                       )
                     : [];
 
@@ -236,13 +158,9 @@ export function loadHtmlFiles(build, htmlFiles) {
                     : [];
 
             // These processes can be solved in parallel
-            await Promise.all([
-                ...resolveDataLinks(),
-                ...resolveDataAssets(),
-                ...resolveDataFetch(),
-            ]);
+            await Promise.all([...resolveDataLinks(), ...resolveDataAssets()]);
 
-            build.inputs[file] = {
+            build.getFile(file).page = {
                 data: {
                     content,
                     ...data,
@@ -256,42 +174,7 @@ export function loadHtmlFiles(build, htmlFiles) {
                 dest,
                 addFile,
                 addDataAsset,
-                addDataFetch,
             };
         })
     );
-}
-
-const isNextObject = (value) => value && typeof value == "object";
-
-async function mapRef(data, map, root) {
-    for (let prop in data) {
-        if (prop == "$ref") {
-            let value = await map(data[prop], root);
-            if (isNextObject(value)) {
-                let nextData = { ...data };
-                delete nextData.$ref;
-                let nextValue = { ...value, ...nextData };
-                let nextRoot = root == data ? nextValue : root || nextValue;
-                if (Array.isArray(value)) {
-                    return Promise.all(
-                        value.map((value) =>
-                            isNextObject(value)
-                                ? mapRef(value, map, nextRoot)
-                                : value
-                        )
-                    );
-                } else {
-                    return await mapRef(nextValue, map, nextRoot);
-                }
-            } else {
-                return value;
-            }
-        } else {
-            if (isNextObject(data[prop])) {
-                data[prop] = await mapRef(data[prop], map, root || data[prop]);
-            }
-        }
-    }
-    return data;
 }

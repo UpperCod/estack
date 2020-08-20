@@ -6,7 +6,6 @@ import { loadPages } from "./load-pages";
  * @param {string[]} htmlFiles
  */
 export async function loadHtml(build, htmlFiles) {
-    let nextAssets = await loadHtmlFiles(build, htmlFiles);
+    await loadHtmlFiles(build, htmlFiles);
     await loadPages(build);
-    return nextAssets;
 }
