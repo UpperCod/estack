@@ -1,5 +1,5 @@
 ---
-$ref: base.yaml
+$ref: ./docs/base.yaml
 title: EStack todo en uno
 description: zero configuracion, generador de sitios estaticos, servidor de desarrollo, bundle y más.
 linkTitle: Introduccion
@@ -27,14 +27,18 @@ query:
 links:
     age:
         $ref: ~langs
-toc:
-    $ref: base.yaml~sub.age
+logo:
+    $link: logo.svg
 ---
 
-<h1>text : {{page.user|json}}</h1>
+![Logo]({{page.logo.link}})
+
+<h1>text : {{page.liquid|json}}</h1>
 <h1>text : {{page.message1}}</h1>
 <h1>text : {{page.message2}}</h1>
 <h1>text : {{page.title}}</h1>
+
+{{page.langs|json}}
 
 ### Todo proyecto recurre a una gran cantidad de herramientas con configuracion individual solo para comenzar a desarrollar, Estack reduce ese numero de herramientas a solo una de zero configuracion que sincroniza eficientemente: Servidor de desarrollo, generador de sitios estaticos incremental, bundle(Rollup) y manejador de assets.
 

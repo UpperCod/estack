@@ -2,7 +2,7 @@ import path from "path";
 import getProp from "@uppercod/get-prop";
 import { isUrl } from "../utils/utils";
 
-export const ref = ({ readFile, request }) => async (value, root, file) => {
+export const yamlRef = ({ readFile, request }) => async (value, root, file) => {
     const { dir } = path.parse(file);
     const [, src, prop] = value.match(/([^~#]*)(?:(?:~|#\/){0,1}(.+)){0,1}/);
     if (src) {

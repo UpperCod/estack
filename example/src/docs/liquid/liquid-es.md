@@ -2,7 +2,7 @@
 title: EStack
 description: En entorno productivo basado en una pila de herramientas perfectamente sincornizadas
 link: es/liquid
-linkTitle: Liquid
+linkTitle: Liquidssss
 lang: es
 tag: doc
 order: 2
