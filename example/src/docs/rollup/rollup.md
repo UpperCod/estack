@@ -4,7 +4,8 @@ lang: en
 tag: doc
 order: 3
 links:
-    langs: ./links.yaml
+    langs:
+        $ref: ./links.yaml
 ---
 
 # hi?

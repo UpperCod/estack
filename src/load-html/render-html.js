@@ -1,8 +1,7 @@
 import { Liquid, Tokenizer, evalToken } from "liquidjs";
 import { renderMarkdown, highlighted } from "./render-markdown";
-
+import getProp from "@uppercod/get-prop";
 import {
-    getProp,
     normalizeLineSpace,
     mapPropToObject,
     isJs,

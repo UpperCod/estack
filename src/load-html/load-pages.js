@@ -1,6 +1,7 @@
 import path from "path";
-import { isHtml, queryPages, normalizePath } from "../utils/utils";
+import { isHtml, normalizePath } from "../utils/utils";
 import { renderHtml } from "./render-html";
+import { queryPages } from "./query-page";
 
 import {
     ERROR_TRANSFORMING,

@@ -10,7 +10,7 @@ import yamlParse from "@uppercod/yaml";
  * ---
  * lorem...
  */
-export async function getMetaPage(file, code, readFile) {
+export async function frontmatter(file, code, plugins) {
     let meta = { __br: 0 };
     let [fragment] = getFragments(code, {
         open: /^---/m,
@@ -18,19 +18,21 @@ export async function getMetaPage(file, code, readFile) {
         equal: true,
     });
     if (fragment) {
-        let frontmatter;
+        let yaml;
         let { open, end } = fragment;
         if (!open.indexOpen) {
             code = replaceFragments(code, [fragment], ({ content }) => {
-                frontmatter = content;
+                yaml = content;
                 return "";
             });
         }
-        meta = await yamlParse({
-            file,
-            code: frontmatter,
-            readFile,
-        });
+        meta = await yamlParse(
+            {
+                file,
+                code: yaml,
+            },
+            plugins
+        );
         meta.__br = code.slice(0, end.indexEnd).split("\n").length;
     }
 

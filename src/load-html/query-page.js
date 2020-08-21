@@ -1,4 +1,4 @@
-import { getProp } from "./general";
+import getProp from "@uppercod/get-prop";
 /**
  *
  * @param {Object[]} pages - collection of pages

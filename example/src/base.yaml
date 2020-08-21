@@ -3,7 +3,8 @@ message1:
 message2:
     $ref: message.txt
 user:
-    $ref: https://jsonplaceholder.typicode.com/users
+    $ref: https://jsonplaceholder.typicode.com/users/1
+
 langs:
     - link: ./docs/stylis/stylis.md
     - link: ./docs/rollup/rollup.md

@@ -31,7 +31,7 @@ toc:
     $ref: base.yaml~sub.age
 ---
 
-<h1>text : {{page.user[0].address|json}}</h1>
+<h1>text : {{page.user|json}}</h1>
 <h1>text : {{page.message1}}</h1>
 <h1>text : {{page.message2}}</h1>
 <h1>text : {{page.title}}</h1>

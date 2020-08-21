@@ -1,7 +1,8 @@
 import path from "path";
-import { isMd, isUrl, normalizePath, getMetaPage } from "../utils/utils";
-
+import { isMd, isUrl, normalizePath } from "../utils/utils";
+import { frontmatter } from "./frontmatter";
 import { renderMarkdown } from "./render-markdown";
+import { ref } from "./plugin-yaml-ref";
 
 import {
     ERROR_TRANSFORMING,
@@ -21,20 +22,18 @@ export function loadHtmlFiles(build, htmlFiles) {
             const code = await build.readFile(file);
             let meta = [code, {}];
             try {
-                meta = await getMetaPage(
-                    file.replace(/\.\w+/, ".yaml"),
-                    code,
-                    async (src) => {
-                        if (isUrl(src)) {
-                            let [, code] = await build.request(src);
+                meta = await frontmatter(file.replace(/\.\w+/, ".yaml"), code, {
+                    ref: ref({
+                        async request(src) {
+                            const [, code] = await build.request(src);
                             return code;
-                        } else {
-                            let code = await build.readFile(src);
+                        },
+                        readFile(src) {
                             build.addChildFile(file, src);
-                            return code;
-                        }
-                    }
-                );
+                            return build.readFile(src);
+                        },
+                    }),
+                });
             } catch (e) {
                 build.logger.debug(
                     `${ERROR_TRANSFORMING} ${file}:${e.mark.line}:${e.mark.position}`,
@@ -110,7 +109,6 @@ export function loadHtmlFiles(build, htmlFiles) {
                         },
                     };
                 };
-
                 links[prop] = Array.isArray(value)
                     ? value.map(createProxy)
                     : createProxy(value);
