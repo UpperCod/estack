@@ -7,7 +7,7 @@ const UID = {};
 const SPACE = "\0_request_";
 const LOAD = {};
 /**
- * @param {import("../internal").build} build
+ * @param {import("../create-build").build} build
  * @returns {import("rollup").Plugin}
  */
 export let pluginImportUrl = (build) => ({
@@ -28,7 +28,7 @@ export let pluginImportUrl = (build) => ({
     },
 });
 /**
- * @param {import("../internal").build} build
+ * @param {import("../create-build").build} build
  */
 async function resolve(build, id) {
     await lexer.init;

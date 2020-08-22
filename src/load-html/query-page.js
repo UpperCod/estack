@@ -2,11 +2,7 @@ import getProp from "@uppercod/get-prop";
 /**
  *
  * @param {Object[]} pages - collection of pages
- * @param {Object} options
- * @param {{[index:string]:any}} options.where - query to match
- * @param {number} [options.limit] - page limits per page
- * @param {string} [options.sort] - page limits per page
- * @param {1|-1} [options.order] - page order is ascending(1) or decent(-1)
+ * @param {import("./load-html-files").query} query
  * @param {boolean} [onlyPages] - Avoid grouping by pages and return only the pages
  */
 export function queryPages(

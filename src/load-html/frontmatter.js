@@ -3,12 +3,10 @@ import yamlParse from "@uppercod/yaml";
 
 /**
  * Extract the meta snippet header
+ * @param {string} file
  * @param {string} code
- * @example
- * ---
- * name
- * ---
- * lorem...
+ * @param {plugins} plugins
+ * @returns {Promise<[string,object]>}
  */
 export async function frontmatter(file, code, plugins) {
     let meta = { __br: 0 };
@@ -38,3 +36,15 @@ export async function frontmatter(file, code, plugins) {
 
     return [code, meta];
 }
+
+/**
+ * @callback plugin
+ * @param {any} value
+ * @param {object|any[]} root
+ * @param {string} file
+ * @returns {Promise<{file?:string,value:any}>}
+ */
+
+/**
+ * @typedef {{[index:string]:plugin}} plugins
+ */

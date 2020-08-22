@@ -33,18 +33,3 @@ export let isJs = (file) => /\.(js|ts|jsx|tsx)$/.test(file);
  * @param {string} file
  */
 export let isCss = (file) => /\.css$/.test(file);
-/**
- * Determines if the file is of the permanent name type with extensions .html, .css, .js
- * @param {string} file
- */
-export let isFixLink = (file) => isHtml(file) || isJs(file) || isCss(file);
-/**
- * Determine if the file is not permanently named
- * @param {string} file
- */
-export let isNotFixLink = (file) => !isFixLink(file);
-/**
- * Determines if the file content can be considered json
- * @param {string} content
- */
-export let isJsonContent = (content) => /^\s*[\{[]/.test(content);

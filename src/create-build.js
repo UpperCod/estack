@@ -1,4 +1,7 @@
 import glob from "fast-glob";
+import { request as uRequest } from "@uppercod/request";
+import createTree from "@uppercod/index-tree";
+import createCache from "@uppercod/cache";
 import path from "path";
 import {
     writeFile as fsWriteFile,
@@ -13,16 +16,15 @@ import { createServer } from "./create-server";
 import { createWatch } from "./create-watch";
 import { loadOptions } from "./load-options";
 import { loadBuild } from "./load-build";
-import { request as uRequest } from "@uppercod/request";
-import createTree from "@uppercod/index-tree";
-import createCache from "@uppercod/cache";
 
 /**
- * @param {import("./internal").options} options
+ * @param {import("./load-options").options} options
  */
 export async function createBuild(options) {
     let cycleBuild = 0;
     let watcher;
+
+    /**@type {import("./create-server").server} */
     let server;
 
     options = await loadOptions(options);
@@ -32,43 +34,52 @@ export async function createBuild(options) {
     const getDataDest = createDataDest(options);
 
     const refCache = {};
+    /** @type {build["getRefCache"]} */
     const getRefCache = (id) => (refCache[id] = refCache[id] || {});
 
     const loadReady = logger.load();
 
     const files = await glob(options.src);
 
+    /** @type {build["addFile"]} */
     const addFile = (src) => tree.add(src);
 
+    /** @type {build["writeFile"]} */
     const writeFile = ({ dest, code, type, stream }) => {
-        if (options.virtual && server) {
+        if (options.virtual) {
             server.sources[dest] = { code, stream, type };
         } else {
-            return fsWriteFile(dest, code);
+            return stream ? fsCopyFile(stream, dest) : fsWriteFile(dest, code);
         }
     };
 
-    const copyFile = (from, to) => fsCopyFile(from, to);
-
+    /** @type {build["addChildFile"]} */
     const addChildFile = (src, childSrc) => {
         tree.addChild(src, childSrc);
         watcher.add(childSrc);
     };
 
+    /** @type {build["removeFile"]} */
     const removeFile = (src) => tree.remove(src);
 
+    /** @type {build["getFile"]} */
     const getFile = (src) => tree.get(src);
 
+    /** @type {build["getFiles"]} */
     const getFiles = () => Object.keys(tree.tree).map((src) => tree.tree[src]);
 
+    /** @type {build["readFile"]} */
     const readFile = (src, cache = true) => {
         const file = tree.get(src);
         const conent = (cache ? file.content : false) || fsReadFile(src);
         return (file.content = conent);
     };
+    1;
 
+    /** @type {build["hasFile"]} */
     const hasFile = (src) => tree.has(src);
 
+    /** @type {build["reserveFile"]} */
     const reserveFile = (src) => {
         const file = tree.get(src);
         const prevent = file.prevent;
@@ -76,16 +87,19 @@ export async function createBuild(options) {
         return !prevent;
     };
 
+    /** @type {build["isReservedFile"]} */
     const isReservedFile = (src) => !!tree.get(src).prevent;
 
-    const isNotReservedFile = (src) => !isReservedFile(src);
-
+    /** @type {build["isAsset"]} */
     const isAsset = (src) => !options.assetsWithoutHash.test(src);
 
+    /** @type {build["getDest"]} */
     const getDest = (src) => cache(getDataDest, src);
 
+    /** @type {build["request"]} */
     const request = (src) => cache(uRequest, src);
 
+    /**@type {build} */
     const build = {
         options,
         getFile,
@@ -99,7 +113,6 @@ export async function createBuild(options) {
         getFiles,
         reserveFile,
         isReservedFile,
-        isNotReservedFile,
         isAsset,
         getDest,
         getRefCache,
@@ -213,3 +226,61 @@ const createDataDest = (options) => (file) => {
         },
     };
 };
+
+/**
+ * @template T
+ * @typedef {(str:string)=>T} fnFile
+ */
+
+/**
+ * @typedef {Object} record - interface for file registration
+ * @property {string} dest - file destination
+ * @property {string} [type] - type of file
+ * @property {string} [code] - file code if this is string
+ * @property {string} [stream] - origin of the file to generate stream of this
+ */
+
+/**
+ * @typedef {Object} file - file registration in build
+ * @property {string} src - source
+ * @property {boolean}  root - Files declared as root are retrieved using getParents
+ * @property {string[]} imported - Import relations
+ * @property {import("./load-html/load-html-files").page} [page] - page data, it is created only from html or md documents
+ */
+
+/**
+ * @typedef {Object} dest - represents the destination data of the file
+ * @property {string} base - filename with type extension
+ * @property {string} name - filename
+ * @property {string} link - file link as static
+ * @property {string}  dest - file destination for write
+ * @property {{base:string,file:string,dir:string}} raw - date of origin
+ */
+
+/**
+ * @callback readFile
+ * @param {string} src - file
+ * @param {boolean} [fromCache=true] - if false, ignore the cache
+ * @returns {Promise<string>}
+ */
+
+/**
+ * @typedef {Object} build
+ * @property {readFile} readFile - Read the log, it keeps a cache on the read
+ * @property {fnFile<void>} addFile  - add a file to the file tree, files added with this function are cataloged as root.
+ * @property {fnFile<boolean>} hasFile - Check if the file exists in the tree
+ * @property {fnFile<file>} getFile - Get a file record
+ * @property {()=>file[]} getFiles - Get a file record
+ * @property {(data:record)=>Promise<any>|undefined} writeFile - Write or virtualize a file
+ * @property {fnFile<void>} removeFile - Remove the relationship from the build file
+ * @property {fnFile<boolean>} reserveFile - reserve a file in the execution queue
+ * @property {fnFile<boolean>} isReservedFile - check if the file is reserved
+ * @property {fnFile<boolean>} isAsset - check if the file is assets
+ * @property {fnFile<dest>} getDest - check if the file is assets
+ * @property {(id:string|symbol)=>object} getRefCache - Gets an object cache
+ * @property {(src:string,srcChild:string)=>void} addChildFile - relate the srcChild file to src
+ * @property {(url:string)=>Promise<[string,string]>} request - Generate a request returning the url and body of this
+ * @property {import("./load-options").options} options
+ * @property {import("./utils/logger").logger} logger
+ * @property {fnFile<Promise<any>>} [addFileToQueque] - This method is only created in load-build.
+ */

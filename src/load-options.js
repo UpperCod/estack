@@ -6,7 +6,7 @@ import { getPackage } from "./utils/utils";
 
 /**
  *
- * @param {import("./internal").options} options
+ * @param {options} options
  */
 export async function loadOptions({
     mode,
@@ -112,3 +112,29 @@ export async function loadOptions({
 
     return options;
 }
+
+/**
+ * @typedef {Object} options
+ * @property {string | string[]} src
+ * @property {object} [pkg]
+ * @property {string} [dest]
+ * @property {string} [mode]
+ * @property {boolean} [watch]
+ * @property {string[] | string} [external]
+ * @property {string} [jsx]
+ * @property {string} [jsxFragment]
+ * @property {boolean} [forceWrite]
+ * @property {boolean} [silent]
+ * @property {string} [href]
+ * @property {string} [proxy]
+ * @property {boolean|string} [server]
+ * @property {boolean} [virtual]
+ * @property {boolean} [sourcemap]
+ * @property {boolean} [minify]
+ * @property {boolean} [hashAllAssets]
+ * @property {string} [assetDir]
+ * @property {string} [assetHashPattern]
+ * @property {RegExp} [assetsWithoutHash]
+ * @property {string} [assetsDir]
+ * @property {number} [port]
+ */

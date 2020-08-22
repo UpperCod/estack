@@ -10,7 +10,7 @@ import { loadRollup } from "./load-rollup/load-rollup";
  */
 
 /**
- * @param {import("./internal").build } build
+ * @param {import("./create-build").build } build
  * @param {string[]} files
  * @param { number } cycle
  * @param {boolean} [forceBuild]
@@ -70,11 +70,7 @@ export async function loadBuild(build, files, cycle, forceBuild) {
             resolveJs,
             ...copyFiles.map(async (file) => {
                 let { dest } = build.getDest(file);
-                if (build.options.virtual) {
-                    build.writeFile({ dest, stream: file });
-                } else {
-                    return build.copyFile(file, dest);
-                }
+                build.writeFile({ dest, stream: file });
             }),
         ]);
 

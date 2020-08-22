@@ -39,34 +39,34 @@ let fileExists = async (file) =>
  * @param {number} options.port
  * @param {boolean} options.reload
  * @param {string} options.proxy
- * @returns {Promise<import("./internal").server>}
+ * @returns {Promise<server>}
  */
 export async function createServer({ root, port, reload, proxy }) {
-    let nextAssets = sirv(root, {
+    const nextAssets = sirv(root, {
         dev: true,
     });
 
-    let nextAssetsRoot = sirv(".", {
+    const nextAssetsRoot = sirv(".", {
         dev: true,
     });
 
     port = await findPort(port, port + 100);
 
-    let nextProxy =
+    const nextProxy =
         proxy &&
         ((req, res) =>
             proxyServer.web(req, res, {
                 target: proxy,
             }));
 
-    let fallback = normalizePath(path.join(root, "index.html"));
-    let notFound = normalizePath(path.join(root, "404.html"));
+    const fallback = normalizePath(path.join(root, "index.html"));
+    const notFound = normalizePath(path.join(root, "404.html"));
 
-    let responses = [];
+    const responses = [];
+    /**@type {server["sources"]}*/
+    const sources = {};
 
-    let sources = {};
-
-    let addLiveReload = (code) =>
+    const addLiveReload = (code) =>
         (code += `
   <script>{
     let source = new EventSource('http://localhost:${port}/livereload');
@@ -75,82 +75,75 @@ export async function createServer({ root, port, reload, proxy }) {
 `);
 
     polka()
-        .use(
-            /**@type {useCallback} */
-            async (req, res, next) => {
-                if (req.path == "/livereload" && reload) {
-                    next();
-                    return;
-                }
-
-                let file = req.path;
-
-                if (file == "/") {
-                    file = "index.html";
-                } else if (/\/$/.test(file)) {
-                    file += "index.html";
-                } else if (!/\.[\w]+$/.test(file)) {
-                    file += ".html";
-                }
-
-                file = normalizePath(path.join(root, file));
-
-                let virtualSource =
-                    sources[file] ||
-                    (isHtml(file) ? sources[fallback] : sources[notFound]);
-
-                let [
-                    resolveHtml,
-                    resolveStatic,
-                    resolveFallback,
-                ] = virtualSource
-                    ? []
-                    : await Promise.all([
-                          // check if the file exists as html
-                          isHtml(file) && fileExists(file),
-                          // check if the file exists as static
-                          fileExists(file),
-                          // it is verified in each request of the html type,
-                          // to ensure the existence in a dynamic environment
-                          isHtml(file) && !proxy && fileExists(fallback), //
-                      ]);
-
-                res.setHeader("Access-Control-Allow-Origin", "*");
-                res.setHeader("Cache-Control", "no-cache");
-
-                // mirror files to server without writing
-                if (virtualSource) {
-                    if (virtualSource.stream) {
-                        req.path = virtualSource.stream;
-                        nextAssetsRoot(req, res, next); //
-                    } else {
-                        let { code, type } = virtualSource;
-
-                        res.setHeader("Content-Type", mime[type]);
-
-                        res.end(type == "html" ? addLiveReload(code) : code);
-                    }
-                } else if (resolveHtml || resolveFallback) {
-                    res.setHeader("Content-Type", "text/html; charset=utf-8");
-                    try {
-                        let code = await asyncFs.readFile(
-                            resolveHtml || resolveFallback,
-                            "utf8"
-                        );
-                        res.end(reload ? addLiveReload(code) : code);
-                    } catch (e) {
-                        res.end(e);
-                    }
-                } else if (resolveStatic) {
-                    nextAssets(req, res, next);
-                } else if (nextProxy) {
-                    nextProxy(req, res);
-                } else {
-                    res.statusCode = 404;
-                    res.end("");
-                }
+        .use(async (req, res, next) => {
+            if (req.path == "/livereload" && reload) {
+                next();
+                return;
             }
-        )
+
+            let file = req.path;
+
+            if (file == "/") {
+                file = "index.html";
+            } else if (/\/$/.test(file)) {
+                file += "index.html";
+            } else if (!/\.[\w]+$/.test(file)) {
+                file += ".html";
+            }
+
+            file = normalizePath(path.join(root, file));
+
+            const virtualSource =
+                sources[file] ||
+                (isHtml(file) ? sources[fallback] : sources[notFound]);
+
+            const [resolveHtml, resolveStatic, resolveFallback] = virtualSource
+                ? []
+                : await Promise.all([
+                      // check if the file exists as html
+                      isHtml(file) && fileExists(file),
+                      // check if the file exists as static
+                      fileExists(file),
+                      // it is verified in each request of the html type,
+                      // to ensure the existence in a dynamic environment
+                      isHtml(file) && !proxy && fileExists(fallback), //
+                  ]);
+
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Cache-Control", "no-cache");
+
+            // mirror files to server without writing
+            if (virtualSource) {
+                if (virtualSource.stream) {
+                    req.path = virtualSource.stream;
+                    nextAssetsRoot(req, res, next); //
+                } else {
+                    let { code, type } = virtualSource;
+
+                    res.setHeader("Content-Type", mime[type]);
+
+                    res.end(type == "html" ? addLiveReload(code) : code);
+                }
+            } else if (resolveHtml || resolveFallback) {
+                res.setHeader("Content-Type", "text/html; charset=utf-8");
+                try {
+                    let code = await asyncFs.readFile(
+                        resolveHtml || resolveFallback,
+                        "utf8"
+                    );
+                    res.end(reload ? addLiveReload(code) : code);
+                } catch (e) {
+                    res.end(e);
+                }
+            } else if (resolveStatic) {
+                nextAssets(req, res, next);
+            } else if (nextProxy) {
+                nextProxy(req, res);
+            } else {
+                res.statusCode = 404;
+                res.end("");
+            }
+        })
         .use((req, res) => {
             // livereload
             res.writeHead(200, {
@@ -211,5 +204,15 @@ async function findPort(port, limit, pending) {
 }
 
 /**
- * @typedef {(req:object,res:object,next:any)=>Promise<any>} useCallback
+ * @typedef {Object} source
+ * @property {string} [type] - type of file
+ * @property {string} [code] - file code if this is string
+ * @property {string} [stream] - origin of the file to generate stream of this
+ */
+
+/**
+ * @typedef {Object} server
+ * @property {number} port
+ * @property {{[index:string]:source}} sources
+ * @property {()=>void} reload
  */

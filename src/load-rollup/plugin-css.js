@@ -5,7 +5,7 @@ const VIRTUAL = `\0estack:utils`;
 const replaceScopeCss = (id, code) =>
     code.replace(/#== */g, id ? id + " " : "");
 /**
- * @param {import("../internal").build} build
+ * @param {import("../create-build").build} build
  * @returns {import("rollup").Plugin}
  */
 export let pluginImportCss = (build) => ({
@@ -30,7 +30,7 @@ export let pluginImportCss = (build) => ({
                     file: id,
                     code,
                     readFile: build.readFile,
-                    addWatchFile: (id) => this.addWatchFile(id),
+                    addChildFile: (id) => this.addWatchFile(id),
                     request: build.request,
                 },
                 "#=="

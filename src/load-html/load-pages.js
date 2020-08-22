@@ -16,7 +16,7 @@ import {
 
 /**
  *
- * @param {import("../internal").build} build
+ * @param {import("../create-build").build} build
  */
 export function loadPages(build) {
     //The templates files are virtual, these can be referred
@@ -130,6 +130,7 @@ export function loadPages(build) {
             data.content = await renderHtml(_page.data.content, pageData);
             return pageData;
         } catch (e) {
+            /**@todo */
             createErrorFromLiquid(build, data, e);
         }
     });
@@ -170,6 +171,8 @@ export function loadPages(build) {
                     try {
                         content = await renderHtml(layout.content, pageData);
                     } catch (e) {
+                        console.log(e);
+                        /**@todo */
                         createErrorFromLiquid(build, _layout.data, e);
                     }
                 }
@@ -208,7 +211,7 @@ function createErrorFromLiquid(build, data, e) {
 }
 /**
  *
- * @param {import("../internal").build} build
+ * @param {import("../create-build").build} build
  * @param {*} pages
  * @param {*} page
  * @param {*} addPage
@@ -230,19 +233,23 @@ function resolveArchive(build, pages, page, addPage) {
                 ? { dest: page.dest, link: data.link }
                 : build.getDest(file);
 
-        let position = paged - 1;
+        const createPosition = (position) => {
+            position = position < 0 ? 0 : position > length ? length : position;
+            return {
+                position,
+                link: normalizePath(
+                    collection[position] && position > 0
+                        ? data.link + "/" + position
+                        : data.link
+                ),
+                toString() {
+                    return this.link;
+                },
+            };
+        };
 
-        const prev = normalizePath(
-            collection[position] && position > 0
-                ? data.link + "/" + position
-                : data.link
-        );
-
-        position = paged + 1;
-
-        const next = normalizePath(
-            collection[position] ? data.link + "/" + position : ""
-        );
+        const prev = createPosition(paged - 1);
+        const next = createPosition(paged + 1);
 
         // A new page is returned
         addPage({

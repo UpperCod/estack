@@ -9,7 +9,7 @@ let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
 /**
  *
- * @param {import("../internal").options} options
+ * @param {import("../load-options").options} options
  */
 export function plugins(options) {
     let optionalPlugins = [];
@@ -38,6 +38,3 @@ export function plugins(options) {
         ...optionalPlugins,
     ];
 }
-/**
- * @typeof {import("../internal") } Build
- */

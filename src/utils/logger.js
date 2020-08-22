@@ -181,7 +181,7 @@ function stringTable(rows, padding = 2) {
         )
         .join("\n");
 }
-
+/**@type {logger} */
 export let logger = {
     load() {
         let getMessage = (dots) => message + colors.green(".".repeat(dots));
@@ -226,3 +226,14 @@ export let logger = {
         return log("", BUILD, mark, true);
     },
 };
+
+/**
+ * @typedef {Object} logger
+ * @property {()=>()=>void} load
+ * @property {(message:string)=>(message:string)=>Promise<void>} header
+ * @property {(message:string)=>(message:string)=>Promise<void>} footer
+ * @property {(message: any, mark: string) => Promise<any>} markBuildError
+ * @property {(mark: string) => Promise<any>} markBuild
+ * @property {(message: string, mark: string) => Promise<any>} debug
+ * @property {(mark: string) => Promise<any>} mark
+ */

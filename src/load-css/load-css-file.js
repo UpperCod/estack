@@ -20,8 +20,8 @@ let cache = {};
  * @param {object} context
  * @param {string} context.file - current css file
  * @param {string} context.code - css code to analyze
- * @param {import("../internal").request} context.request - read a file
- * @param {import("../internal").readFile} [context.readFile] - read a file
+ * @param {import("../create-build").build["request"]} context.request - read a file
+ * @param {import("../create-build").build["readFile"]} [context.readFile] - read a file
  * @param {(file:string)=>void} context.addChildFile - execute the callback every time a css import is generated
  * @param {object} [imports]
  * @param {boolean} [returnRules] - If true it will return the rules as Array

@@ -11,8 +11,7 @@ import {
 } from "../constants";
 
 /**
- *
- * @param {import("../internal").build} build
+ * @param {import("../create-build").build} build
  * @param {*} htmlFiles
  */
 export function loadHtmlFiles(build, htmlFiles) {
@@ -20,6 +19,7 @@ export function loadHtmlFiles(build, htmlFiles) {
         htmlFiles.map(async (file) => {
             let { dir, name } = path.parse(file);
             const code = await build.readFile(file);
+            /**@type {[string,object]} */
             let meta = [code, {}];
 
             async function addFile(src) {
@@ -85,12 +85,6 @@ export function loadHtmlFiles(build, htmlFiles) {
 
             name = data.slug || name;
 
-            const links = {};
-
-            const fetch = {};
-
-            const assets = {};
-
             let { link: _link = "", folder = "" } = data;
 
             let dataFile;
@@ -114,11 +108,8 @@ export function loadHtmlFiles(build, htmlFiles) {
                     content,
                     ...data,
                     slug: normalizePath(name),
-                    fetch,
-                    assets,
                     file: normalizePath(file),
                     link,
-                    links,
                 },
                 dest,
                 addFile: (src) =>
@@ -127,3 +118,32 @@ export function loadHtmlFiles(build, htmlFiles) {
         })
     );
 }
+
+/**
+ * @typedef {Object} query
+ * @property {{[index:string]:any}} where - query to match
+ * @property {number} [limit] - page limits per page
+ * @property {string} [sort] - page limits per page
+ * @property {1|-1} [order] - page order is ascending(1) or decent(-1)
+ */
+
+/**
+ * @typedef {Object} data - Page data interface, This is public for the template
+ * @property {string} content - page content, hmlt or md.
+ * @property {string} slug - name as page file slug
+ * @property {string} file - page source file name
+ * @property {string} link - name of access to the page as link
+ * @property {string} [symlink] - symbolic page link, this allows access to the page through this alias, using the links property the template
+ * @property {string} [fragment] - declare if the page is of type fragment
+ * @property {string} [template] - declare if the page is of type template
+ * @property {string|boolean} [layout] - declare if the page is of type layout, so it depends on a template
+ * @property {query} [archive] - declare if the page will create a list of archives
+ * @property {{[index:string]: query}} [query] - declare if the page will create a list of archives
+ **/
+
+/**
+ * @typedef {Object} page - Page interface
+ * @property {data} data -  Page data interface, This is public for the template
+ * @property {string} dest - writing destination of the page
+ * @property {(src:string)=>Promise<string>} addFile - add a file anonymously
+ */

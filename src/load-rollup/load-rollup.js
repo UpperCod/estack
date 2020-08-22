@@ -5,14 +5,13 @@ import { plugins } from "./plugins";
 import { pluginImportUrl } from "./plugin-import-url";
 import { pluginImportCss } from "./plugin-css";
 import { normalizePath } from "../utils/fs";
-import { logger } from "../utils/utils";
 
 const CACHE_ROLLUP = Symbol("_CacheRollup");
 
 /**
  *
- * @param {import("../internal").build} build
- * @param {*} jsFiles
+ * @param {import("../create-build").build} build
+ * @param {string[]} jsFiles
  */
 export async function loadRollup(build, jsFiles) {
     const cache = build.getRefCache(CACHE_ROLLUP);

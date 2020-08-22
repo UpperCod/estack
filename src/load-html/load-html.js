@@ -2,7 +2,7 @@ import { loadHtmlFiles } from "./load-html-files";
 import { loadPages } from "./load-pages";
 
 /**
- * @param {import("../internal").build} build
+ * @param {import("../create-build").build} build
  * @param {string[]} htmlFiles
  */
 export async function loadHtml(build, htmlFiles) {
