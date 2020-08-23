@@ -19,7 +19,7 @@ export async function loadOptions({
     silent,
     href = "/",
     assetsDir,
-    assetHashPattern = "[hash]-[name]",
+    assetHashPattern,
     server,
     sourcemap,
     minify,
@@ -81,9 +81,8 @@ export async function loadOptions({
         ...Object.keys(pkg.peerDependencies),
     ];
 
-    let { name } = path.parse(assetHashPattern);
-
-    assetHashPattern = name;
+    assetHashPattern =
+        assetHashPattern || (mode == "dev" ? "[hash]-[name]" : "[hash]");
 
     let assetsWithoutHash = hashAllAssets ? /\.html$/ : /\.(html|js|css)$/;
 

@@ -2,7 +2,7 @@ import path from "path";
 import { rollup, watch } from "rollup";
 import { MARK_ROLLUP } from "../constants";
 import { plugins } from "./plugins";
-import { pluginImportUrl } from "./plugin-import-url";
+import pluginImportUrl from "rollup-plugin-import-url";
 import { pluginImportCss } from "./plugin-css";
 import { normalizePath } from "../utils/fs";
 

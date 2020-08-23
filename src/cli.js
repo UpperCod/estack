@@ -12,7 +12,7 @@ sade("estack <mode> <src> [dest]")
     .option(
         "--assetHashPattern",
         "customize the destination name for the assets",
-        "[hash]-[name]"
+        ""
     )
     .option("--sourcemap", "Enable the use of sourcemap", false)
     .option("--silent", "Prevents printing of logs", false)

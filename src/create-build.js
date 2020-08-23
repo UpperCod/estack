@@ -2,6 +2,7 @@ import glob from "fast-glob";
 import { request as uRequest } from "@uppercod/request";
 import createTree from "@uppercod/index-tree";
 import createCache from "@uppercod/cache";
+import hash from "@uppercod/hash";
 import path from "path";
 import {
     writeFile as fsWriteFile,
@@ -56,7 +57,7 @@ export async function createBuild(options) {
     /** @type {build["addChildFile"]} */
     const addChildFile = (src, childSrc) => {
         tree.addChild(src, childSrc);
-        watcher.add(childSrc);
+        watcher && watcher.add(childSrc);
     };
 
     /** @type {build["removeFile"]} */
@@ -120,7 +121,7 @@ export async function createBuild(options) {
             ...logger,
             async markBuild(...args) {
                 await logger.markBuild(...args);
-                server.reload();
+                server && server.reload();
             },
         },
     };
@@ -184,11 +185,7 @@ const createDataDest = (options) => (file) => {
 
     if (!options.assetsWithoutHash.test(ext)) {
         const data = {
-            hash:
-                "" +
-                file
-                    .split("")
-                    .reduce((out, i) => (out + i.charCodeAt(0)) | 8, 4),
+            hash: hash(file),
             name,
         };
 
