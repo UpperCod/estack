@@ -1,12 +1,8 @@
 import { Liquid, Tokenizer, evalToken } from "liquidjs";
 import getProp from "@uppercod/get-prop";
+import normalizeIndentation from "@uppercod/normalize-indentation";
 import { renderMarkdown, highlighted } from "./render-markdown";
-import {
-    normalizeLineSpace,
-    mapPropToObject,
-    isJs,
-    normalizePath,
-} from "../utils/utils";
+import { mapPropToObject, isJs, normalizePath } from "../utils/utils";
 
 import {
     DATA_FRAGMENTS,
@@ -57,7 +53,7 @@ engine.registerFilter("group", (data, by, def) => {
  * Apply markdown as a liquid filter
  */
 engine.registerFilter("markdown", (string) =>
-    renderMarkdown(normalizeLineSpace(string))
+    renderMarkdown(normalizeIndentation(string))
 );
 /**
  * Apply markdown as a liquid filter
@@ -67,7 +63,7 @@ engine.registerFilter("slug", normalizePath);
  * Apply markdown as a prismjs filter
  */
 engine.registerFilter("highlighted", (string, type) =>
-    highlighted(normalizeLineSpace(string), type)
+    highlighted(normalizeIndentation(string), type)
 );
 
 /**
@@ -170,39 +166,6 @@ engine.registerTag(
             : "";
     })
 );
-
-/**
- * Execute the addDataFetch function associated with the page context
- * @example
- * {% fetch myData = "https://my-api" %}
- * {{myData | json}}
- * {{page.fetch.myData}}
- */
-
-engine.registerTag(
-    "fetch",
-    createTag(
-        async (
-            {
-                [DATA_PAGE]: _page,
-                [DATA_LAYOUT]: _layout,
-                [FROM_LAYOUT]: fromLayout,
-            },
-            name,
-            data,
-            set
-        ) => {
-            let addDataFetch = fromLayout
-                ? _layout && _layout.addDataFetch
-                : _page && _page.addDataFetch;
-            if (addDataFetch) {
-                set(name, await addDataFetch(null, data));
-            }
-            return "";
-        }
-    )
-);
-
 /**
  *
  * @param {Tag} next - function in charge of processing the tag context

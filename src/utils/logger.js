@@ -110,10 +110,10 @@ async function log(message, type, mark, fail) {
             );
 
             message = [
-                ...addPadding(" ", allMessageHeader),
+                ...addPadding(" ", uniqueError(allMessageHeader)),
                 allMessageBuild,
-                ...addPadding(" ", allMessagesDebug, -1),
-                ...addPadding(" ", allMessageFooter, -1),
+                ...addPadding(" ", uniqueError(allMessagesDebug), -1),
+                ...addPadding(" ", uniqueError(allMessageFooter), -1),
             ]
                 .filter((value) => value)
                 .join("\n");
@@ -145,6 +145,15 @@ function addPadding(padding, list, position) {
         list[position == -1 ? "unshift" : "push"](padding);
     }
     return list;
+}
+
+function uniqueError(errors) {
+    return errors.reduce((errors, error) => {
+        if (!errors.includes(error)) {
+            errors.push(error);
+        }
+        return errors;
+    }, []);
 }
 
 function stringTable(rows, padding = 2) {

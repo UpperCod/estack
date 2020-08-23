@@ -1,6 +1,8 @@
 ---
 $ref: ./docs/base.yaml
 title: EStack todo en uno
+value:
+    $ref: https://raw.githubusercontent.com/atomicojs/atomico/master/README.md
 description: zero configuracion, generador de sitios estaticos, servidor de desarrollo, bundle y más.
 linkTitle: Introduccion
 link: /

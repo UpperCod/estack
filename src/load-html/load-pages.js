@@ -4,7 +4,6 @@ import { renderHtml } from "./render-html";
 import { queryPages } from "./query-page";
 
 import {
-    ERROR_TRANSFORMING,
     FROM_LAYOUT,
     DATA_FRAGMENTS,
     DATA_LAYOUT,
@@ -130,8 +129,7 @@ export function loadPages(build) {
             data.content = await renderHtml(_page.data.content, pageData);
             return pageData;
         } catch (e) {
-            /**@todo */
-            createErrorFromLiquid(build, data, e);
+            build.logger.markBuildError(createError(e + "", data), MARK_ROOT);
         }
     });
 
@@ -145,11 +143,10 @@ export function loadPages(build) {
             pages.map(async (pageData) => {
                 if (!pageData) return;
 
-                let {
+                const {
                     page,
                     layout,
                     [DATA_PAGE]: _page,
-                    [DATA_LAYOUT]: _layout,
                     [PAGE_ASSETS]: _pageAssets,
                 } = pageData;
 
@@ -171,9 +168,10 @@ export function loadPages(build) {
                     try {
                         content = await renderHtml(layout.content, pageData);
                     } catch (e) {
-                        console.log(e);
-                        /**@todo */
-                        createErrorFromLiquid(build, _layout.data, e);
+                        build.logger.markBuildError(
+                            createError(e + "", layout, 2),
+                            MARK_ROOT
+                        );
                     }
                 }
                 if (content != null) {
@@ -196,19 +194,18 @@ export function loadPages(build) {
     );
 }
 
-function createErrorFromLiquid(build, data, e) {
-    let test = e.message.match(/line:(\d+), +col:(\d+)/);
-    let lines = [];
-    if (test) {
-        let [, line, col] = test;
-        lines = ["", data.__br + Number(line), col];
-    }
-
-    build.logger.debug(
-        `${ERROR_TRANSFORMING} ${data.file + lines.join(":")}`,
-        MARK_ROOT
+const createError = (error, { file, __br }, diffLine = 0) =>
+    error.replace(
+        /(RenderError|ParseError:)(?:.+), *line:(\d+), *col:(\d+)/,
+        (all, label, value, col) =>
+            label +
+            " " +
+            file +
+            ":" +
+            (Number(value) + (__br - diffLine)) +
+            ":" +
+            col
     );
-}
 /**
  *
  * @param {import("../create-build").build} build

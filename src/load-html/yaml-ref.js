@@ -8,8 +8,9 @@ export const yamlRef = ({ readFile, request }) => async (value, root, file) => {
     if (src) {
         try {
             const isUrlSrc = isUrl(src);
-            file = isUrlSrc ? src : path.join(dir, src);
-            value = await (isUrlSrc ? request : readFile)(file);
+            const nextFile = isUrlSrc ? src : path.join(dir, src);
+            value = await (isUrlSrc ? request : readFile)(nextFile, file);
+            file = nextFile;
         } catch (e) {
             return { file, value };
         }

@@ -2,7 +2,7 @@
 import sirv from "sirv";
 
 import path from "path";
-import net from "net";
+import findPort from "@uppercod/find-port";
 import polka from "polka";
 
 import httpProxy from "http-proxy";
@@ -170,37 +170,6 @@ export async function createServer({ root, port, reload, proxy }) {
             );
         },
     };
-}
-/**
- * this function searches if the available port is free,
- * if it is not it will search for the next one until
- * the limit is completed
- * @param {number} port - search start port
- * @param {number} limit - port search limit
- * @param {object} [pending] - allows terminating execution from an internal recursive process
- */
-async function findPort(port, limit, pending) {
-    if (!pending) {
-        pending = {};
-        pending.promise = new Promise((resolve, reject) => {
-            pending.resolve = resolve;
-            pending.reject = reject;
-        });
-    }
-    let client = net.createConnection({ port });
-
-    client.on("connect", () => {
-        client.end();
-        if (port > limit) {
-            pending.reject();
-        } else {
-            findPort(port + 1, limit, pending);
-        }
-    });
-
-    client.on("error", () => pending.resolve(port));
-
-    return pending.promise;
 }
 
 /**

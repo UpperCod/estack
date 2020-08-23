@@ -4,11 +4,7 @@ import { frontmatter } from "./frontmatter";
 import { renderMarkdown } from "./render-markdown";
 import { yamlRef } from "./yaml-ref";
 
-import {
-    ERROR_TRANSFORMING,
-    ERROR_FILE_NOT_FOUNT,
-    MARK_ROOT,
-} from "../constants";
+import { MARK_ROOT } from "../constants";
 
 /**
  * @param {import("../create-build").build} build
@@ -30,15 +26,40 @@ export function loadHtmlFiles(build, htmlFiles) {
             }
 
             try {
-                meta = await frontmatter(file.replace(/\.\w+/, ".yaml"), code, {
+                const aliasFile = normalizePath(file.replace(/\.\w+/, ".yaml"));
+                meta = await frontmatter(aliasFile, code, {
                     ref: yamlRef({
-                        async request(src) {
-                            const [, code] = await build.request(src);
-                            return code;
+                        async request(src, currentFile) {
+                            try {
+                                const [, code] = await build.request(src);
+                                return code;
+                            } catch (e) {
+                                build.logger.markBuildError(
+                                    `FetchError: request to ${normalizePath(
+                                        src
+                                    )} from ${normalizePath(currentFile)}`,
+                                    MARK_ROOT
+                                );
+                                return {};
+                            }
                         },
-                        readFile(src) {
-                            build.addChildFile(file, src);
-                            return build.readFile(src);
+                        async readFile(src, currentFile) {
+                            try {
+                                build.addChildFile(currentFile, src);
+                                return await build.readFile(src);
+                            } catch (e) {
+                                build.logger.markBuildError(
+                                    `NotFound: file ${normalizePath(
+                                        src
+                                    )} from ${
+                                        normalizePath(currentFile) == aliasFile
+                                            ? file
+                                            : normalizePath(currentFile)
+                                    }`,
+                                    MARK_ROOT
+                                );
+                                return {};
+                            }
                         },
                     }),
                     async link(value, root, file) {
@@ -70,8 +91,8 @@ export function loadHtmlFiles(build, htmlFiles) {
                     },
                 });
             } catch (e) {
-                build.logger.debug(
-                    `${ERROR_TRANSFORMING} ${file}:${e.mark.line}:${e.mark.position}`,
+                build.logger.markBuildError(
+                    createError(e + "", normalizePath(file)),
                     MARK_ROOT
                 );
             }
@@ -118,6 +139,12 @@ export function loadHtmlFiles(build, htmlFiles) {
         })
     );
 }
+
+const createError = (error, file) =>
+    error.replace(
+        /(YAMLException:)(?:.+) +line *(\d+), +column +(\d+):/,
+        (all, label, value, col) => label + " " + file + ":" + value + ":" + col
+    );
 
 /**
  * @typedef {Object} query
