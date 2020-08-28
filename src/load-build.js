@@ -23,12 +23,14 @@ export async function loadBuild(build, files, cycle, forceBuild) {
 
         files.forEach(build.addFile);
 
+        /**@type {{[file:string]:Promise<import("./create-build").dest>}} */
         const queueFiles = {};
 
         build.addFileToQueque = (file) => {
             /**
              * to optimize the process, the promise that the file looks for is
              * cached, in order to reduce this process to only one execution between buils
+             * @param {string} file
              */
             async function resolve(file) {
                 await asyncFs.stat(file);

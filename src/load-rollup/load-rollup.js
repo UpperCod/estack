@@ -14,16 +14,19 @@ const CACHE_ROLLUP = Symbol("_CacheRollup");
  * @param {string[]} jsFiles
  */
 export async function loadRollup(build, jsFiles) {
+    /**@type {cache} */
     const cache = build.getRefCache(CACHE_ROLLUP);
 
     const { options } = build;
     // clean the old watcher
     if (cache.watcher) cache.watcher.filter((watcher) => watcher.close());
-
     cache.watcher = [];
 
+    /**@type {{[alias:string]:import("../create-build").dest}} */
     const aliasLoad = {};
+    /**@type {{[alias:string]:import("../create-build").dest}} */
     const aliasFileName = {};
+    /**@type {string[]} */
     const entries = [];
     const root = path.join(options.dest, options.assetsDir);
 
@@ -45,7 +48,7 @@ export async function loadRollup(build, jsFiles) {
         external: options.external,
         cache: cache.bundle,
         plugins: [
-            pluginImportUrl(build),
+            pluginImportUrl(),
             /**@type {import("rollup").Plugin} */
             {
                 name: "local-estack",
@@ -143,10 +146,14 @@ export async function loadRollup(build, jsFiles) {
             }
         });
 
-        cache.true = 10;
-
         cache.watcher.push(watcher);
     } else {
         await bundle.write(output);
     }
 }
+
+/**
+ * @typedef {Object} cache
+ * @property {import("rollup").RollupCache} [bundle]
+ * @property {import("rollup").RollupWatcher[]} [watcher]
+ */

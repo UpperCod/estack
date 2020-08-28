@@ -1,48 +1,40 @@
+import { serialize, stringify } from "stylis";
+import { load } from "stylis-pack/load";
+import { pluginImport } from "stylis-pack/plugin-import";
 import { isCss } from "../utils/types";
-import { loadCssFile } from "../load-css/load-css-file";
 
-const VIRTUAL = `\0estack:utils`;
-const replaceScopeCss = (id, code) =>
-    code.replace(/#== */g, id ? id + " " : "");
 /**
  * @param {import("../create-build").build} build
  * @returns {import("rollup").Plugin}
  */
 export let pluginImportCss = (build) => ({
     name: "plugin-import-css",
-    resolveId(id) {
-        if (id == VIRTUAL || "\0" + id == VIRTUAL) {
-            return VIRTUAL;
-        }
-    },
-    load(id) {
-        if (id == VIRTUAL) {
-            return `
-            export const replaceScopeCss = ${replaceScopeCss};
-            export const injectStyle = (code) => document.head.insertAdjacentHTML("beforeend", "<style>"+code+"</style>");
-            `;
-        }
+    renderStart() {
+        this.cssParallel = {};
     },
     async transform(code, id) {
         if (isCss(id)) {
-            const css = await loadCssFile(
+            /**@type {{css:any[],tree:object}} */
+            const root = await load(
                 {
-                    file: id,
                     code,
-                    readFile: build.readFile,
-                    addChildFile: (id) => this.addWatchFile(id),
-                    request: build.request,
+                    file: id,
                 },
-                "#=="
+                [pluginImport()],
+                this.cssParallel || {}
             );
+
+            for (const src in root.tree.tree) {
+                if (src != id) {
+                    this.addWatchFile(src);
+                }
+            }
+
+            const css = serialize(root.css, stringify);
             /**@type {import("rollup").SourceDescription} */
             return {
                 code: `
-                import { replaceScopeCss, injectStyle } from "${VIRTUAL}";
-                const code = ${JSON.stringify(css)};
-                export const scope = (id) => replaceScopeCss(id||"",code);
-                export const inject = (id) => injectStyle(scope(id));
-                export default ${JSON.stringify(replaceScopeCss("", css))};
+                export default ${JSON.stringify(css)};
                 `,
                 map: { mappings: "" },
             };

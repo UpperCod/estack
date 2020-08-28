@@ -33,13 +33,17 @@ export async function loadOptions({
     let pkg = await getPackage();
 
     src = Array.isArray(src) ? src : src.split(/ *; */g);
-
+    /**
+     *
+     * @param {string} value
+     */
     let testHtml = (value) => ["html", "md"].some((ext) => value.includes(ext));
     let withHtml = src.some((exp) =>
         /\!/.test(exp)
             ? false
             : [/{([^}]+)}$/, /\.(\w+)$/].some((regExp) => {
-                  let test = exp.match(regExp);
+                  /**@type {string[]} */
+                  const test = exp.match(regExp);
                   if (test) {
                       let [, value] = test;
 

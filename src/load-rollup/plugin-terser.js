@@ -1,6 +1,6 @@
 import terser from "terser";
-
-let cache = {};
+import createCache from "@uppercod/cache";
+const cache = createCache();
 /**
  * rollup-plugin-terser, has dependencies that prevent
  * the generation of the bundle, so a similar effect is used
@@ -13,13 +13,7 @@ export function pluginTerser({ sourcemap }) {
         name: "plugin-terser",
         async renderChunk(code, chunk) {
             if (chunk.fileName.endsWith(".js")) {
-                if (!cache[code]) {
-                    cache[code] = terser.minify(code, {
-                        sourceMap: sourcemap,
-                        module: true,
-                    });
-                }
-                return cache[code];
+                return cache(terser.minify, code);
             }
         },
     };

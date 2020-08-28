@@ -1,6 +1,6 @@
 import glob from "fast-glob";
 import { request as uRequest } from "@uppercod/request";
-import createTree from "@uppercod/index-tree";
+import createTree from "@uppercod/imported";
 import createCache from "@uppercod/cache";
 import hash from "@uppercod/hash";
 import path from "path";
@@ -67,13 +67,13 @@ export async function createBuild(options) {
     const getFile = (src) => tree.get(src);
 
     /** @type {build["getFiles"]} */
-    const getFiles = () => Object.keys(tree.tree).map((src) => tree.tree[src]);
+    const getFiles = () => Object.keys(tree.tree).map((src) => getFile(src));
 
     /** @type {build["readFile"]} */
     const readFile = (src, cache = true) => {
-        const file = tree.get(src);
-        const conent = (cache ? file.content : false) || fsReadFile(src);
-        return (file.content = conent);
+        const file = getFile(src);
+        const content = (cache ? file.content : false) || fsReadFile(src);
+        return (file.content = content);
     };
     1;
 
@@ -82,14 +82,14 @@ export async function createBuild(options) {
 
     /** @type {build["reserveFile"]} */
     const reserveFile = (src) => {
-        const file = tree.get(src);
+        const file = getFile(src);
         const prevent = file.prevent;
         file.prevent = true;
         return !prevent;
     };
 
     /** @type {build["isReservedFile"]} */
-    const isReservedFile = (src) => !!tree.get(src).prevent;
+    const isReservedFile = (src) => !!getFile(src).prevent;
 
     /** @type {build["isAsset"]} */
     const isAsset = (src) => !options.assetsWithoutHash.test(src);
@@ -130,7 +130,6 @@ export async function createBuild(options) {
         watcher = createWatch(options.src, (group) => {
             let files = group.add || [];
             let forceBuild;
-
             if (group.unlink) {
                 group.unlink.forEach(tree.remove);
                 forceBuild = true;
@@ -139,9 +138,9 @@ export async function createBuild(options) {
                 group.change
                     .filter((src) => !isJs(src))
                     .map((src) => {
-                        const parents = tree.getParents(src);
+                        const roots = tree.getRoots(src);
                         tree.remove(src);
-                        return parents;
+                        return roots;
                     })
                     .flat()
                     .forEach((src) => {
@@ -149,6 +148,7 @@ export async function createBuild(options) {
                         files.push(src);
                     });
             }
+
             if (files.length || forceBuild) {
                 loadBuild(build, files, cycleBuild++, forceBuild);
             }
@@ -240,8 +240,10 @@ const createDataDest = (options) => (file) => {
 /**
  * @typedef {Object} file - file registration in build
  * @property {string} src - source
- * @property {boolean}  root - Files declared as root are retrieved using getParents
  * @property {string[]} imported - Import relations
+ * @property {Promise<string>} [content] -
+ * @property {boolean}  [prevent] - Files declared as root are retrieved using getParents
+ * @property {boolean}  [root] - Files declared as root are retrieved using getParents
  * @property {import("./load-html/load-html-files").page} [page] - page data, it is created only from html or md documents
  */
 

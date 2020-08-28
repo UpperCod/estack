@@ -1,19 +1,26 @@
 import chokidar from "chokidar";
-
+/**
+ *
+ * @param {string[]} glob
+ * @param {*} listener
+ */
 export function createWatch(glob, listener) {
+    /**
+     * @type {{[file:string]:string}}
+     */
     let currentGroup;
 
-    let loadGroup = () => {
+    const loadGroup = () => {
         if (!currentGroup) {
             currentGroup = {};
             setTimeout(() => {
                 listener(currentGroup);
-                currentGroup = false;
+                currentGroup = null;
             }, 200);
         }
     };
 
-    let watcher = chokidar.watch(glob, { ignoreInitial: true });
+    const watcher = chokidar.watch(glob, { ignoreInitial: true });
 
     ["add", "change", "unlink"].map((type) => {
         watcher.on(type, (file) => {
