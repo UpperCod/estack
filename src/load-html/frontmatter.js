@@ -1,40 +1,42 @@
 import { getFragments, replaceFragments } from "@uppercod/str-fragment";
-import yamlParse from "@uppercod/yaml";
+import yaml from "js-yaml";
 
+/**
+ *
+ * @param {string} code
+ * @param {string} [filename]
+ */
+export const yamlLoad = (code, filename) => yaml.safeLoad(code, { filename });
 /**
  * Extract the meta snippet header
  * @param {string} file
  * @param {string} code
- * @param {plugins} plugins
- * @returns {Promise<[string,object]>}
+ * @returns {[string,object]}
  */
-export async function frontmatter(file, code, plugins) {
-    let meta = { __br: 0 };
-    let [fragment] = getFragments(code, {
+export function frontmatter(file, code) {
+    const [fragment] = getFragments(code, {
         open: /^---/m,
         end: /^---/m,
         equal: true,
     });
     if (fragment) {
-        let yaml;
-        let { open, end } = fragment;
+        let strValue;
+        const { open, end } = fragment;
+
         if (!open.indexOpen) {
             code = replaceFragments(code, [fragment], ({ content }) => {
-                yaml = content;
+                strValue = content;
                 return "";
             });
         }
-        meta = await yamlParse(
-            {
-                file,
-                code: yaml,
-            },
-            plugins
-        );
+        const meta = yamlLoad(strValue, file);
+        //@ts-ignore
         meta.__br = code.slice(0, end.indexEnd).split("\n").length;
+        //@ts-ignore
+        return [code, meta];
     }
 
-    return [code, meta];
+    return [code, { __br: 0 }];
 }
 
 /**

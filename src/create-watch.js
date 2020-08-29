@@ -1,12 +1,13 @@
 import chokidar from "chokidar";
 /**
  *
- * @param {string[]} glob
- * @param {*} listener
+ * @param {string|string[]} glob
+ * @param {(event:event)=>void} listener
+ * @returns {{add:(file:string)=>void}}
  */
 export function createWatch(glob, listener) {
     /**
-     * @type {{[file:string]:string}}
+     * @type {event}
      */
     let currentGroup;
 
@@ -31,3 +32,11 @@ export function createWatch(glob, listener) {
 
     return watcher;
 }
+
+/**
+ * @typedef {string[]} files
+ */
+
+/**
+ * @typedef {Object<string,files>} event
+ */

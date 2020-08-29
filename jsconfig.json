@@ -2,8 +2,7 @@
     "compilerOptions": {
       "allowSyntheticDefaultImports": true,
       "module": "esnext",
-      "target": "es5",
-      "lib": ["es2015", "es2017", "dom"],
+      "target": "esnext",
       "moduleResolution": "node",
       "rootDir": "src",
       "noImplicitAny": true,

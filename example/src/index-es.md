@@ -35,8 +35,6 @@ logo:
 
 ![Logo]({{page.logo.link}})
 
-<script src="{{'log.js'|asset}}" type="module"></script>
-
 <h1>text : {{page.liquid|json}}</h1>
 <h1>text : {{page.message1}}</h1>
 <h1>text : {{page.message2}}</h1>

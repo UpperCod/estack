@@ -23,6 +23,9 @@ import { loadBuild } from "./load-build";
  */
 export async function createBuild(options) {
     let cycleBuild = 0;
+    /**
+     * @type {{add:(file:string)=>void}}
+     */
     let watcher;
 
     /**@type {import("./create-server").server} */
@@ -34,6 +37,7 @@ export async function createBuild(options) {
     const cache = createCache();
     const getDataDest = createDataDest(options);
 
+    /**@type {Object<string|symbol,any>} */
     const refCache = {};
     /** @type {build["getRefCache"]} */
     const getRefCache = (id) => (refCache[id] = refCache[id] || {});
@@ -174,6 +178,11 @@ export async function createBuild(options) {
     return loadBuild(build, files, cycleBuild++);
 }
 
+/**
+ *
+ * @param {import("./load-options").options} options
+ * @returns {(file:string)=>dest}
+ */
 const createDataDest = (options) => (file) => {
     let { name, ext, dir, base } = path.parse(file);
 
@@ -184,6 +193,9 @@ const createDataDest = (options) => (file) => {
     const isIndex = typeHtml && name == "index";
 
     if (!options.assetsWithoutHash.test(ext)) {
+        /**
+         * @type {Object<string,string>}
+         */
         const data = {
             hash: hash(file),
             name,
@@ -276,9 +288,9 @@ const createDataDest = (options) => (file) => {
  * @property {fnFile<boolean>} isReservedFile - check if the file is reserved
  * @property {fnFile<boolean>} isAsset - check if the file is assets
  * @property {fnFile<dest>} getDest - check if the file is assets
- * @property {(id:string|symbol)=>object} getRefCache - Gets an object cache
+ * @property {(id:string|symbol)=>Object<string|symbol,any>} getRefCache - Gets an object cache
  * @property {(src:string,srcChild:string)=>void} addChildFile - relate the srcChild file to src
- * @property {(url:string)=>Promise<[string,string]>} request - Generate a request returning the url and body of this
+ * @property {(url:string)=>Promise<import("@uppercod/request").Return>} request - Generate a request returning the url and body of this
  * @property {import("./load-options").options} options
  * @property {import("./utils/logger").logger} logger
  * @property {fnFile<Promise<any>>} [addFileToQueque] - This method is only created in load-build.
