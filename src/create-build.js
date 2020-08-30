@@ -141,16 +141,27 @@ export async function createBuild(options) {
             if (group.change) {
                 group.change
                     .filter((src) => !isJs(src))
-                    .map((src) => {
-                        const roots = tree.getRoots(src);
-                        tree.remove(src);
-                        return roots;
-                    })
+                    .map(
+                        /**
+                         * @param {string} src
+                         * @returns {string[]}
+                         */
+                        (src) => {
+                            const roots = tree.getRoots(src);
+                            tree.remove(src);
+                            return roots;
+                        }
+                    )
                     .flat()
-                    .forEach((src) => {
-                        tree.remove(src);
-                        files.push(src);
-                    });
+                    .forEach(
+                        /**
+                         * @param {string} src
+                         */
+                        (src) => {
+                            tree.remove(src);
+                            files.push(src);
+                        }
+                    );
             }
 
             if (files.length || forceBuild) {

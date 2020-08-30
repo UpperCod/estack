@@ -16,6 +16,7 @@ sade("estack <mode> <src> [dest]")
     )
     .option("--sourcemap", "Enable the use of sourcemap", false)
     .option("--silent", "Prevents printing of logs", false)
+    .option("--postcss", "Prevents printing of logs")
     .option("--forceWrite", "Force writing files in development mode", false)
     .option(
         "--sizes",

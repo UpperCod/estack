@@ -10,25 +10,54 @@ export async function loadCss(build, cssFiles) {
     const parallel = {};
     await Promise.all(
         cssFiles.map(async (file) => {
-            let code = await load(
-                {
-                    code: await build.readFile(file),
-                    file,
-                },
-                [pluginImport({})],
-                parallel
-            );
-
-            for (const src in code.tree.tree) {
-                if (src != file) {
-                    build.addChildFile(file, src);
+            const css = await build.readFile(file);
+            /**@param {import("@uppercod/imported").Tree} tree */
+            const addChildren = (tree) => {
+                for (const src in tree) {
+                    if (src != file) {
+                        build.addChildFile(file, src);
+                    }
                 }
+            };
+            if (build.options.postcss) {
+                const [postcss, pluginImport] = await Promise.all([
+                    import("postcss"),
+                    import("@uppercod/postcss-import"),
+                ]);
+                //@ts-ignore
+                const result = await postcss([
+                    //@ts-ignore
+                    pluginImport(),
+                    ...build.options.postcssPlugins,
+                ]).process(css, {
+                    from: file,
+                });
+
+                addChildren(result.tree.tree);
+
+                return build.writeFile({
+                    dest: build.getDest(file).dest,
+                    code: result + "",
+                    type: "css",
+                });
+            } else {
+                const result = await load(
+                    {
+                        code: css,
+                        file,
+                    },
+                    [pluginImport({})],
+                    parallel
+                );
+
+                addChildren(result.tree.tree);
+
+                return build.writeFile({
+                    dest: build.getDest(file).dest,
+                    code: serialize(result.css, stringify),
+                    type: "css",
+                });
             }
-            return build.writeFile({
-                dest: build.getDest(file).dest,
-                code: serialize(code.css, stringify),
-                type: "css",
-            });
         })
     );
 }

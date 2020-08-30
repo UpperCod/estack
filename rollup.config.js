@@ -16,7 +16,11 @@ export default {
         freeze: false,
         interop: false,
     },
-    external: [...builtins, ...Object.keys(pkg.dependencies)],
+    external: [
+        ...builtins,
+        ...Object.keys(pkg.dependencies),
+        ...Object.keys(pkg.peerDependencies),
+    ],
     //treeshake: {
     //  moduleSideEffects: false,
     //  propertyReadSideEffects: false,

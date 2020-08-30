@@ -3,6 +3,7 @@ import builtins from "builtin-modules";
 
 import path from "path";
 import { getPackage } from "./utils/utils";
+import getProp from "@uppercod/get-prop";
 
 /**
  *
@@ -26,19 +27,21 @@ export async function loadOptions({
     proxy,
     port,
     hashAllAssets,
+    postcss,
 }) {
     let watch;
 
     if (silent) process.env.silent = "true";
-    let pkg = await getPackage();
+    const pkg = await getPackage();
 
     src = Array.isArray(src) ? src : src.split(/ *; */g);
     /**
      *
-     * @param {string} value
+     * @param {string[]} value
      */
-    let testHtml = (value) => ["html", "md"].some((ext) => value.includes(ext));
-    let withHtml = src.some((exp) =>
+    const testHtml = (value) =>
+        ["html", "md"].some((ext) => value.includes(ext));
+    const withHtml = src.some((exp) =>
         /\!/.test(exp)
             ? false
             : [/{([^}]+)}$/, /\.(\w+)$/].some((regExp) => {
@@ -88,7 +91,20 @@ export async function loadOptions({
     assetHashPattern =
         assetHashPattern || (mode == "dev" ? "[hash]-[name]" : "[hash]");
 
-    let assetsWithoutHash = hashAllAssets ? /\.html$/ : /\.(html|js|css)$/;
+    const assetsWithoutHash = hashAllAssets ? /\.html$/ : /\.(html|js|css)$/;
+    let postcssPlugins = [];
+    if (postcss) {
+        if (typeof postcss == "string") {
+            /**@type {Object<string,any>} */
+            const plugins = getProp(pkg, postcss, {});
+            postcssPlugins = await Promise.all(
+                Object.keys(plugins).map(async (name) => {
+                    const plugin = await import(name);
+                    return plugins[name] ? plugin(plugins[name]) : plugin;
+                })
+            );
+        }
+    }
 
     let options = {
         src,
@@ -105,6 +121,8 @@ export async function loadOptions({
         assetsWithoutHash,
         watch,
         server,
+        postcss,
+        postcssPlugins,
         virtual: !forceWrite && watch && server ? true : false,
         jsx: jsx == "react" ? "React.createElement" : jsx,
         jsxFragment: jsx == "react" ? "React.Fragment" : jsxFragment,
@@ -139,5 +157,7 @@ export async function loadOptions({
  * @property {string} [assetHashPattern]
  * @property {RegExp} [assetsWithoutHash]
  * @property {string} [assetsDir]
+ * @property {string} [postcss]
+ * @property {any} [postcssPlugins]
  * @property {number} [port]
  */
