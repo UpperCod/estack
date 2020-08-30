@@ -1,4 +1,4 @@
-@import "b.css";
+@import "b.css" (as: b);
 body {
-    background: red;
+    @use b.body;
 }

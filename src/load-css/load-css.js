@@ -15,7 +15,7 @@ export async function loadCss(build, cssFiles) {
                     code: await build.readFile(file),
                     file,
                 },
-                [pluginImport()],
+                [pluginImport({})],
                 parallel
             );
 
@@ -24,12 +24,9 @@ export async function loadCss(build, cssFiles) {
                     build.addChildFile(file, src);
                 }
             }
-
-            code = serialize(code.css, stringify);
-
             return build.writeFile({
                 dest: build.getDest(file).dest,
-                code,
+                code: serialize(code.css, stringify),
                 type: "css",
             });
         })

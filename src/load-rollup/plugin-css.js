@@ -14,7 +14,6 @@ export let pluginImportCss = (build) => ({
     },
     async transform(code, id) {
         if (isCss(id)) {
-            /**@type {{css:any[],tree:object}} */
             const root = await load(
                 {
                     code,

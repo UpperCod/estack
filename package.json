@@ -68,7 +68,7 @@
         "sade": "^1.7.3",
         "sirv": "^0.4.2",
         "stylis": "^4.0.1",
-        "stylis-pack": "^1.1.0",
+        "stylis-pack": "^1.2.3",
         "terser": "^4.8.0"
     },
     "optionalDependencies": {
