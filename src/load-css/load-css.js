@@ -1,6 +1,7 @@
 import { load } from "stylis-pack/load";
 import { pluginImport } from "stylis-pack/plugin-import";
 import { serialize, stringify } from "stylis";
+import { loadPostcss } from "./load-postcss";
 /**
  * Load css allows to process groups of Css files in parallel.
  * @param {import("../create-build").build} build
@@ -20,18 +21,11 @@ export async function loadCss(build, cssFiles) {
                 }
             };
             if (build.options.postcss) {
-                const [postcss, pluginImport] = await Promise.all([
-                    import("postcss"),
-                    import("@uppercod/postcss-import"),
-                ]);
-                //@ts-ignore
-                const result = await postcss([
-                    //@ts-ignore
-                    pluginImport(),
-                    ...build.options.postcssPlugins,
-                ]).process(css, {
-                    from: file,
-                });
+                const result = await loadPostcss(
+                    file,
+                    css,
+                    build.options.postcssPlugins
+                );
 
                 addChildren(result.tree.tree);
 
