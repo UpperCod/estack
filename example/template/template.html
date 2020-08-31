@@ -1,0 +1,28 @@
+---
+template: default
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{page.title}}</title>
+    <!--head-->
+    {{ './template.css' | asset: tag:true }}
+    {{ './components/doc-tabs/doc-tabs.tsx' | asset: tag:true }}
+</head>
+<body>
+    {% fragment "template-header" with header: page.site.links.header %}
+    <section class="estackContent">
+        <header class="estackContent-space">
+            <h1 class="hero">{{page.title}}</h1>
+            <p class="hero">{{page.description}}</p>
+        </header>
+        <article class="estackContent-space estackContent_inner">
+            {{page.content}}
+        </article>
+    </section>
+    {% fragment "template-footer" %}
+    <!--footer-->
+</body>
+</html>

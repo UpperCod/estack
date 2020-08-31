@@ -32,4 +32,4 @@ export let isJs = (file) => /\.(js|ts|jsx|tsx)$/.test(file);
  * Determine if the file has the extension .css
  * @param {string} file
  */
-export let isCss = (file) => /\.css$/.test(file);
+export let isCss = (file) => /\.(css|scss)$/.test(file);

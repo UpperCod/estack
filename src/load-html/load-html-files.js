@@ -73,9 +73,11 @@ export function loadHtmlFiles(build, htmlFiles) {
 
                 name = data.slug || name;
 
-                let { link: _link = "", folder = "" } = data;
+                let { link: _link = "", permalink, folder = "" } = data;
 
                 let dataFile;
+
+                _link = _link || permalink;
 
                 if (_link) {
                     _link +=
@@ -126,16 +128,16 @@ const createError = (error, file) =>
 
 /**
  * @typedef {Object} query
- * @property {{[index:string]:any}} where - query to match
+ * @property {Object<string,any>} find - query to match
  * @property {number} [limit] - page limits per page
- * @property {string} [sort] - page limits per page
- * @property {1|-1} [order] - page order is ascending(1) or decent(-1)
+ * @property {Object<string,number>} [sort] - page limits per page
  */
 
 /**
  * @typedef {Object} data - Page data interface, This is public for the template
  * @property {boolean} [draft] -
  * @property {string} [content] - page content, hmlt or md.
+ * @property {string} [permalink] - name as page file slug
  * @property {string} [slug] - name as page file slug
  * @property {string} [folder] - name as page file slug
  * @property {string} [name] - name as page file slug

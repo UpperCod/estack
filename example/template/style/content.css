@@ -1,0 +1,33 @@
+@import "https://raw.githubusercontent.com/PrismJS/prism-themes/master/themes/prism-a11y-dark.css";
+.estackContent {
+    max-width: 920px;
+    box-sizing: border-box;
+    margin: auto;
+    padding: 7.5rem 0px 3.25rem;
+    &-space {
+        padding-left: var(--estack_boxSpaceX);
+        padding-right: var(--estack_boxSpaceX);
+    }
+    &_inner {
+        padding-top: var(--estack_boxSpaceY);
+        padding-bottom: var(--estack_boxSpaceY);
+        background: var(--estack_bg);
+        border-radius: var(--estack_radio);
+
+        em {
+            color: cornflowerblue;
+        }
+    }
+}
+.markdown-code-container {
+    background: var(--estack_bgCode);
+    border-radius: 10px;
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow: auto;
+}
+
+doc-tabs {
+    --docTabs-bgcolor: var(--estack_bgCode);
+    --docTabs_btn-inactive: #16141b;
+}

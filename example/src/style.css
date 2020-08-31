@@ -1,4 +1,0 @@
-@import "b.css" (as: b);
-body {
-    @use b.body;
-}

@@ -1,0 +1,10 @@
+$global: lang
+links:
+    header:
+        - $link: ./doc/frontmatter/frontmatter.md
+        - link: "#"
+          linkTitle: Template
+        - link: "#"
+          linkTitle: Assets
+        - link: "#"
+          linkTitle: CLI

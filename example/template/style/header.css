@@ -1,0 +1,23 @@
+.estackHeader {
+    width: 100%;
+    height: auto;
+    display: flex;
+    min-height: 50px;
+    &_link {
+        font-size: 0.875rem;
+        padding: 0.5rem;
+        letter-spacing: 1px;
+    }
+    &_col {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 0%;
+        &-left {
+            justify-content: flex-start;
+        }
+        &-right {
+            justify-content: flex-end;
+        }
+    }
+}

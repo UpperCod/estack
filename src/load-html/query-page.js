@@ -1,16 +1,16 @@
 import getProp from "@uppercod/get-prop";
+
+const defSort = { date: -1 };
 /**
  *
  * @param {Object[]} pages - collection of pages
  * @param {import("./load-html-files").query} query
  * @param {boolean} [onlyPages] - Avoid grouping by pages and return only the pages
  */
-export function queryPages(
-    pages,
-    { where, sort = "date", limit, order = -1 },
-    onlyPages
-) {
-    let keys = Object.keys(where);
+export function queryPages(pages, { find, sort = defSort, limit }, onlyPages) {
+    const keysFind = Object.keys(find);
+    const [indexSort] = Object.keys(sort);
+    const orderSort = sort[indexSort];
     let item;
     let size = 0;
     let currentPaged = 0;
@@ -18,12 +18,14 @@ export function queryPages(
 
     pages = pages
         .filter((page) =>
-            keys.every((prop) =>
-                [].concat(getProp(page, prop)).includes(where[prop])
+            keysFind.every((prop) =>
+                [].concat(getProp(page, prop)).includes(find[prop])
             )
         )
         .sort((a, b) =>
-            getProp(a, sort) > getProp(b, sort) ? order : order * -1
+            getProp(a, indexSort) > getProp(b, indexSort)
+                ? orderSort
+                : orderSort * -1
         );
 
     if (onlyPages) {

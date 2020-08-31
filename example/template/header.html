@@ -1,0 +1,15 @@
+---
+fragment: template-header
+title: fragment?
+---
+<header class="estackHeader">
+    <div class="estackHeader_col"></div>
+    <div class="estackHeader_col">
+        {% for item in header %}
+            <a class="estackHeader_link" href="{{item.link}}">{{item.linkTitle}}</a>
+        {% endfor %}
+    </div>
+    <div class="estackHeader_col"></div>
+</header>
+
+

@@ -1,0 +1,70 @@
+:host {
+    display: block;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    --docTabs_btn-color: white;
+    --docTabs_btn-padding: 12px 20px 8px;
+    --docTabs_btn-inactive: #404040;
+    --docTabs_btn-radio: 8px;
+    --docTabs_btn-fontSize: 0.9em;
+    --docTabs-bgcolor: #2b2b2b;
+    border-radius: 0.9rem;
+    background: var(--docTabs-bgcolor);
+}
+
+.slides {
+    display: flex;
+}
+.slide {
+    max-width: 100%;
+    min-width: 100%;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+.header {
+    display: flex;
+    margin-bottom: 10px;
+    position: relative;
+    overflow-x: auto;
+}
+.header_line {
+    position: absolute;
+    width: 100%;
+    height: 10px;
+    background: var(--docTabs_btn-inactive);
+}
+.header_fill {
+    flex: 0%;
+    background: var(--docTabs_btn-inactive);
+    transition: 0.3s ease all;
+}
+
+.button {
+    background: transparent;
+    color: var(--docTabs_btn-color);
+    padding: var(--docTabs_btn-padding);
+    border: none;
+    transition: 0.3s ease all;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    background: var(--docTabs_btn-inactive);
+    outline: none;
+    font-size: var(--docTabs_btn-fontSize);
+    &-active {
+        --radio: calc(var(--docTabs_btn-radio) * 1.5);
+        opacity: 1;
+        background: transparent;
+        border-radius: var(--radio) var(--radio) 0px 0px;
+        background: var(--docTabs-bgcolor);
+    }
+    &-active + .header_fill,
+    &-next {
+        border-radius: 0px 0px 0px var(--docTabs_btn-radio);
+    }
+    &-prev {
+        border-radius: 0px 0px var(--docTabs_btn-radio) 0px;
+    }
+}
