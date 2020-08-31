@@ -69,17 +69,16 @@ export function loadPages(build) {
      */
     const addPage = (page) => {
         const { data } = page;
-        const { link, symlink } = data;
+        const { link } = data;
 
-        if (pages[link] || pages[symlink]) {
+        if (pages[link]) {
             let refPage = pages[link] || pages[link];
             build.logger.debug(
-                `${ERROR_DUPLICATE_ID} identifiers [symlink] or [link] must be unique, ${refPage.data.file} ${data.file}`,
+                `${ERROR_DUPLICATE_ID} identifiers "page.link" must be unique, ${refPage.data.file} ${data.file}`,
                 MARK_ROOT
             );
         } else {
             pages[link] = page;
-            if (symlink) pages[symlink] = page;
             page.ref = {
                 ...data,
                 content: null,
@@ -194,7 +193,7 @@ export function loadPages(build) {
                      * @example
                      * singlePage : index
                      */
-                    let id = page.symlink || page.link;
+                    let id = page.link;
                     if (layout.singlePage && layout.singlePage !== id) {
                         return;
                     }
@@ -299,7 +298,6 @@ function resolveArchive(build, pages, page, addPage) {
             ...page,
             data: {
                 ...data,
-                symlink: paged == 0 && data.symlink,
                 link,
                 archive: {
                     paged,

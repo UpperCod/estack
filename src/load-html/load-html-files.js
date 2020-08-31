@@ -152,7 +152,6 @@ const createError = (error, file) =>
  * @property {string} [linkTitle] - page source file name
  * @property {string} [file] - page source file name
  * @property {string} [link] - name of access to the page as link
- * @property {string} [symlink] - symbolic page link, this allows access to the page through this alias, using the links property the template
  * @property {string} [fragment] - declare if the page is of type fragment
  * @property {string} [template] - declare if the page is of type template
  * @property {string} [singlePage] - declare if the page is of type template
