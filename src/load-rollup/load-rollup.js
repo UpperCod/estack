@@ -104,7 +104,7 @@ export async function loadRollup(build, jsFiles) {
                 },
             },
             pluginImportCss(build),
-            ...plugins(options),
+            ...(await plugins(options)),
         ],
     };
     /**@type {{dir:string,format:"es",sourcemap:boolean}} */

@@ -4,15 +4,15 @@ import common from "@rollup/plugin-commonjs/dist";
 import sucrase from "@rollup/plugin-sucrase";
 import replace from "@rollup/plugin-replace";
 import { pluginTerser } from "./plugin-terser";
-import typescript from "@rollup/plugin-typescript";
 
 let extensions = [".js", ".jsx", ".ts", ".tsx"];
 
 /**
  *
  * @param {import("../load-options").options} options
+ * @returns {Promise<any[]>}
  */
-export function plugins(options) {
+export async function plugins(options) {
     let optionalPlugins = [];
 
     if (options.minify) {
@@ -20,7 +20,7 @@ export function plugins(options) {
     }
 
     if (options.typescript) {
-        optionalPlugins.push(typescript());
+        optionalPlugins.push(await import("@rollup/plugin-typescript"));
     }
 
     return [

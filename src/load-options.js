@@ -81,9 +81,8 @@ export async function loadOptions({
 
     let postcssPlugins = [];
 
-    const ts = "typescript";
-    const typescript =
-        devDependencies[ts] || dependencies[ts] || peerDependencies[ts];
+    const ts = "@rollup/plugin-typescript";
+    const typescript = devDependencies[ts] || dependencies[ts];
 
     if (postcss) {
         if (typeof postcss == "string") {
