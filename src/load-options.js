@@ -34,26 +34,12 @@ export async function loadOptions({
     if (silent) process.env.silent = "true";
     const pkg = await getPackage();
 
-    src = Array.isArray(src) ? src : src.split(/ *; */g);
-    /**
-     *
-     * @param {string[]} value
-     */
-    const testHtml = (value) =>
-        ["html", "md"].some((ext) => value.includes(ext));
-    const withHtml = src.some((exp) =>
-        /\!/.test(exp)
-            ? false
-            : [/{([^}]+)}$/, /\.(\w+)$/].some((regExp) => {
-                  /**@type {string[]} */
-                  const test = exp.match(regExp);
-                  if (test) {
-                      let [, value] = test;
+    const { dependencies, devDependencies, peerDependencies } = pkg;
 
-                      return testHtml(value.split(/ *, */));
-                  }
-              })
-    );
+    src = Array.isArray(src) ? src : src.split(/ *; */g);
+
+    const withHtml = useHtml(src);
+
     if (withHtml) {
         assetsDir = assetsDir == null ? "assets" : assetsDir;
         hashAllAssets = hashAllAssets == null ? true : hashAllAssets;
@@ -78,21 +64,27 @@ export async function loadOptions({
         external = Array.isArray(external)
             ? external
             : [true, "true"].includes(external)
-            ? Object.keys(pkg.dependencies)
+            ? Object.keys(dependencies)
             : external.split(/ *, */);
     }
 
     external = [
         ...builtins,
         ...(external || []),
-        ...Object.keys(pkg.peerDependencies),
+        ...Object.keys(peerDependencies),
     ];
 
     assetHashPattern =
         assetHashPattern || (mode == "dev" ? "[hash]-[name]" : "[hash]");
 
     const assetsWithoutHash = hashAllAssets ? /\.html$/ : /\.(html|js|css)$/;
+
     let postcssPlugins = [];
+
+    const ts = "typescript";
+    const typescript =
+        devDependencies[ts] || dependencies[ts] || peerDependencies[ts];
+
     if (postcss) {
         if (typeof postcss == "string") {
             /**@type {Object<string,any>} */
@@ -126,6 +118,7 @@ export async function loadOptions({
         virtual: !forceWrite && watch && server ? true : false,
         jsx: jsx == "react" ? "React.createElement" : jsx,
         jsxFragment: jsx == "react" ? "React.Fragment" : jsxFragment,
+        typescript,
     };
 
     // normalize routes for fast-glob
@@ -133,6 +126,32 @@ export async function loadOptions({
 
     return options;
 }
+
+/**
+ *
+ * @param {string[]} value
+ */
+const testHtml = (value) => ["html", "md"].some((ext) => value.includes(ext));
+
+/**
+ *
+ * @param {string[]} src
+ * @returns {boolean}
+ */
+const useHtml = (src) =>
+    src.some((exp) =>
+        /\!/.test(exp)
+            ? false
+            : [/{([^}]+)}$/, /\.(\w+)$/].some((regExp) => {
+                  /**@type {string[]} */
+                  const test = exp.match(regExp);
+                  if (test) {
+                      let [, value] = test;
+
+                      return testHtml(value.split(/ *, */));
+                  }
+              })
+    );
 
 /**
  * @typedef {Object} options
@@ -146,6 +165,7 @@ export async function loadOptions({
  * @property {string} [jsxFragment]
  * @property {boolean} [forceWrite]
  * @property {boolean} [silent]
+ * @property {boolean} [typescript]
  * @property {string} [href]
  * @property {string} [proxy]
  * @property {boolean|string} [server]

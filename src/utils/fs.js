@@ -69,6 +69,7 @@ export async function copyFile(src, dest) {
 
 /**
  * Read a package.json from the bin execution source
+ * @returns {Promise<package>}
  */
 export async function getPackage() {
     try {
@@ -80,3 +81,14 @@ export async function getPackage() {
         return { ...pkgDefault };
     }
 }
+
+/**
+ * @typedef {Object<string,string>} dependencies
+ */
+
+/**
+ * @typedef {Object} package
+ * @property {dependencies} dependencies
+ * @property {dependencies} devDependencies
+ * @property {dependencies} peerDependencies
+ */
