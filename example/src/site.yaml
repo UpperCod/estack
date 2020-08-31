@@ -1,4 +1,3 @@
-$global: lang
 links:
     header:
         - $link: ./doc/frontmatter/frontmatter.md

@@ -1,4 +1,5 @@
 ---
+$global: en
 title: EStack generador de sitios estatico moderno
 description: EStack orqueta assets.
 site:

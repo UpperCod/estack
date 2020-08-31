@@ -19,20 +19,40 @@ import {
  */
 export function loadPages(build) {
     //The templates files are virtual, these can be referred
-    //by a file that declares layour for use of this
+    //by a file that declares layour for use of this.
+    /**
+     * @type {Object<string,page>}
+     */
     const templates = {};
 
+    /**
+     * @type {Object<string,page>}
+     */
     const fragments = {};
     //The files are virtual and it allows to generate a query
     //on the pages in order to create page collections
+    /**
+     * @type {any[]}
+     */
     const archives = [];
     // stores the content of the pages already resolved
 
+    /**
+     * @type {Map<data["query"],any[]>}
+     */
     const queries = new Map();
 
+    /**
+     * @type {Object<string,page>}
+     */
     const pages = {};
 
     const links = new Proxy(pages, {
+        /**
+         *
+         * @param {Object<string,page>} obj
+         * @param {string} prop
+         */
         get(obj, prop) {
             if (obj[prop]) {
                 return obj[prop].ref;
@@ -40,8 +60,13 @@ export function loadPages(build) {
         },
     });
 
+    /**@type {any[]} */
     const pagesData = [];
 
+    /**
+     *
+     * @param {page} page
+     */
     const addPage = (page) => {
         const { data } = page;
         const { link, symlink } = data;
@@ -90,7 +115,10 @@ export function loadPages(build) {
     });
 
     queries.forEach((pages, query) => {
-        let results = {};
+        /**
+         * @type {Object<string,page[]>}
+         */
+        const results = {};
         for (let prop in query) {
             let value = query[prop];
             results[prop] = queryPages(pagesData, value, true);
@@ -111,6 +139,7 @@ export function loadPages(build) {
         let _layout = templates[layout == null ? "default" : layout];
 
         let pageData = {
+            global: build.global,
             links,
             pkg: build.options.pkg,
             build: !build.options.watch,
@@ -122,7 +151,11 @@ export function loadPages(build) {
             [DATA_FRAGMENTS]: fragments,
             [DATA_LAYOUT]: _layout,
             [DATA_PAGE]: _page,
+            /**
+             * @type {Object<string,string[]>}
+             */
             [PAGE_ASSETS]: {},
+            [FROM_LAYOUT]: false,
         };
 
         try {
@@ -179,6 +212,10 @@ export function loadPages(build) {
                         dest: _page.dest,
                         code: content.replace(
                             /<!-- *(\w+) *-->/,
+                            /**
+                             * @param {string} all
+                             * @param {string} type
+                             */
                             (all, type) => {
                                 if (_pageAssets[type]) {
                                     return _pageAssets[type].join("");
@@ -194,6 +231,12 @@ export function loadPages(build) {
     );
 }
 
+/**
+ *
+ * @param {string} error
+ * @param {data} data
+ * @param {number} [diffLine]
+ */
 const createError = (error, { file, __br }, diffLine = 0) =>
     error.replace(
         /(RenderError|ParseError:)(?:.+), *line:(\d+), *col:(\d+)/,
@@ -229,7 +272,10 @@ function resolveArchive(build, pages, page, addPage) {
             paged == 0
                 ? { dest: page.dest, link: data.link }
                 : build.getDest(file);
-
+        /**
+         *
+         * @param {number} position
+         */
         const createPosition = (position) => {
             position = position < 0 ? 0 : position > length ? length : position;
             return {
@@ -267,3 +313,11 @@ function resolveArchive(build, pages, page, addPage) {
         });
     });
 }
+
+/**
+ * @typedef {import("./load-html-files").data} data
+ */
+
+/**
+ * @typedef {import("./load-html-files").page & {ref?:data}} page
+ */

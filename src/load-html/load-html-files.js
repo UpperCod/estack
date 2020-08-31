@@ -57,6 +57,12 @@ export function loadHtmlFiles(build, htmlFiles) {
                     {
                         $link: $link(build, addFile),
                         $ref: $ref(build),
+                        async $global({ value, root, file: _file }) {
+                            if (_file == file) {
+                                build.global[value] = root;
+                            }
+                            return {};
+                        },
                     }
                 );
 
@@ -135,6 +141,7 @@ const createError = (error, file) =>
 
 /**
  * @typedef {Object} data - Page data interface, This is public for the template
+ * @property {number} [__br]
  * @property {boolean} [draft] -
  * @property {string} [content] - page content, hmlt or md.
  * @property {string} [permalink] - name as page file slug
@@ -148,6 +155,7 @@ const createError = (error, file) =>
  * @property {string} [symlink] - symbolic page link, this allows access to the page through this alias, using the links property the template
  * @property {string} [fragment] - declare if the page is of type fragment
  * @property {string} [template] - declare if the page is of type template
+ * @property {string} [singlePage] - declare if the page is of type template
  * @property {string|boolean} [layout] - declare if the page is of type layout, so it depends on a template
  * @property {query} [archive] - declare if the page will create a list of archives
  * @property {{[index:string]: query}} [query] - declare if the page will create a list of archives

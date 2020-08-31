@@ -14,6 +14,9 @@ export function queryPages(pages, { find, sort = defSort, limit }, onlyPages) {
     let item;
     let size = 0;
     let currentPaged = 0;
+    /**
+     * @type {any[]}
+     */
     let collection = [];
 
     pages = pages

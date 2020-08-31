@@ -106,6 +106,7 @@ export async function createBuild(options) {
 
     /**@type {build} */
     const build = {
+        global: {},
         options,
         getFile,
         addFile,
@@ -304,5 +305,6 @@ const createDataDest = (options) => (file) => {
  * @property {(url:string)=>Promise<import("@uppercod/request").Return>} request - Generate a request returning the url and body of this
  * @property {import("./load-options").options} options
  * @property {import("./utils/logger").logger} logger
+ * @property {Object<string,any>} global
  * @property {fnFile<Promise<any>>} [addFileToQueque] - This method is only created in load-build.
  */
