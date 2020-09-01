@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "moduleResolution":"Node",
+    "module": "ES6",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "outDir":"./dest"
+  },
+  "include": ["src2/**/*","types.d.ts"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
+  }
