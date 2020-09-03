@@ -1,6 +1,6 @@
 import * as chokidar from "chokidar";
 
-interface Group {
+export interface Group {
     add?: string[];
     change?: string[];
     unlink?: string[];
@@ -35,9 +35,11 @@ export function createWatch({ glob, listener, delay, normalize }: Options) {
     ["add", "change", "unlink"].map((type: keyof Group) => {
         watcher.on(type, (file) => {
             loadGroup();
-            (currentGroup[type] = currentGroup[type] || []).push(
-                normalize ? normalize(file) : file
-            );
+            currentGroup[type] = currentGroup[type] || [];
+            file = normalize ? normalize(file) : file;
+            if (!currentGroup[type].includes(file)) {
+                currentGroup[type].push(file);
+            }
         });
     });
 

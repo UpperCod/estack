@@ -1,10 +1,7 @@
 import { File, PageData } from "@estack/core";
 import { frontmatter } from "./frontmatter";
-import createCache from "@uppercod/cache";
 import { loadData } from "../data/load-data";
 import { normalizePath } from "../../utils";
-
-const cache = createCache();
 
 export async function loadFile(rootFile: File): Promise<void> {
     const [html, metadata] = frontmatter(rootFile.src, await rootFile.read());
@@ -12,7 +9,7 @@ export async function loadFile(rootFile: File): Promise<void> {
 
     copyRootFile.read = () => Promise.resolve(metadata);
 
-    const data: PageData = await loadData(copyRootFile);
+    const data: PageData = metadata ? {} : await loadData(copyRootFile);
 
     let { link = "", folder = "", permalink, slug, content: _content } = data;
 

@@ -6,7 +6,11 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
-    "outDir":"./dest"
+    "outDir":"./dest",
+    "target": "ESnext",
+    "lib": [
+      "es2019"
+    ]
   },
   "include": ["src2/**/*","types.d.ts"],
   "exclude": ["node_modules", "**/*.spec.ts"]

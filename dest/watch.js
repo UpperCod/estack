@@ -1,21 +1,24 @@
 import * as chokidar from "chokidar";
-export function createWatch(_a) {
-    var glob = _a.glob, listener = _a.listener, delay = _a.delay, normalize = _a.normalize;
-    var currentGroup;
-    var loadGroup = function () {
+export function createWatch({ glob, listener, delay, normalize }) {
+    let currentGroup;
+    const loadGroup = () => {
         if (!currentGroup) {
             currentGroup = {};
-            setTimeout(function () {
+            setTimeout(() => {
                 listener(currentGroup);
                 currentGroup = null;
             }, delay || 200);
         }
     };
-    var watcher = chokidar.watch(glob, { ignoreInitial: true });
-    ["add", "change", "unlink"].map(function (type) {
-        watcher.on(type, function (file) {
+    const watcher = chokidar.watch(glob, { ignoreInitial: true });
+    ["add", "change", "unlink"].map((type) => {
+        watcher.on(type, (file) => {
             loadGroup();
-            (currentGroup[type] = currentGroup[type] || []).push(normalize ? normalize(file) : file);
+            currentGroup[type] = currentGroup[type] || [];
+            file = normalize ? normalize(file) : file;
+            if (!currentGroup[type].includes(file)) {
+                currentGroup[type].push(file);
+            }
         });
     });
     return watcher;

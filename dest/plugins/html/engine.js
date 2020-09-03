@@ -1,14 +1,12 @@
 import { Liquid } from "liquidjs";
 import createCache from "@uppercod/cache";
 export function createEngine() {
-    var cache = createCache();
-    var engine = new Liquid({
+    const cache = createCache();
+    const engine = new Liquid({
         cache: true,
-        dynamicPartials: false
+        dynamicPartials: false,
     });
-    var parse = function (template) { return engine.parse(template); };
-    return function (template, data) {
-        return engine.render(cache(parse, template), data);
-    };
+    const parse = (template) => engine.parse(template);
+    return (template, data) => engine.render(cache(parse, template), data);
 }
 //# sourceMappingURL=engine.js.map

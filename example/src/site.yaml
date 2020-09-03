@@ -1,3 +1,5 @@
+age:
+    $ref: ./doc/frontmatter/sub.yaml
 links:
     header:
         - $link: ./doc/frontmatter/frontmatter.md

@@ -5,7 +5,7 @@ import getProp from "@uppercod/get-prop";
 import { request } from "@uppercod/request";
 import { safeLoad } from "js-yaml";
 
-import { isUrl } from "../../types";
+import { isUrl, isHtml } from "../../types";
 
 const yamlLoad = (code: string, src: string) =>
     safeLoad(code, { filename: src });
@@ -22,7 +22,10 @@ export async function loadData(rootFile: File) {
                 value: yamlLoad(value, rootFile.src),
             },
             {
-                async $ref({ value, root }, { addChild, load }) {
+                async $link({ value }) {
+                    return rootFile.addLink(value);
+                },
+                async $ref({ value, root }) {
                     let data = root;
                     const [, src, prop]: string[] = value.match(
                         /([^#|~]*)(?:(?:#|~)(?:\/){0,1}(.*)){0,1}/

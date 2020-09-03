@@ -34,7 +34,11 @@ export async function createServer(options: Options): Promise<Context> {
             const mime = getType(file.type);
             if (file.assigned && typeof file.content == "string") {
                 res.writeHead(200, { "Content-Type": mime + ";charset=utf-8" });
-                res.end(file.content);
+                res.end(
+                    file.type == "html"
+                        ? livereload.addScriptLiveReload(file.content)
+                        : file.content
+                );
             } else {
                 const readStream = createReadStream(file.src);
                 readStream.on("open", () => {

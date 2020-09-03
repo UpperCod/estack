@@ -30,7 +30,7 @@ export function createLiveReload(path: string, port: number) {
     const addScriptLiveReload = (code: string) =>
         (code += `
         <script>{
-        let source = new EventSource('http://localhost:${port}/${path}');
+        let source = new EventSource('http://localhost:${port}${path}');
         source.onmessage = e =>  setTimeout(()=>location.reload(),250);
         }</script>
     `);

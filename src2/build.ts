@@ -1,7 +1,7 @@
 import { File, Build, Plugin } from "@estack/core";
 import * as path from "path";
 import { readFile } from "fs/promises";
-import createTree from "@uppercod/imported";
+import createTree, { Context } from "@uppercod/imported";
 import glob from "fast-glob";
 import { load } from "./load";
 import { pluginHtml } from "./plugins/html";
@@ -9,7 +9,10 @@ import { pluginData } from "./plugins/data";
 import { pluginServer } from "./plugins/server";
 import { normalizePath } from "./utils";
 import { createDataDest } from "./link";
-import { createWatch } from "./watch";
+import { createWatch, Group } from "./watch";
+import { isHtml } from "./types";
+
+type Cycle = (listSrc: string[]) => Promise<void>;
 
 export async function createBuild(src: string) {
     const listSrc = await glob(src);
@@ -44,11 +47,32 @@ export async function createBuild(src: string) {
                 join: (src: string) => path.join(file.raw.dir, src),
                 async addChild(src: string) {
                     src = getSrc(file.join(src));
-                    if (!build.hasFile(src)) {
+                    const exist = build.hasFile(src);
+                    tree.addChild(file.src, src);
+                    if (!exist) {
+                        watcher.add(src);
                         await load(build, [src]);
-                        tree.addChild(file.src, src);
                     }
                     return build.getFile(src);
+                },
+                async addLink(src: string) {
+                    if (isHtml(src)) {
+                        const nextSrc = file.join(src);
+                        return {
+                            get link() {
+                                return getFile(nextSrc).link;
+                            },
+                            get linkTitle() {
+                                return getFile(nextSrc).data.linkTitle;
+                            },
+                        };
+                    } else {
+                        const {
+                            link,
+                            raw: { base: linkTitle },
+                        } = await file.addChild(src);
+                        return { link, linkTitle };
+                    }
                 },
                 setLink(...args: string[]): string {
                     const link = normalizePath(path.join(...args));
@@ -89,7 +113,7 @@ export async function createBuild(src: string) {
 
     await pluginsCall("mounted");
 
-    const cycle = async (listSrc: string[]) => {
+    const cycle: Cycle = async (listSrc: string[]) => {
         await pluginsCall("beforeLoad");
         await load(build, listSrc, true);
         await pluginsCall("afterLoad");
@@ -97,11 +121,41 @@ export async function createBuild(src: string) {
 
     const watcher = createWatch({
         glob: src,
-        listener(group) {
-            if (group.change) {
-            }
-        },
+        listener: createListenerWatcher(tree, cycle),
     });
 
     cycle(listSrc);
 }
+
+const createListenerWatcher = (tree: Context, cycle: Cycle) => (
+    group: Group
+) => {
+    let files: string[] = [];
+    const { unlink = [] } = group;
+    if (group.change) {
+        const change = group.change
+            .map((src): string[] => {
+                if (tree.has(src)) {
+                    const roots = tree.getRoots(src);
+                    unlink.push(src, ...roots);
+                    return roots;
+                }
+                return [];
+            })
+            .flat();
+
+        files.push(...change);
+    }
+
+    if (unlink) {
+        unlink.forEach((src) => tree.remove(src));
+    }
+
+    if (group.add) {
+        files.push(...group.add);
+    }
+
+    if (files.length) {
+        cycle(files);
+    }
+};

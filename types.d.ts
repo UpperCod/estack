@@ -3,6 +3,11 @@ declare module "@estack/core" {
         [index: string]: any;
     }
 
+    export interface Link extends FillData {
+        link: string;
+        linkTitle: string;
+    }
+
     export interface Build {
         addFile(src: string, isRoot?: boolean): File;
         hasFile(src: string): boolean;
@@ -56,6 +61,7 @@ declare module "@estack/core" {
         join(src: string): string;
         setLink(...src: string[]): string;
         addError(message: string): void;
+        addLink(src: string): Promise<Link>;
     }
 
     export type File = Partial<PropsFile>;

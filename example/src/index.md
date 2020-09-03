@@ -2,9 +2,15 @@
 $global: en
 title: EStack generador de sitios estatico moderno
 description: EStack orqueta assets.
+logo:
+    $link: logo-black.svg
 site:
     $ref: site.yaml
 ---
+
+<img src="{{page.logo.link}}"/>
+
+<h1>{{page.title}} ??</h1>
 
 Estack es una sola dependencia que empaqueta y sincronziar una serie de herramientas para un desarrollo moderno, agil y escalable.
 

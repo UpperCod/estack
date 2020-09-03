@@ -44,7 +44,7 @@
         "@uppercod/get-prop": "^1.0.0",
         "@uppercod/hash": "^1.0.0",
         "@uppercod/imported": "^1.2.1",
-        "@uppercod/map-object": "^1.1.0",
+        "@uppercod/map-object": "^1.1.1",
         "@uppercod/normalize-indentation": "^1.0.0",
         "@uppercod/request": "^1.1.2",
         "@uppercod/str-fragment": "^1.1.1",

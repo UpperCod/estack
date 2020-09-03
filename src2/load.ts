@@ -4,7 +4,7 @@ export async function load(build: Build, listSrc: string[], isRoot?: boolean) {
     const currentFiles: Files = listSrc.reduce((currentFiles: Files, src) => {
         const nextSrc = build.getSrc(src);
         if (!build.isAssigned(nextSrc)) {
-            currentFiles[nextSrc] = build.addFile(nextSrc);
+            currentFiles[nextSrc] = build.addFile(nextSrc, isRoot);
         }
         return currentFiles;
     }, {});
