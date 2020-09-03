@@ -81,7 +81,7 @@ export function loadData(rootFile) {
                                                     return [3, 5];
                                                 case 2:
                                                     if (!src) return [3, 5];
-                                                    return [4, rootFile.addChild(rootFile.join(src))];
+                                                    return [4, rootFile.addChild(src)];
                                                 case 3:
                                                     result = _e.sent();
                                                     return [4, result.dataAsync];

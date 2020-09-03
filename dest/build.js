@@ -52,62 +52,119 @@ import glob from "fast-glob";
 import { load } from "./load";
 import { pluginHtml } from "./plugins/html";
 import { pluginData } from "./plugins/data";
+import { pluginServer } from "./plugins/server";
 import { normalizePath } from "./utils";
+import { createDataDest } from "./link";
+import { createWatch } from "./watch";
 export function createBuild(src) {
     return __awaiter(this, void 0, void 0, function () {
-        var listSrc, tree, getSrc, hasFile, getFile, addFile, build;
+        var listSrc, tree, getDest, getSrc, hasFile, getFile, isAssigned, addFile, build, pluginsCall, cycle, watcher;
+        var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4, glob(src)];
                 case 1:
                     listSrc = _a.sent();
                     tree = createTree();
+                    getDest = createDataDest({
+                        assetHashPattern: "[hash]-[name]",
+                        assetsWithoutHash: /\.(html|js)/,
+                        assetsDir: "assets",
+                        dest: "build",
+                        href: "/"
+                    });
                     getSrc = function (src) { return path.normalize(src); };
                     hasFile = function (src) { return tree.has(getSrc(src)); };
                     getFile = function (src) { return tree.get(getSrc(src)); };
-                    addFile = function (src) {
+                    isAssigned = function (src) {
+                        if (hasFile(src)) {
+                            return getFile(src).assigned;
+                        }
+                        return false;
+                    };
+                    addFile = function (src, isRoot) {
                         src = getSrc(src);
                         var file = tree.get(src);
-                        var dataSrc = path.parse(src);
-                        Object.assign(file, __assign(__assign({}, dataSrc), { read: function () { return readFile(src, "utf-8"); }, join: function (src) {
-                                return path.join(dataSrc.dir, src);
-                            },
-                            addChild: function (src) {
-                                return __awaiter(this, void 0, void 0, function () {
-                                    return __generator(this, function (_a) {
-                                        switch (_a.label) {
-                                            case 0:
-                                                src = getSrc(src);
-                                                if (!!build.hasFile(src)) return [3, 2];
-                                                return [4, load(build, [src])];
-                                            case 1:
-                                                _a.sent();
-                                                _a.label = 2;
-                                            case 2: return [2, build.getFile(src)];
-                                        }
+                        if (isRoot)
+                            tree.add(src);
+                        if (!file.setLink) {
+                            Object.assign(file, __assign(__assign({}, getDest(src)), { errors: [], read: function () { return readFile(src, "utf-8"); }, join: function (src) { return path.join(file.raw.dir, src); }, addChild: function (src) {
+                                    return __awaiter(this, void 0, void 0, function () {
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0:
+                                                    src = getSrc(file.join(src));
+                                                    if (!!build.hasFile(src)) return [3, 2];
+                                                    return [4, load(build, [src])];
+                                                case 1:
+                                                    _a.sent();
+                                                    tree.addChild(file.src, src);
+                                                    _a.label = 2;
+                                                case 2: return [2, build.getFile(src)];
+                                            }
+                                        });
                                     });
-                                });
-                            },
-                            setLink: function () {
-                                var args = [];
-                                for (var _i = 0; _i < arguments.length; _i++) {
-                                    args[_i] = arguments[_i];
-                                }
-                                return (file.link = normalizePath(path.join.apply(path, args)));
-                            } }));
+                                },
+                                setLink: function () {
+                                    var args = [];
+                                    for (var _i = 0; _i < arguments.length; _i++) {
+                                        args[_i] = arguments[_i];
+                                    }
+                                    var link = normalizePath(path.join.apply(path, args));
+                                    Object.assign(file, getDest(link));
+                                    return file.link;
+                                },
+                                addError: function (message) {
+                                    if (!file.errors.includes(message)) {
+                                        file.errors.push(message);
+                                    }
+                                } }));
+                        }
                         return file;
                     };
                     build = {
+                        mode: "dev",
+                        global: {},
                         files: tree.tree,
-                        plugins: [pluginHtml(), pluginData()],
+                        plugins: [pluginServer(), pluginHtml(), pluginData()],
                         getSrc: getSrc,
                         addFile: addFile,
                         hasFile: hasFile,
-                        getFile: getFile
+                        getFile: getFile,
+                        isAssigned: isAssigned
                     };
-                    return [4, load(build, listSrc)];
+                    pluginsCall = function (method) {
+                        return Promise.all(build.plugins.map(function (plugin) {
+                            return typeof plugin[method] == "function" && plugin[method](build);
+                        }));
+                    };
+                    return [4, pluginsCall("mounted")];
                 case 2:
                     _a.sent();
+                    cycle = function (listSrc) { return __awaiter(_this, void 0, void 0, function () {
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4, pluginsCall("beforeLoad")];
+                                case 1:
+                                    _a.sent();
+                                    return [4, load(build, listSrc, true)];
+                                case 2:
+                                    _a.sent();
+                                    return [4, pluginsCall("afterLoad")];
+                                case 3:
+                                    _a.sent();
+                                    return [2];
+                            }
+                        });
+                    }); };
+                    watcher = createWatch({
+                        glob: src,
+                        listener: function (group) {
+                            if (group.change) {
+                            }
+                        }
+                    });
+                    cycle(listSrc);
                     return [2];
             }
         });

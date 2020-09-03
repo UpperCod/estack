@@ -1,3 +1,14 @@
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -36,24 +47,31 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 import { loadFile } from "./load-page";
 import { isHtml } from "../../types";
+import { createEngine } from "./engine";
 export function pluginHtml() {
     return {
-        name: "plugin-html",
+        name: "html",
+        mounted: function () {
+            this.render = createEngine();
+        },
         filter: function (_a) {
             var src = _a.src;
             return isHtml(src);
         },
-        load: function (currentFiles, files) {
+        load: function (currentFiles, _a) {
+            var files = _a.files, global = _a.global;
             return __awaiter(this, void 0, void 0, function () {
-                var templates, fragments, archives, src, file, data;
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
+                var templates, fragments, archives, pages, src, file, data, task, renderPage, renderTemplate, link;
+                var _this = this;
+                return __generator(this, function (_b) {
+                    switch (_b.label) {
                         case 0: return [4, Promise.all(currentFiles.map(loadFile))];
                         case 1:
-                            _a.sent();
+                            _b.sent();
                             templates = {};
                             fragments = {};
                             archives = {};
+                            pages = {};
                             for (src in files) {
                                 if (!isHtml(src))
                                     continue;
@@ -69,8 +87,77 @@ export function pluginHtml() {
                                     templates[src] = file;
                                 }
                                 else {
+                                    if (pages[file.link]) {
+                                        file.addError("Duplicate links: " + pages[file.link].src);
+                                        continue;
+                                    }
+                                    pages[file.link] = file;
                                 }
                             }
+                            task = [];
+                            renderPage = function (file) { return __awaiter(_this, void 0, void 0, function () {
+                                var renderData, _a, e_1;
+                                return __generator(this, function (_b) {
+                                    switch (_b.label) {
+                                        case 0:
+                                            renderData = {
+                                                file: file,
+                                                global: global,
+                                                page: file.data
+                                            };
+                                            _b.label = 1;
+                                        case 1:
+                                            _b.trys.push([1, 3, , 4]);
+                                            _a = renderData.file;
+                                            return [4, this.render(file.data.content, renderData)];
+                                        case 2:
+                                            _a.content = _b.sent();
+                                            return [2, renderData];
+                                        case 3:
+                                            e_1 = _b.sent();
+                                            renderData.file.addError(e_1);
+                                            return [3, 4];
+                                        case 4: return [2];
+                                    }
+                                });
+                            }); };
+                            renderTemplate = function (renderData) { return __awaiter(_this, void 0, void 0, function () {
+                                var page, file, _a, layout, template, _b, e_2;
+                                return __generator(this, function (_c) {
+                                    switch (_c.label) {
+                                        case 0:
+                                            if (!renderData)
+                                                return [2];
+                                            page = renderData.page, file = renderData.file;
+                                            _a = page.layout, layout = _a === void 0 ? "default" : _a;
+                                            template = templates[layout];
+                                            if (!template) return [3, 4];
+                                            renderData.layout = template.data;
+                                            renderData.page = __assign(__assign({}, page), { content: file.content });
+                                            _c.label = 1;
+                                        case 1:
+                                            _c.trys.push([1, 3, , 4]);
+                                            _b = file;
+                                            return [4, this.render(template.data.content, renderData)];
+                                        case 2:
+                                            _b.content = _c.sent();
+                                            return [3, 4];
+                                        case 3:
+                                            e_2 = _c.sent();
+                                            renderData.file.addError(e_2);
+                                            return [3, 4];
+                                        case 4: return [2];
+                                    }
+                                });
+                            }); };
+                            for (link in pages) {
+                                task.push(renderPage(pages[link]));
+                            }
+                            return [4, Promise.all(task).then(function (pages) {
+                                    return Promise.all(pages.map(renderTemplate));
+                                })];
+                        case 2:
+                            _b.sent();
                             return [2];
                     }
                 });

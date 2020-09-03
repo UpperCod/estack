@@ -4,7 +4,7 @@ import { loadData } from "./load-data";
 
 export function pluginData(): Plugin {
     return {
-        name: "plugin-data",
+        name: "data",
         filter: ({ src }) => isYaml(src) || isJson(src),
         async load(files) {
             await Promise.all(files.map(loadData));

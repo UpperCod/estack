@@ -34,26 +34,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-import { isYaml, isJson } from "../../types";
-import { loadData } from "./load-data";
-export function pluginData() {
+export function pluginCopy() {
     return {
-        name: "data",
-        filter: function (_a) {
-            var src = _a.src;
-            return isYaml(src) || isJson(src);
-        },
-        load: function (files) {
-            return __awaiter(this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0: return [4, Promise.all(files.map(loadData))];
-                        case 1:
-                            _a.sent();
-                            return [2];
-                    }
-                });
-            });
+        name: "copy",
+        filter: function () { return true; },
+        load: function (currentFiles) {
+            return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
+                return [2];
+            }); });
         }
     };
 }

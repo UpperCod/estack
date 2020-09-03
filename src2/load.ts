@@ -1,9 +1,9 @@
 import { Files, File, Build } from "@estack/core";
 
-export async function load(build: Build, listSrc: string[]) {
+export async function load(build: Build, listSrc: string[], isRoot?: boolean) {
     const currentFiles: Files = listSrc.reduce((currentFiles: Files, src) => {
         const nextSrc = build.getSrc(src);
-        if (!build.hasFile(nextSrc)) {
+        if (!build.isAssigned(nextSrc)) {
             currentFiles[nextSrc] = build.addFile(nextSrc);
         }
         return currentFiles;
@@ -15,17 +15,18 @@ export async function load(build: Build, listSrc: string[]) {
             const nextCurrentFiles: Files = {};
             for (let src in currentFiles) {
                 const file: File = currentFiles[src];
-                if (plugin.filter(file)) {
+                if (plugin.filter && plugin.filter(file)) {
+                    file.errors = [];
+                    file.assigned = true;
                     selectFiles.push(file);
                 } else {
                     nextCurrentFiles[src] = file;
                 }
             }
-            if (selectFiles.length) {
+            if (selectFiles.length && plugin.load) {
                 task.push(
                     (async () => {
-                        selectFiles.forEach((file) => (file.prevent = true));
-                        await plugin.load(selectFiles, build.files);
+                        await plugin.load(selectFiles, build);
                     })()
                 );
             }

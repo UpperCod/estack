@@ -36,9 +36,7 @@ export async function loadData(rootFile: File) {
                             ? yamlLoad(content, src)
                             : content;
                     } else if (src) {
-                        const result = await rootFile.addChild(
-                            rootFile.join(src)
-                        );
+                        const result = await rootFile.addChild(src);
                         const { root } = await result.dataAsync;
                         data = root;
                     }

@@ -34,55 +34,63 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-export function load(build, listSrc, isRoot) {
+import { createReadStream } from "fs";
+import * as http from "http";
+import findPort from "@uppercod/find-port";
+import { createLiveReload } from "./livereload";
+import { getType } from "mime";
+export function createServer(options) {
     return __awaiter(this, void 0, void 0, function () {
-        var currentFiles, task;
-        var _this = this;
+        var port, pathLiveReload, sources, livereload;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0:
-                    currentFiles = listSrc.reduce(function (currentFiles, src) {
-                        var nextSrc = build.getSrc(src);
-                        if (!build.isAssigned(nextSrc)) {
-                            currentFiles[nextSrc] = build.addFile(nextSrc);
+                case 0: return [4, findPort(options.port, options.port + 100)];
+                case 1:
+                    port = _a.sent();
+                    pathLiveReload = "/livereload";
+                    sources = {};
+                    http.createServer(function (req, res) {
+                        if (req.url == pathLiveReload) {
+                            livereload.middleware(res);
+                            return;
                         }
-                        return currentFiles;
-                    }, {});
-                    task = build.plugins.reduce(function (_a, plugin) {
-                        var task = _a[0], currentFiles = _a[1];
-                        var selectFiles = [];
-                        var nextCurrentFiles = {};
-                        for (var src in currentFiles) {
-                            var file = currentFiles[src];
-                            if (plugin.filter && plugin.filter(file)) {
-                                file.errors = [];
-                                file.assigned = true;
-                                selectFiles.push(file);
+                        res.setHeader("Access-Control-Allow-Origin", "*");
+                        res.setHeader("Cache-Control", "no-cache");
+                        var file = sources[req.url];
+                        if (file) {
+                            var mime_1 = getType(file.type);
+                            if (file.assigned && typeof file.content == "string") {
+                                res.writeHead(200, { "Content-Type": mime_1 + ";charset=utf-8" });
+                                res.end(file.content);
                             }
                             else {
-                                nextCurrentFiles[src] = file;
+                                var readStream_1 = createReadStream(file.src);
+                                readStream_1.on("open", function () {
+                                    res.writeHead(200, { "Content-Type": mime_1 });
+                                    readStream_1.pipe(res);
+                                });
+                                readStream_1.on("error", function () {
+                                    notFound(res);
+                                });
                             }
                         }
-                        if (selectFiles.length && plugin.load) {
-                            task.push((function () { return __awaiter(_this, void 0, void 0, function () {
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0: return [4, plugin.load(selectFiles, build)];
-                                        case 1:
-                                            _a.sent();
-                                            return [2];
-                                    }
-                                });
-                            }); })());
+                        else {
+                            notFound(res);
                         }
-                        return [task, currentFiles];
-                    }, [[], currentFiles])[0];
-                    return [4, Promise.all(task)];
-                case 1:
-                    _a.sent();
-                    return [2];
+                    }).listen(port);
+                    livereload = createLiveReload(pathLiveReload, port);
+                    return [2, {
+                            reload: function (nextSources) {
+                                sources = nextSources;
+                                livereload.reload();
+                            }
+                        }];
             }
         });
     });
 }
-//# sourceMappingURL=load.js.map
+var notFound = function (res) {
+    res.writeHead(404, { "Content-Type": "text/plain" });
+    res.end("");
+};
+//# sourceMappingURL=server.js.map

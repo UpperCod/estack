@@ -4,12 +4,15 @@ declare module "@estack/core" {
     }
 
     export interface Build {
-        addFile(src: string): File;
+        addFile(src: string, isRoot?: boolean): File;
         hasFile(src: string): boolean;
         getFile(src: string): File;
         getSrc(src: string): string;
+        isAssigned(src: string): boolean;
         plugins: Plugin[];
         files: Files;
+        global: FillData;
+        mode: "dev" | "build";
     }
 
     export interface PageData {
@@ -31,20 +34,28 @@ declare module "@estack/core" {
     export type Data = PageData & YamlData & FillData;
 
     export interface PropsFile {
+        errors: string[];
         link: string;
         src: string;
         dir: string;
         name: string;
         base: string;
-        ext: string;
-        prevent: boolean;
+        type: string;
+        assigned: boolean;
         imported: string[];
         data: Data;
         dataAsync: Promise<Data>;
+        content?: string;
+        raw: {
+            base: string;
+            file: string;
+            dir: string;
+        };
         addChild(src: string): Promise<File>;
         read(): Promise<string>;
         join(src: string): string;
         setLink(...src: string[]): string;
+        addError(message: string): void;
     }
 
     export type File = Partial<PropsFile>;
@@ -55,7 +66,10 @@ declare module "@estack/core" {
 
     export interface Plugin {
         name: string;
-        filter(file: File): boolean;
-        load(currentFiles: File[], files: Files): Promise<void>;
+        mounted?: (build: Build) => Promise<void> | void;
+        beforeLoad?: (build: Build) => Promise<void> | void;
+        afterLoad?: (build: Build) => Promise<void> | void;
+        filter?: (file: File) => boolean;
+        load?: (currentFiles: File[], build: Build) => Promise<void>;
     }
 }
