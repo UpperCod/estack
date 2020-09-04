@@ -43,6 +43,7 @@ export async function createBuild(src: string) {
             Object.assign(file, {
                 ...getDest(src),
                 errors: [],
+                alerts: [],
                 read: () => readFile(src, "utf-8"),
                 join: (src: string) => path.join(file.raw.dir, src),
                 async addChild(src: string) {
@@ -80,6 +81,11 @@ export async function createBuild(src: string) {
                     return file.link;
                 },
                 addError(message: string) {
+                    if (!file.errors.includes(message)) {
+                        file.errors.push(message);
+                    }
+                },
+                addAlert(message: string) {
                     if (!file.errors.includes(message)) {
                         file.errors.push(message);
                     }

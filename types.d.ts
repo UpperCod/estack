@@ -1,6 +1,6 @@
 declare module "@estack/core" {
-    export interface FillData {
-        [index: string]: any;
+    export interface FillData<T = any> {
+        [index: string]: T;
     }
 
     export interface Link extends FillData {
@@ -20,8 +20,16 @@ declare module "@estack/core" {
         mode: "dev" | "build";
     }
 
+    export interface PageQuery {
+        find?: FillData<string | string[]>;
+        limit?: number;
+        sort?: FillData<number>;
+    }
+
     export interface PageData {
+        global?: string;
         link?: string;
+        file?: string;
         slug?: string;
         permalink?: string;
         folder?: string;
@@ -30,6 +38,7 @@ declare module "@estack/core" {
         template?: string;
         layout?: string;
         fragment?: string;
+        archive?: FillData<PageQuery>;
     }
 
     export interface YamlData {
@@ -39,6 +48,7 @@ declare module "@estack/core" {
     export type Data = PageData & YamlData & FillData;
 
     export interface PropsFile {
+        alerts: string[];
         errors: string[];
         link: string;
         src: string;
@@ -61,6 +71,7 @@ declare module "@estack/core" {
         join(src: string): string;
         setLink(...src: string[]): string;
         addError(message: string): void;
+        addAlert(message: string): void;
         addLink(src: string): Promise<Link>;
     }
 

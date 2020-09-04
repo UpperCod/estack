@@ -17,6 +17,7 @@ export async function load(build: Build, listSrc: string[], isRoot?: boolean) {
                 const file: File = currentFiles[src];
                 if (plugin.filter && plugin.filter(file)) {
                     file.errors = [];
+                    file.alerts = [];
                     file.assigned = true;
                     selectFiles.push(file);
                 } else {
