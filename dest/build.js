@@ -1,17 +1,17 @@
 import * as path from "path";
-import { readFile } from "fs/promises";
 import createTree from "@uppercod/imported";
-import glob from "fast-glob";
+import * as glob from "fast-glob";
 import { load } from "./load";
 import { pluginHtml } from "./plugins/html";
 import { pluginData } from "./plugins/data";
 import { pluginServer } from "./plugins/server";
-import { normalizePath } from "./utils";
+import { normalizePath } from "./utils/utils";
 import { createDataDest } from "./link";
 import { createWatch } from "./watch";
-import { isHtml } from "./types";
+import { isHtml } from "./utils/types";
+import { readFile } from "./utils/fs";
 export async function createBuild(src) {
-    const listSrc = await glob(src);
+    const listSrc = glob.sync(src);
     const tree = createTree();
     const getDest = createDataDest({
         assetHashPattern: "[hash]-[name]",
@@ -38,7 +38,8 @@ export async function createBuild(src) {
             Object.assign(file, {
                 ...getDest(src),
                 errors: [],
-                read: () => readFile(src, "utf-8"),
+                alerts: [],
+                read: () => readFile(src),
                 join: (src) => path.join(file.raw.dir, src),
                 async addChild(src) {
                     src = getSrc(file.join(src));
@@ -73,6 +74,11 @@ export async function createBuild(src) {
                     return file.link;
                 },
                 addError(message) {
+                    if (!file.errors.includes(message)) {
+                        file.errors.push(message);
+                    }
+                },
+                addAlert(message) {
                     if (!file.errors.includes(message)) {
                         file.errors.push(message);
                     }

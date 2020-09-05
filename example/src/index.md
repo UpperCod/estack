@@ -12,6 +12,8 @@ site:
 
 <h1>{{page.title}} ??</h1>
 
+<script>console.log(`{{page.title}}`)</script>
+
 Estack es una sola dependencia que empaqueta y sincronziar una serie de herramientas para un desarrollo moderno, agil y escalable.
 
 1. [Rollup](#): para procesar los assets de extension **js, jsx, ts y tsx**.

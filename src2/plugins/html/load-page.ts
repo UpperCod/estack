@@ -1,7 +1,7 @@
 import { File, PageData } from "@estack/core";
 import { frontmatter } from "./frontmatter";
 import { loadData } from "../data/load-data";
-import { normalizePath } from "../../utils";
+import { normalizePath } from "../../utils/utils";
 
 export async function loadFile(rootFile: File): Promise<void> {
     const [html, metadata] = frontmatter(rootFile.src, await rootFile.read());

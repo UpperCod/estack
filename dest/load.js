@@ -13,6 +13,7 @@ export async function load(build, listSrc, isRoot) {
             const file = currentFiles[src];
             if (plugin.filter && plugin.filter(file)) {
                 file.errors = [];
+                file.alerts = [];
                 file.assigned = true;
                 selectFiles.push(file);
             }

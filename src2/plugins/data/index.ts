@@ -1,5 +1,5 @@
 import { Plugin } from "@estack/core";
-import { isYaml, isJson } from "../../types";
+import { isYaml, isJson } from "../../utils/types";
 import { loadData } from "./load-data";
 
 export function pluginData(): Plugin {

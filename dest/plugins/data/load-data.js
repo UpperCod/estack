@@ -3,7 +3,7 @@ import createCache from "@uppercod/cache";
 import getProp from "@uppercod/get-prop";
 import { request } from "@uppercod/request";
 import { safeLoad } from "js-yaml";
-import { isUrl } from "../../types";
+import { isUrl } from "../../utils/types";
 const yamlLoad = (code, src) => safeLoad(code, { filename: src });
 const cache = createCache();
 export async function loadData(rootFile) {

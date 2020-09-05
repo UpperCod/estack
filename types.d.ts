@@ -1,4 +1,24 @@
 declare module "@estack/core" {
+    interface OptionsDest {
+        assetHashPattern: string;
+        assetsWithoutHash: RegExp;
+        assetsDir: string;
+        dest: string;
+        href: string;
+    }
+
+    export interface Options extends OptionsDest {
+        mode: string;
+        src: string | string[];
+        external?: string | string[];
+        jsx?: string;
+        jsxFragment?: string;
+        silent?: string;
+        minify?: string;
+        port?: string;
+        sourcemap?: boolean;
+    }
+
     export interface FillData<T = any> {
         [index: string]: T;
     }
@@ -47,35 +67,33 @@ declare module "@estack/core" {
 
     export type Data = PageData & YamlData & FillData;
 
-    export interface PropsFile {
-        alerts: string[];
-        errors: string[];
-        link: string;
-        src: string;
-        dir: string;
-        name: string;
-        base: string;
-        type: string;
-        assigned: boolean;
-        imported: string[];
-        data: Data;
-        dataAsync: Promise<Data>;
+    export interface File {
+        alerts?: string[];
+        errors?: string[];
+        link?: string;
+        src?: string;
+        dir?: string;
+        name?: string;
+        base?: string;
+        type?: string;
+        assigned?: boolean;
+        imported?: string[];
+        data?: Data;
+        dataAsync?: Promise<Data>;
         content?: string;
-        raw: {
+        raw?: {
             base: string;
             file: string;
             dir: string;
         };
-        addChild(src: string): Promise<File>;
-        read(): Promise<string>;
-        join(src: string): string;
-        setLink(...src: string[]): string;
-        addError(message: string): void;
-        addAlert(message: string): void;
-        addLink(src: string): Promise<Link>;
+        addChild?: (src: string) => Promise<File>;
+        read?: () => Promise<string>;
+        join?: (src: string) => string;
+        setLink?: (...src: string[]) => string;
+        addError?: (message: string) => void;
+        addAlert?: (message: string) => void;
+        addLink?: (src: string) => Promise<Link>;
     }
-
-    export type File = Partial<PropsFile>;
 
     export interface Files {
         [src: string]: File;

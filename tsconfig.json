@@ -6,7 +6,6 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
-    "outDir":"./dest",
     "target": "ESnext",
     "lib": [
       "es2019"

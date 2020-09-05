@@ -1,7 +1,7 @@
 import { Plugin, Files, File, FillData, PageData } from "@estack/core";
 import { RenderData } from "./types";
 import { loadFile } from "./load-page";
-import { isHtml } from "../../types";
+import { isHtml } from "../../utils/types";
 import { createEngine } from "./engine";
 
 export function pluginHtml(): Plugin {

@@ -1,16 +1,16 @@
 import { File, Build, Plugin } from "@estack/core";
 import * as path from "path";
-import { readFile } from "fs/promises";
 import createTree, { Context } from "@uppercod/imported";
-import glob from "fast-glob";
+import * as glob from "fast-glob";
 import { load } from "./load";
 import { pluginHtml } from "./plugins/html";
 import { pluginData } from "./plugins/data";
 import { pluginServer } from "./plugins/server";
-import { normalizePath } from "./utils";
+import { normalizePath } from "./utils/utils";
 import { createDataDest } from "./link";
 import { createWatch, Group } from "./watch";
-import { isHtml } from "./types";
+import { isHtml } from "./utils/types";
+import { readFile } from "./utils/fs";
 
 type Cycle = (listSrc: string[]) => Promise<void>;
 
@@ -44,7 +44,7 @@ export async function createBuild(src: string) {
                 ...getDest(src),
                 errors: [],
                 alerts: [],
-                read: () => readFile(src, "utf-8"),
+                read: () => readFile(src),
                 join: (src: string) => path.join(file.raw.dir, src),
                 async addChild(src: string) {
                     src = getSrc(file.join(src));

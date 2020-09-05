@@ -1,6 +1,6 @@
 import * as path from "path";
-import { normalizePath } from "./utils";
-import { isHtml, isJs } from "./types";
+import { normalizePath } from "./utils/utils";
+import { isHtml, isJs } from "./utils/types";
 import hash from "@uppercod/hash";
 export const createDataDest = (options) => (file) => {
     let { name, ext, dir, base } = path.parse(file);

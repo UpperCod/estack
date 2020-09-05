@@ -1,6 +1,6 @@
 import { frontmatter } from "./frontmatter";
 import { loadData } from "../data/load-data";
-import { normalizePath } from "../../utils";
+import { normalizePath } from "../../utils/utils";
 export async function loadFile(rootFile) {
     const [html, metadata] = frontmatter(rootFile.src, await rootFile.read());
     const copyRootFile = { ...rootFile };

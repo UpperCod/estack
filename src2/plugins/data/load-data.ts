@@ -5,7 +5,7 @@ import getProp from "@uppercod/get-prop";
 import { request } from "@uppercod/request";
 import { safeLoad } from "js-yaml";
 
-import { isUrl, isHtml } from "../../types";
+import { isUrl, isHtml } from "../../utils/types";
 
 const yamlLoad = (code: string, src: string) =>
     safeLoad(code, { filename: src });
