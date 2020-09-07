@@ -7,6 +7,15 @@ const cwd = process.cwd();
 
 export const localFile = (file: string) => path.join(cwd, file);
 
+export const exist = async (file: string) => {
+    try {
+        await fs.stat(localFile(file));
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
+
 export const readFile = (file: string): Promise<string> =>
     fs.readFile(localFile(file), utf);
 

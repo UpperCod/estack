@@ -1,4 +1,4 @@
-import { Files } from "@estack/core";
+import { Files } from "estack";
 import { createReadStream } from "fs";
 import * as http from "http";
 import findPort from "@uppercod/find-port";
@@ -10,11 +10,12 @@ interface Options {
     proxy?: string;
 }
 
-interface Context {
+export interface Server {
+    port: number;
     reload: (sources: Files) => void;
 }
 
-export async function createServer(options: Options): Promise<Context> {
+export async function createServer(options: Options): Promise<Server> {
     const port = await findPort(options.port, options.port + 100);
     const pathLiveReload = "/livereload";
     let sources: Files = {};
@@ -32,7 +33,7 @@ export async function createServer(options: Options): Promise<Context> {
 
         if (file) {
             const mime = getType(file.type);
-            if (file.assigned && typeof file.content == "string") {
+            if (typeof file.content == "string") {
                 res.writeHead(200, { "Content-Type": mime + ";charset=utf-8" });
                 res.end(
                     file.type == "html"
@@ -57,6 +58,7 @@ export async function createServer(options: Options): Promise<Context> {
     const livereload = createLiveReload(pathLiveReload, port);
 
     return {
+        port,
         reload: (nextSources: Files) => {
             sources = nextSources;
             livereload.reload();

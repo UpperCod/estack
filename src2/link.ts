@@ -1,15 +1,18 @@
-import { OptionsDest } from "@estack/core";
+import { OptionsDest } from "estack";
 import * as path from "path";
 import { normalizePath } from "./utils/utils";
 import { isHtml, isJs } from "./utils/types";
-import hash from "@uppercod/hash";
+import createId from "@uppercod/hash";
 
 interface DataHashPattern {
     hash: string;
     name: string;
 }
 
-export const createDataDest = (options: OptionsDest) => (file: string) => {
+export const createDataDest = (options: OptionsDest) => (
+    file: string,
+    hash = true
+) => {
     let { name, ext, dir, base } = path.parse(file);
 
     ext = isJs(ext) ? ".js" : isHtml(ext) ? ".html" : ext || ".html";
@@ -18,9 +21,9 @@ export const createDataDest = (options: OptionsDest) => (file: string) => {
 
     const isIndex = typeHtml && name == "index";
 
-    if (!options.assetsWithoutHash.test(ext)) {
+    if (hash && !options.assetsWithoutHash.test(ext)) {
         const data: DataHashPattern = {
-            hash: hash(file),
+            hash: createId(file),
             name,
         };
 

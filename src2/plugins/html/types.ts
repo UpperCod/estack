@@ -1,4 +1,4 @@
-import { PageData, FillData, File } from "@estack/core";
+import { PageData, FillData, File } from "estack";
 
 export interface RenderData {
     file: File;

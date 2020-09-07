@@ -1,6 +1,9 @@
-import { Options } from "@estack/core";
+import { Options, OptionsBuild } from "estack";
+import * as path from "path";
+import getProp from "@uppercod/get-prop";
 import { readFile } from "./utils/fs";
 import * as builtins from "builtin-modules";
+import { normalizePath } from "./utils/utils";
 
 const pkgDefault = {
     dependencies: {},
@@ -9,55 +12,91 @@ const pkgDefault = {
     scripts: {},
 };
 
+const jsDefault = {
+    jsx: "h",
+    jsxFragment: "Fragment",
+};
+
+const cssDefault = {};
+
 export async function loadOptions({
     mode,
     src,
     dest,
-    external,
-    jsx,
-    jsxFragment,
+    js,
+    css,
     port,
     silent,
+    href,
     assetsDir,
     assetHashPattern,
-    assetsWithoutHash,
     sourcemap,
+    watch,
 }: Options) {
     const pkg = await getPackage();
+    let assetsWithoutHash: RegExp;
+    let server = false;
+
+    href = href || "/";
+    dest = dest || "";
+    assetsDir = assetsDir || "assets";
 
     src = Array.isArray(src) ? src : src.split(/ *; */g);
 
-    const withHtml = useHtml(src);
+    const site = useHtml(src);
 
-    if (withHtml) {
+    const destAssets = normalizePath(path.join(dest, assetsDir));
+
+    if (site) {
+        assetsWithoutHash = /\.(html)$/;
         assetsDir = assetsDir == null ? "assets" : assetsDir;
     } else {
         assetsDir = "";
+        assetsWithoutHash = /\.(js|css)$/;
     }
 
     dest = dest || "public";
 
     if (mode == "dev") {
         sourcemap = true;
+        assetHashPattern = assetHashPattern || "[hash]-[name]";
+        server = site;
+        watch = true;
     }
 
     if (mode == "build") {
         sourcemap = sourcemap || false;
+        assetHashPattern = assetHashPattern || "[hash]";
     }
 
-    if (external) {
-        external = Array.isArray(external)
-            ? external
-            : [true, "true"].includes(external)
-            ? Object.keys(pkg.dependencies)
-            : external.split(/ *, */);
-    }
+    const options: OptionsBuild = {
+        mode,
+        src,
+        site,
+        destAssets,
+        sourcemap,
+        external: [
+            ...builtins,
+            ...Object.keys(pkg.dependencies).filter(
+                (prop) => pkg.peerDependencies[prop]
+            ),
+            ...Object.keys(pkg.peerDependencies),
+        ],
+        port: typeof port == "string" ? Number(port) : port,
+        assetHashPattern,
+        assetsWithoutHash,
+        assetsDir,
+        dest,
+        href,
+        watch,
+        server,
+        js: typeof js == "string" ? getProp(pkg, js, jsDefault) : jsDefault,
+        css:
+            typeof css == "string" ? getProp(pkg, css, cssDefault) : cssDefault,
+        silent,
+    };
 
-    external = [
-        ...builtins,
-        ...(external || []),
-        ...Object.keys(pkg.peerDependencies),
-    ];
+    return options;
 }
 
 async function getPackage() {

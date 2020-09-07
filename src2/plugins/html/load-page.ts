@@ -1,4 +1,4 @@
-import { File, PageData } from "@estack/core";
+import { File, PageData } from "estack";
 import { frontmatter } from "./frontmatter";
 import { loadData } from "../data/load-data";
 import { normalizePath } from "../../utils/utils";
@@ -7,11 +7,11 @@ export async function loadFile(rootFile: File): Promise<void> {
     const [html, metadata] = frontmatter(rootFile.src, await rootFile.read());
     const copyRootFile = { ...rootFile };
 
-    copyRootFile.read = () => Promise.resolve(metadata);
+    copyRootFile.read = async () => metadata;
 
-    const data: PageData = metadata ? {} : await loadData(copyRootFile);
+    const data: PageData = metadata ? await loadData(copyRootFile) : {};
 
-    let { link = "", folder = "", permalink, slug, content: _content } = data;
+    let { link, folder = "", permalink, slug, content: _content } = data;
 
     /**@todo add markdown */
     const content = _content || html;

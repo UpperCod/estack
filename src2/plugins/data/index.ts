@@ -1,4 +1,4 @@
-import { Plugin } from "@estack/core";
+import { Plugin } from "estack";
 import { isYaml, isJson } from "../../utils/types";
 import { loadData } from "./load-data";
 

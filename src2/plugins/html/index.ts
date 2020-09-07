@@ -1,4 +1,4 @@
-import { Plugin, Files, File, FillData, PageData } from "@estack/core";
+import { Plugin, Files, File, FillData, PageData } from "estack";
 import { RenderData } from "./types";
 import { loadFile } from "./load-page";
 import { isHtml } from "../../utils/types";
@@ -11,9 +11,10 @@ export function pluginHtml(): Plugin {
             this.render = createEngine();
         },
         filter: ({ src }) => isHtml(src),
-        async load(currentFiles, { files }) {
+        async load(currentFiles) {
             await Promise.all(currentFiles.map(loadFile));
-
+        },
+        async afterLoad({ files }) {
             const templates: Files = {};
             const fragments: Files = {};
             const archives: Files = {};
@@ -38,7 +39,11 @@ export function pluginHtml(): Plugin {
                     templates[src] = file;
                 } else {
                     if (pages[file.link]) {
-                        file.addError(`Duplicate links: ${data.link}`);
+                        file.addError(
+                            `Duplicate link: "${data.link}" in ${
+                                pages[file.link].src
+                            }`
+                        );
                         continue;
                     }
                     pages[file.link] = file;
