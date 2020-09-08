@@ -2,19 +2,20 @@ import { Plugin, Files, File, FillData, PageData } from "estack";
 import { RenderData } from "./types";
 import { loadFile } from "./load-page";
 import { isHtml } from "../../utils/types";
-import { createEngine } from "./engine";
+import { createEngine, Render } from "./engine";
 
 export function pluginHtml(): Plugin {
+    let render: Render;
     return {
         name: "html",
         mounted() {
-            this.render = createEngine();
+            render = createEngine();
         },
         filter: ({ src }) => isHtml(src),
-        async load(currentFiles) {
-            await Promise.all(currentFiles.map(loadFile));
+        async load(file) {
+            await loadFile(file);
         },
-        async afterLoad({ files }) {
+        async afterLoad({ files, mode }) {
             const templates: Files = {};
             const fragments: Files = {};
             const archives: Files = {};
@@ -31,12 +32,15 @@ export function pluginHtml(): Plugin {
                     }
                     global[data.global] = data;
                 }
-                if (data.archive) {
+                if (data.draft && mode == "build") {
+                    file.write = false;
+                } else if (data.archive) {
                     archives[src] = file;
                 } else if (data.fragment) {
                     fragments[src] = file;
                 } else if (data.template) {
-                    templates[src] = file;
+                    templates[data.template] = file;
+                    file.write = false;
                 } else {
                     if (pages[file.link]) {
                         file.addError(
@@ -59,13 +63,13 @@ export function pluginHtml(): Plugin {
                     page: file.data,
                 };
                 try {
-                    renderData.file.content = await this.render(
+                    renderData.file.content = await render(
                         file.data.content,
                         renderData
                     );
                     return renderData;
                 } catch (e) {
-                    renderData.file.addError(e);
+                    renderData.file.addError(e + "");
                 }
             };
 
@@ -80,12 +84,12 @@ export function pluginHtml(): Plugin {
                     renderData.layout = template.data;
                     renderData.page = { ...page, content: file.content };
                     try {
-                        file.content = await this.render(
+                        file.content = await render(
                             template.data.content,
                             renderData
                         );
                     } catch (e) {
-                        renderData.file.addError(e);
+                        template.addError(e + "");
                     }
                 }
             };

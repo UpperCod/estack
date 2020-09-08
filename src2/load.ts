@@ -11,7 +11,6 @@ export async function load(build: Build, listSrc: string[], isRoot?: boolean) {
 
     const [task] = build.plugins.reduce(
         ([task, currentFiles], plugin) => {
-            const selectFiles: File[] = [];
             const nextCurrentFiles: Files = {};
             for (let src in currentFiles) {
                 const file: File = currentFiles[src];
@@ -19,17 +18,12 @@ export async function load(build: Build, listSrc: string[], isRoot?: boolean) {
                     file.errors = [];
                     file.alerts = [];
                     file.assigned = true;
-                    selectFiles.push(file);
+                    if (plugin.load) {
+                        task.push(plugin.load(file, build));
+                    }
                 } else {
                     nextCurrentFiles[src] = file;
                 }
-            }
-            if (selectFiles.length && plugin.load) {
-                task.push(
-                    (async () => {
-                        await plugin.load(selectFiles, build);
-                    })()
-                );
             }
             return [task, currentFiles];
         },

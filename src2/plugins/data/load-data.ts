@@ -14,6 +14,7 @@ const cache = createCache();
 
 export async function loadData(rootFile: File) {
     const value = await rootFile.read();
+    rootFile.write = false;
     if (!rootFile.dataAsync) {
         let dataValue;
         try {

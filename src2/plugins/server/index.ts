@@ -7,15 +7,17 @@ export function pluginServer(): Plugin {
         name: "server",
         async mounted(build) {
             server = await createServer({ port: build.options.port });
-            build.log.log({
-                header: `Server running on http://localhost:${server.port}`,
-                color: "green",
+            build.log.print({
+                message: "Server running on [bold.underline.green $].",
+                params: [`http://localhost:${server.port}`],
             });
         },
         buildEnd({ files }) {
             const sources: Files = {};
             for (const src in files) {
-                sources[files[src].link] = files[src];
+                const file = files[src];
+                if (!file.write) continue;
+                sources[file.link] = file;
             }
             server.reload(sources);
         },

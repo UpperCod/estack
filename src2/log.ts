@@ -1,5 +1,10 @@
-import { File, Log, LogParam, LogColors } from "estack";
+import { Log, LogOptions } from "estack";
 import * as colors from "colors/safe";
+import getProp from "@uppercod/get-prop";
+
+interface Mesages {
+    [message: string]: string;
+}
 
 function getTime(): string {
     const date = new Date();
@@ -9,44 +14,51 @@ function getTime(): string {
     return `[${time}]`;
 }
 
-const getHeader = (header: string, color: LogColors) =>
-    `\n${getTime()} ${color && colors[color] ? colors[color](header) : header}`;
+const template = (
+    str: string,
+    map: (command: string, index: number) => string,
+    index = 0
+) =>
+    str.replace(/\[([^\s]+)\s+\$\s*\]/g, (all, command) =>
+        map(command, index++)
+    );
 
-export function createLog(): Log {
+export function createLog(messages?: Mesages): Log {
+    const format = (message: string, params: string[]) =>
+        template(messages[message] ?? message, (command, index) =>
+            getProp<(str: string) => string>(
+                colors,
+                command,
+                (str: string) => str,
+                false
+            )(params[index])
+        );
+
     return {
-        raw: console.log,
-        log: ({ header, body, color }: LogParam) => {
-            console.log(getHeader(header, color));
-            if (body) {
-                console.group();
-                console.log(`\n${body}`);
-                console.groupEnd();
+        print({ message = "", body, type = "log", params = [] }: LogOptions) {
+            let header = "";
+            if (type == "log" || type == "alert" || type == "error") {
+                header += getTime() + " ";
+                header += format(message, params);
+            } else {
+                header = format(message, params);
             }
-        },
-        alert: ({ header, body, color }: LogParam<File[]>) => {
-            console.log(getHeader(header, color));
-            if (body.length) {
+            if (header) console.log(header);
+            if (body && body.length) {
                 console.group();
-                body.map(({ alerts, src }) => {
-                    console.log(`\n${colors.gray(src)}`);
-                    console.group();
+                body.map(({ src, items }) => {
+                    console.log(`${colors.gray(src)}`);
                     console.log(
-                        alerts.map((e) => colors.yellow(e)).join("\n\n")
+                        items
+                            .map((e) =>
+                                type == "alert"
+                                    ? colors.yellow(e)
+                                    : type == "error"
+                                    ? colors.red(e)
+                                    : e
+                            )
+                            .join("\n\n")
                     );
-                    console.groupEnd();
-                });
-                console.groupEnd();
-            }
-        },
-        error: ({ header, body, color }: LogParam<File[]>) => {
-            console.log(getHeader(header, color));
-            if (body.length) {
-                console.group();
-                body.map(({ errors, src }) => {
-                    console.log(`\n${colors.gray(src)}`);
-                    console.group();
-                    console.log(errors.map((e) => colors.red(e)).join("\n\n"));
-                    console.groupEnd();
                 });
                 console.groupEnd();
             }

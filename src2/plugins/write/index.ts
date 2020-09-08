@@ -1,7 +1,7 @@
 import { Plugin } from "estack";
 import { writeFile, copyFile } from "../../utils/fs";
 
-export function pluginWrite(exclude = /.(yaml|yml|json)$/): Plugin {
+export function pluginWrite(): Plugin {
     return {
         name: "plugin-write",
         buildEnd(build) {
@@ -9,7 +9,7 @@ export function pluginWrite(exclude = /.(yaml|yml|json)$/): Plugin {
             const task = [];
             for (const src in files) {
                 const file = files[src];
-                if (exclude.test(file.src)) continue;
+                if (!file.write) continue;
                 if (typeof file.content == "string") {
                     task.push(writeFile(file.dest, file.content));
                 } else {

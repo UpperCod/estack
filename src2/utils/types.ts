@@ -23,7 +23,8 @@ export let isMd = (src: string) => /\.md$/.test(src);
 /**
  * Determines if the src has the extensions .js, .ts, .jsx, .tsx
  */
-export let isJs = (src: string) => /\.(js|ts|jsx|tsx)$/.test(src);
+export let isJs = (src: string) =>
+    /\.(js|ts|jsx|tsx|riot|svelte|vue)$/.test(src);
 /**
  * Determine if the src has the extension .css
  */

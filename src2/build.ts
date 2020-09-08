@@ -1,4 +1,12 @@
-import { File, Options, Build, Plugin } from "estack";
+import {
+    File,
+    Options,
+    Build,
+    Plugin,
+    LogBody,
+    PluginContext,
+    PluginsMessages,
+} from "estack";
 import * as path from "path";
 import * as glob from "fast-glob";
 import createTree, { Context } from "@uppercod/imported";
@@ -23,7 +31,12 @@ export async function createBuild(opts: Options) {
     const listSrc = await glob(options.src);
 
     const tree = createTree();
-    const log = createLog();
+
+    const log = createLog({
+        build: "Built in [bold.green $], Found [bold.red $] errors.",
+        footer: options.watch ? "\nWatching for file changes...\n" : "",
+    });
+
     const mark = createMarks();
 
     const getDest = createDataDest(options);
@@ -39,12 +52,13 @@ export async function createBuild(opts: Options) {
     };
     const addFile = (
         src: string,
-        { isRoot = true, watch = true, hash = true }
+        { isRoot = true, watch = true, hash = true, write = true }
     ) => {
         src = getSrc(src);
         const file: File = tree.get(src);
         /**@todo check use */
         file.watch = file.watch ?? watch;
+        file.write = file.write ?? write;
         if (isRoot) tree.add(src);
         if (!file.setLink) {
             Object.assign(file, {
@@ -146,43 +160,88 @@ export async function createBuild(opts: Options) {
             Promise.resolve()
         );
 
+    const pluginsMessages: PluginsMessages = {};
+
+    build.plugins.forEach((plugin: PluginContext) => {
+        if (!pluginsMessages[plugin.name]) {
+            pluginsMessages[plugin.name] = { errors: [], alerts: [] };
+        }
+        let currentMark: () => string;
+        plugin.log = {
+            clear() {
+                currentMark = mark(plugin.name);
+                pluginsMessages[plugin.name] = { errors: [], alerts: [] };
+            },
+            errors(errors: LogBody[]) {
+                pluginsMessages[plugin.name].errors.push(...errors);
+            },
+            alerts(alerts: LogBody[]) {
+                pluginsMessages[plugin.name].alerts.push(...alerts);
+            },
+            build() {
+                buildLog(currentMark ? currentMark() : "0ms");
+            },
+        };
+    });
+
     await pluginsParallel("mounted");
+
+    const buildLog = (time: string) => {
+        const errors: LogBody[] = [];
+        const alerts: LogBody[] = [];
+
+        for (const name in pluginsMessages) {
+            const log = pluginsMessages[name];
+            errors.push(...log.errors);
+            alerts.push(...log.alerts);
+        }
+
+        for (const src in build.files) {
+            const file = build.files[src];
+
+            file.errors.length &&
+                errors.push({
+                    src: file.src,
+                    items: file.errors,
+                });
+
+            file.alerts.length &&
+                alerts.push({
+                    src: file.src,
+                    items: file.errors,
+                });
+        }
+
+        alerts.length &&
+            log.print({
+                type: "alert",
+                message: "",
+                body: alerts,
+            });
+
+        log.print({
+            type: "error",
+            message: "build",
+            params: [time, errors.length + ""],
+            body: errors,
+        });
+
+        log.print({
+            type: "raw",
+            message: "footer",
+        });
+    };
 
     const cycle: Cycle = async (listSrc: string[]) => {
         const closeMark = mark("build");
 
-        log.log({
-            header: `File change detected. Starting incremental compilation...`,
-        });
         await pluginsSequential("buildStart");
         await pluginsParallel("beforeLoad");
         await load(build, listSrc, true);
         await pluginsParallel("afterLoad");
         await pluginsSequential("buildEnd");
 
-        const errors: File[] = [];
-        const alerts: File[] = [];
-        for (const src in build.files) {
-            const file = build.files[src];
-
-            file.errors.length && errors.push(file);
-
-            file.alerts.length && alerts.push(file);
-        }
-
-        alerts.length &&
-            log.alert({
-                header: "",
-                body: alerts,
-            });
-
-        log.error({
-            header: `Built in ${closeMark()}, Found ${errors.length} errors.`,
-            body: errors,
-            color: errors.length ? "yellow" : "green",
-        });
-
-        options.watch && log.raw("\nWatching for file changes...");
+        buildLog(closeMark());
     };
 
     const watcher =

@@ -7,6 +7,8 @@ import {
     OutputOptions,
     OutputChunk,
     RollupWatcher,
+    RollupLogProps,
+    RollupCache,
 } from "rollup";
 
 interface Internal extends Plugin {
@@ -16,13 +18,14 @@ interface Internal extends Plugin {
 
 export function pluginJs(): Internal {
     let withLoad: boolean;
+    let cache: RollupCache;
     let watcher: RollupWatcher;
     return {
         name: "plugin-js",
         filter: ({ src }) => isJs(src),
-        async load(currentFiles) {
+        async load(file) {
             withLoad = true;
-            currentFiles.map((file) => (file.watch = false));
+            file.watch = false;
         },
         async buildEnd(build) {
             const { files } = build;
@@ -40,12 +43,15 @@ export function pluginJs(): Internal {
             }
 
             if (!Object.keys(filesJs).length) return;
+
             const alias: Files = {};
             const input: RollupOptions = {
                 input: [],
                 preserveEntrySignatures: false,
-                onwarn() {},
-                cache: this.cache,
+                onwarn() {
+                    return "";
+                },
+                cache: cache,
                 plugins: [
                     {
                         name: "plugin-estack-js",
@@ -79,26 +85,59 @@ export function pluginJs(): Internal {
                 ],
             };
 
-            const bundle = await rollup(input);
-            const output: OutputOptions = {
-                format: "es",
-                sourcemap: build.options.sourcemap,
-                dir: build.options.site
-                    ? build.options.destAssets
-                    : build.options.dest,
+            const sendError = (error: RollupLogProps) => {
+                this.log.errors([
+                    {
+                        src: "",
+                        items: [
+                            [
+                                error.loc.file,
+                                error.loc.line,
+                                error.loc.column,
+                            ].join(":"),
+                            error.frame,
+                        ],
+                    },
+                ]);
             };
 
-            if (build.options.watch) {
-                this.cache = bundle;
-                watcher = watch({
-                    ...input,
-                    output,
-                });
-                watcher.on("event", (event) => {
-                    console.log(event);
-                });
-            } else {
-                await bundle.generate(output);
+            try {
+                const bundle = await rollup(input);
+                const output: OutputOptions = {
+                    format: "es",
+                    sourcemap: build.options.sourcemap,
+                    dir: build.options.site
+                        ? build.options.destAssets
+                        : build.options.dest,
+                };
+                if (build.options.watch) {
+                    cache = bundle.cache;
+                    watcher = watch({
+                        ...input,
+                        output,
+                    });
+                    let withError: boolean;
+                    watcher.on("event", (event) => {
+                        switch (event.code) {
+                            case "BUNDLE_START":
+                                this.log.clear();
+                                withError = false;
+                                break;
+                            case "ERROR":
+                                withError = true;
+                                sendError(event.error);
+                                this.log.build();
+                                break;
+                            case "BUNDLE_END":
+                                if (!withError) this.log.build();
+                                break;
+                        }
+                    });
+                } else {
+                    await bundle.generate(output);
+                }
+            } catch (error) {
+                sendError(error);
             }
         },
     };

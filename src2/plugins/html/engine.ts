@@ -2,7 +2,7 @@ import { Liquid } from "liquidjs";
 import createCache from "@uppercod/cache";
 import { RenderData } from "./types";
 
-interface Render {
+export interface Render {
     (template: string, data: RenderData): Promise<string>;
 }
 
@@ -24,6 +24,15 @@ export function createEngine(): Render {
             return link;
         }
     });
+
+    // engine.registerFilter("link", async function (src) {
+    //     const { environments } = this.context;
+    //     const context = environments as RenderData;
+    //     if (context.file) {
+    //         const { link } = await context.file.addLink(src);
+    //         return link;
+    //     }
+    // });
 
     return (template: string, data: RenderData) =>
         engine.render(cache(parse, template), data);
