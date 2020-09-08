@@ -4,8 +4,8 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var path = require('path');
-var createTree = require('@uppercod/imported');
 var glob = require('fast-glob');
+var createTree = require('@uppercod/imported');
 var strFragment = require('@uppercod/str-fragment');
 var mapObject = require('@uppercod/map-object');
 var createCache = require('@uppercod/cache');
@@ -20,6 +20,8 @@ var mime = require('mime');
 var hash = require('@uppercod/hash');
 var chokidar = require('chokidar');
 var fs$1 = require('fs/promises');
+var perf_hooks = require('perf_hooks');
+var colors = require('colors/safe');
 
 async function load(build, listSrc, isRoot) {
     const currentFiles = listSrc.reduce((currentFiles, src) => {
@@ -80,18 +82,31 @@ const yamlLoad = (code, src) => jsYaml.safeLoad(code, { filename: src });
 const cache = createCache();
 async function loadData(rootFile) {
     const value = await rootFile.read();
-    rootFile.dataAsync =
-        rootFile.dataAsync ||
-            mapObject({
-                file: rootFile.src,
-                value: yamlLoad(value, rootFile.src),
-            }, {
-                async $link({ value }) {
+    if (!rootFile.dataAsync) {
+        let dataValue;
+        try {
+            dataValue = yamlLoad(value, rootFile.src);
+        }
+        catch (e) {
+            rootFile.addError(e);
+        }
+        rootFile.dataAsync = mapObject({
+            file: rootFile.src,
+            value: dataValue,
+        }, {
+            async $link({ value }) {
+                try {
                     return rootFile.addLink(value);
-                },
-                async $ref({ value, root }) {
-                    let data = root;
-                    const [, src, prop] = value.match(/([^#|~]*)(?:(?:#|~)(?:\/){0,1}(.*)){0,1}/);
+                }
+                catch (e) {
+                    rootFile.addError(e);
+                    return {};
+                }
+            },
+            async $ref({ value, root }) {
+                let data = root;
+                const [, src, prop] = value.match(/([^#|~]*)(?:(?:#|~)(?:\/){0,1}(.*)){0,1}/);
+                try {
                     if (isUrl(src)) {
                         const [, content, res] = await cache(request.request, src);
                         const contentType = res.headers["content-type"];
@@ -107,8 +122,14 @@ async function loadData(rootFile) {
                         data = root;
                     }
                     return prop ? getProp(data, prop) : data;
-                },
-            });
+                }
+                catch (e) {
+                    rootFile.addError(e);
+                    return {};
+                }
+            },
+        });
+    }
     const { root } = await rootFile.dataAsync;
     return root;
 }
@@ -122,8 +143,8 @@ let normalizePath = (str) => str
 async function loadFile(rootFile) {
     const [html, metadata] = frontmatter(rootFile.src, await rootFile.read());
     const copyRootFile = { ...rootFile };
-    copyRootFile.read = () => Promise.resolve(metadata);
-    const data = metadata ? {} : await loadData(copyRootFile);
+    copyRootFile.read = async () => metadata;
+    const data = metadata ? await loadData(copyRootFile) : {};
     let { link = "", folder = "", permalink, slug, content: _content } = data;
     const content = _content || html;
     const name = slug || rootFile.name;
@@ -399,9 +420,74 @@ const cwd = process.cwd();
 const localFile = (file) => path.join(cwd, file);
 const readFile = (file) => fs$1.readFile(localFile(file), utf);
 
+function toHumanTime(ms) {
+    ms = Math.ceil(ms);
+    if (ms > 300) {
+        return (ms / 1000).toFixed(2) + "s";
+    }
+    else {
+        return ms + "ms";
+    }
+}
+function createMarks() {
+    const marks = {};
+    return function openMark(label) {
+        if (!marks[label]) {
+            marks[label] = perf_hooks.performance.now();
+        }
+        return function closedMark() {
+            if (marks[label]) {
+                const diffTime = perf_hooks.performance.now() - marks[label];
+                marks[label] = 0;
+                return toHumanTime(diffTime);
+            }
+        };
+    };
+}
+
+function getTime() {
+    const date = new Date();
+    const time = colors.grey([date.getHours(), date.getMinutes(), date.getSeconds()].join(":"));
+    return `[${time}]`;
+}
+function createLog() {
+    return {
+        raw: console.log,
+        log: ({ header, body }) => {
+            console.log(`\n${getTime()} ${header}`);
+            if (body) {
+                console.group();
+                console.log(`\n${body}`);
+                console.groupEnd();
+            }
+        },
+        alert: ({ header, body }) => {
+            console.log(`\n${getTime()} ${header}`);
+            if (body) {
+                console.group();
+                console.log(`\n${colors.yellow(body)}`);
+                console.groupEnd();
+            }
+        },
+        error: ({ header, body }) => {
+            console.log(`\n${getTime()} ${header}`);
+            if (body.length) {
+                console.group();
+                body.map(({ errors, src }) => {
+                    console.log(`\n${colors.gray(src)}`);
+                    console.log(errors.map((e) => colors.red(e)).join("\n\n"));
+                });
+                console.groupEnd();
+            }
+        },
+    };
+}
+
 async function createBuild(src) {
     const listSrc = await glob(src);
     const tree = createTree();
+    const console = createLog();
+    const mark = createMarks();
     const getDest = createDataDest({
         assetHashPattern: "[hash]-[name]",
         assetsWithoutHash: /\.(html|js)/,
@@ -463,11 +549,13 @@ async function createBuild(src) {
                     return file.link;
                 },
                 addError(message) {
+                    message += "";
                     if (!file.errors.includes(message)) {
                         file.errors.push(message);
                     }
                 },
                 addAlert(message) {
+                    message += "";
                     if (!file.errors.includes(message)) {
                         file.errors.push(message);
                     }
@@ -485,20 +573,38 @@ async function createBuild(src) {
         addFile,
         hasFile,
         getFile,
+        getDest,
         isAssigned,
     };
     const pluginsCall = (method) => Promise.all(build.plugins.map((plugin) => typeof plugin[method] == "function" && plugin[method](build)));
     await pluginsCall("mounted");
     const cycle = async (listSrc) => {
+        const closeMark = mark("build");
+        console.log({
+            header: `File change detected. Starting incremental compilation...`,
+        });
         await pluginsCall("beforeLoad");
         await load(build, listSrc, true);
         await pluginsCall("afterLoad");
+        const errors = [];
+        for (const src in build.files) {
+            const file = build.files[src];
+            if (file.errors.length) {
+                errors.push(file);
+            }
+            if (file.alerts.length) ;
+        }
+        console.error({
+            header: `Built in ${closeMark()}, Found ${errors.length} errors.`,
+            body: errors,
+        });
+        console.raw("\nWatching for file changes...");
     };
     const watcher = createWatch({
         glob: src,
         listener: createListenerWatcher(tree, cycle),
     });
-    cycle(listSrc);
+    await cycle(listSrc);
 }
 const createListenerWatcher = (tree, cycle) => (group) => {
     let files = [];

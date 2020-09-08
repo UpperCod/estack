@@ -1,0 +1,19 @@
+---
+query:
+    md:
+        find:
+            tag: markdown
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <img src="{{'logo-black.svg'|asset}}" alt="Logo">
+    <script src="{{'index.js'|asset}}"></script>
+    <a href="{{'index.md'|link}}">readme</a>
+    {{query|json}}
+</body>
+</html>

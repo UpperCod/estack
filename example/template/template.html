@@ -8,11 +8,9 @@ template: default
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{page.title}}</title>
     <!--head-->
-    {{ './template.css' | asset: tag:true }}
-    {{ './components/doc-tabs/doc-tabs.tsx' | asset: tag:true }}
+    {{ './template.css' | asset }}
 </head>
 <body>
-    {% fragment "template-header" with header: page.site.links.header %}
     <section class="estackContent">
         <header class="estackContent-space">
             <h1 class="hero">{{page.title}}</h1>
@@ -22,7 +20,6 @@ template: default
             {{page.content}}
         </article>
     </section>
-    {% fragment "template-footer" %}
     <!--footer-->
 </body>
 </html>

@@ -1,8 +1,9 @@
-import { Plugin, Files, File, FillData, PageData } from "estack";
-import { RenderData } from "./types";
+import { Plugin, Files, File, FillData, PageData, Query } from "estack";
+import { RenderData, RenderDataQuery } from "./types";
 import { loadFile } from "./load-page";
 import { isHtml } from "../../utils/types";
 import { createEngine, Render } from "./engine";
+import { pageQuery } from "./query";
 
 export function pluginHtml(): Plugin {
     let render: Render;
@@ -21,6 +22,7 @@ export function pluginHtml(): Plugin {
             const archives: Files = {};
             const pages: Files = {};
             const global: FillData = {};
+            const refQuery: Map<Query, PageData[] | PageData[][]> = new Map();
 
             for (const src in files) {
                 if (!isHtml(src)) continue;
@@ -31,6 +33,15 @@ export function pluginHtml(): Plugin {
                         file.addAlert(`Duplicate global: ${data.global}`);
                     }
                     global[data.global] = data;
+                }
+                if (data.query) {
+                    for (const prop in data.query) {
+                        /**
+                         * The queries are built using the object of this as a reference and later
+                         * retrieve the query from renderPage
+                         */
+                        refQuery.set(data.query[prop], []);
+                    }
                 }
                 if (data.draft && mode == "build") {
                     file.write = false;
@@ -57,16 +68,26 @@ export function pluginHtml(): Plugin {
             const task = [];
 
             const renderPage = async (file: File) => {
+                const {
+                    data: { content, query, ...page },
+                } = file;
+
+                const dataQuery: RenderDataQuery = {};
+
+                if (query) {
+                    for (const prop in query) {
+                        dataQuery[prop] = refQuery.get(query[prop]);
+                    }
+                }
+
                 const renderData: RenderData = {
                     file,
                     global,
-                    page: file.data,
+                    page,
+                    query: dataQuery,
                 };
                 try {
-                    renderData.file.content = await render(
-                        file.data.content,
-                        renderData
-                    );
+                    renderData.file.content = await render(content, renderData);
                     return renderData;
                 } catch (e) {
                     renderData.file.addError(e + "");
@@ -93,6 +114,10 @@ export function pluginHtml(): Plugin {
                     }
                 }
             };
+
+            for (const [query] of refQuery) {
+                refQuery.set(query, pageQuery(pages, query, true));
+            }
 
             for (const link in pages) {
                 task.push(renderPage(pages[link]));

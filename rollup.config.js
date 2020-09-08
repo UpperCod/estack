@@ -8,9 +8,9 @@ import conditionalFsEventsImport from "./build-plugins/conditional-fsevents-impo
 import typescript from "@rollup/plugin-typescript";
 
 export default {
-    input: "src2/build.ts",
+    input: "src2/cli.ts",
     output: {
-        file: "build.js",
+        file: "cli.js",
         format: "cjs",
         banner: "#!/usr/bin/env node",
         externalLiveBindings: false,
