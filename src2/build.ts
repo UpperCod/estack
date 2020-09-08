@@ -30,7 +30,9 @@ export async function createBuild(opts: Options) {
     const options = await loadOptions(opts);
     const listSrc = await glob(options.src);
 
-    const tree = createTree();
+    const tree = createTree({
+        format: path.normalize,
+    });
 
     const log = createLog({
         build: "Built in [bold.green $], Found [bold.red $] errors.",
@@ -41,9 +43,8 @@ export async function createBuild(opts: Options) {
 
     const getDest = createDataDest(options);
 
-    const getSrc = (src: string) => path.normalize(src);
-    const hasFile = (src: string) => tree.has(getSrc(src));
-    const getFile = (src: string): File => tree.get(getSrc(src));
+    const hasFile = (src: string) => tree.has(src);
+    const getFile = (src: string): File => tree.get(src);
     const isAssigned = (src: string) => {
         if (hasFile(src)) {
             return getFile(src).assigned;
@@ -52,28 +53,38 @@ export async function createBuild(opts: Options) {
     };
     const addFile = (
         src: string,
-        { isRoot = true, watch = true, hash = true, write = true }
+        { isRoot = false, watch = true, hash = true, write = true }
     ) => {
-        src = getSrc(src);
         const file: File = tree.get(src);
-        /**@todo check use */
+
         file.watch = file.watch ?? watch;
         file.write = file.write ?? write;
-        if (isRoot) tree.add(src);
+        file.root = file.root ?? isRoot;
+
+        if (file.write && watcher) watcher.add(file.src);
+
         if (!file.setLink) {
+            /**
+             * @todo isolate block
+             */
             Object.assign(file, {
-                ...getDest(src, hash),
+                ...getDest(file.src, hash),
                 errors: [],
                 alerts: [],
                 read: () => readFile(src),
                 join: (src: string) => path.join(file.raw.dir, src),
+                addWatch(src: string) {
+                    if (!watch) return;
+                    const childFile = tree.addChild(file.src, src);
+                    if (watcher) watcher.add(childFile.src);
+                    return childFile;
+                },
                 async addChild(src: string) {
-                    src = getSrc(file.join(src));
+                    src = file.join(src);
                     const exist = build.hasFile(src);
-                    tree.addChild(file.src, src);
+                    const childFile = file.addWatch(src);
                     if (!exist) {
-                        if (watcher) watcher.add(src);
-                        await load(build, [src]);
+                        await load(build, [childFile.src]);
                     }
                     return build.getFile(src);
                 },
@@ -130,7 +141,6 @@ export async function createBuild(opts: Options) {
             pluginJs(),
             options.server ? pluginServer() : pluginWrite(),
         ].filter((plugin) => plugin),
-        getSrc,
         addFile,
         hasFile,
         getFile,
