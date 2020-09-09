@@ -1,9 +1,9 @@
 import { Files, File, Build } from "estack";
 
-export async function load(build: Build, listSrc: string[], isRoot?: boolean) {
+export async function load(build: Build, listSrc: string[], root?: boolean) {
     const currentFiles: Files = listSrc.reduce((currentFiles: Files, src) => {
         if (!build.isAssigned(src)) {
-            const file = build.addFile(src, { isRoot });
+            const file = build.addFile(src, { root });
             currentFiles[file.src] = file;
         }
         return currentFiles;

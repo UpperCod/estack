@@ -76,6 +76,7 @@ export function pluginJs(): Internal {
                                     const file = build.addFile(chunk.fileName, {
                                         hash: false,
                                         watch: false,
+                                        assigned: true,
                                     });
                                     file.content = chunk.code;
                                 }
@@ -86,19 +87,21 @@ export function pluginJs(): Internal {
             };
 
             const sendError = (error: RollupLogProps) => {
-                this.log.errors([
-                    {
-                        src: "",
-                        items: [
-                            [
-                                error.loc.file,
-                                error.loc.line,
-                                error.loc.column,
-                            ].join(":"),
-                            error.frame,
-                        ],
-                    },
-                ]);
+                if (error.loc) {
+                    this.log.errors([
+                        {
+                            src: "",
+                            items: [
+                                [
+                                    error.loc.file,
+                                    error.loc.line,
+                                    error.loc.column,
+                                ].join(":"),
+                                error.frame,
+                            ],
+                        },
+                    ]);
+                }
             };
 
             try {

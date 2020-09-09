@@ -6,6 +6,8 @@ import {
     LogBody,
     PluginContext,
     PluginsMessages,
+    FileOptions,
+    FileOptionsChild,
 } from "estack";
 import * as path from "path";
 import * as glob from "fast-glob";
@@ -22,6 +24,7 @@ import { pluginHtml } from "./plugins/html";
 import { pluginData } from "./plugins/data";
 import { pluginServer } from "./plugins/server";
 import { pluginJs } from "./plugins/js";
+import { pluginCss } from "./plugins/css";
 import { pluginWrite } from "./plugins/write";
 
 type Cycle = (listSrc: string[]) => Promise<void>;
@@ -53,15 +56,22 @@ export async function createBuild(opts: Options) {
     };
     const addFile = (
         src: string,
-        { isRoot = false, watch = true, hash = true, write = true }
+        {
+            root = false,
+            watch = true,
+            hash = true,
+            write = true,
+            assigned,
+        }: FileOptions = {}
     ) => {
         const file: File = tree.get(src);
 
         file.watch = file.watch ?? watch;
         file.write = file.write ?? write;
-        file.root = file.root ?? isRoot;
+        file.root = file.root ?? root;
+        file.assigned = file.assigned ?? assigned;
 
-        if (file.write && watcher) watcher.add(file.src);
+        if (watch) watcher.add(file.src);
 
         if (!file.setLink) {
             /**
@@ -73,20 +83,19 @@ export async function createBuild(opts: Options) {
                 alerts: [],
                 read: () => readFile(src),
                 join: (src: string) => path.join(file.raw.dir, src),
-                addWatch(src: string) {
-                    if (!watch) return;
-                    const childFile = tree.addChild(file.src, src);
-                    if (watcher) watcher.add(childFile.src);
-                    return childFile;
-                },
-                async addChild(src: string) {
-                    src = file.join(src);
-                    const exist = build.hasFile(src);
-                    const childFile = file.addWatch(src);
-                    if (!exist) {
-                        await load(build, [childFile.src]);
+                async addChild(
+                    src: string,
+                    { join = true, ...options }: FileOptionsChild = {}
+                ) {
+                    const childFile = build.addFile(
+                        join ? file.join(src) : src,
+                        options
+                    );
+                    if (options.watch ?? true) {
+                        tree.addChild(file.src, childFile.src);
                     }
-                    return build.getFile(src);
+                    if (!childFile.assigned) await load(build, [childFile.src]);
+                    return childFile;
                 },
                 async addLink(src: string) {
                     if (isHtml(src)) {
@@ -138,6 +147,7 @@ export async function createBuild(opts: Options) {
         plugins: [
             pluginHtml(),
             pluginData(),
+            pluginCss(),
             pluginJs(),
             options.server ? pluginServer() : pluginWrite(),
         ].filter((plugin) => plugin),

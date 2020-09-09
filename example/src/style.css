@@ -1,0 +1,6 @@
+@import "./b.css" (as: b);
+
+.body {
+    @extend b.button;
+    color: red;
+}
