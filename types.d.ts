@@ -42,8 +42,8 @@ declare module "estack" {
         destAssets: string;
         watch: boolean;
         external: string[];
-        js?: FillData;
-        css?: FillData;
+        js?: any[];
+        css?: any[];
         silent?: boolean;
         minify?: boolean;
         server?: boolean;
@@ -84,7 +84,7 @@ declare module "estack" {
         addFile(src: string, options?: FileOptions): File;
         hasFile(src: string): boolean;
         getFile(src: string): File;
-        getDest(src: string): File;
+        getDest(src: string, hash?: boolean): File;
         isAssigned(src: string): boolean;
         plugins: Plugin[];
         files: Files;
@@ -92,6 +92,7 @@ declare module "estack" {
         mode: "dev" | "build";
         log: Log;
         options: OptionsBuild;
+        cycle: (listSrc: string[]) => Promise<void>;
     }
 
     export interface Query {
@@ -135,6 +136,7 @@ declare module "estack" {
         name?: string;
         base?: string;
         type?: string;
+        hash?: boolean;
         /**
          * If true, the file has been assigned to a plugin
          * so it is not processed until the watcher detects changes
@@ -214,11 +216,14 @@ declare module "estack" {
         clear(): void;
         errors(body: LogBody[]): void;
         alerts(body: LogBody[]): void;
-        build(): void;
     }
 
     export interface PluginsMessages {
         [name: string]: { errors: LogBody[]; alerts: LogBody[] };
+    }
+
+    export interface PluginsExternal {
+        [plugin: string]: any;
     }
 
     export interface PluginContext extends Plugin {
@@ -231,41 +236,31 @@ declare module "estack" {
         /**
          * Parallel process, initial and single execution hook
          */
-        mounted?: (this: PluginContext, build: Build) => Promise<void> | void;
+        mounted?: (build: Build) => Promise<void> | void;
         /**
          * Filter the files to associate with the plugin
          */
-        filter?: (this: PluginContext, file: File) => boolean;
+        filter?: (file: File) => boolean;
         /**
          * Sequential process, it is executed before sending the files to the root load
          */
-        buildStart?: (
-            this: PluginContext,
-            build: Build
-        ) => Promise<void> | void;
+        buildStart?: (build: Build) => Promise<void> | void;
         /**
          * Parallel process, it is executed before the execution of the root load
          */
-        beforeLoad?: (
-            this: PluginContext,
-            build: Build
-        ) => Promise<void> | void;
+        beforeLoad?: (build: Build) => Promise<void> | void;
         /**
          * Hook that allows manipulating the file accepted by filter, this process can be executed
          * multiple times and recursively according to the consumption of the assets
          */
-        load?: (
-            this: PluginContext,
-            currentFiles: File,
-            build: Build
-        ) => Promise<void>;
+        load?: (currentFiles: File, build: Build) => Promise<void>;
         /**
          * Parallel process, it is executed after the execution of the root load
          */
-        afterLoad?: (this: PluginContext, build: Build) => Promise<void> | void;
+        afterLoad?: (build: Build) => Promise<void> | void;
         /**
          * Sequential process, it is executed after sending the files to root load
          */
-        buildEnd?: (this: PluginContext, build: Build) => Promise<void> | void;
+        buildEnd?: (build: Build) => Promise<void> | void;
     }
 }

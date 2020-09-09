@@ -10,11 +10,12 @@ export function pluginCss(): Plugin {
         beforeLoad() {
             this.cache = {};
         },
-        async load(file) {
+        async load(file, build) {
             const imports = {};
 
             const result = await postcss([
                 pluginImport({ imports, process: this.cache }),
+                ...build.options.css,
             ]).process(await file.read(), {
                 from: file.src,
             });

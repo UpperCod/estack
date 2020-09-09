@@ -1,4 +1,5 @@
 import { Plugin, Files } from "estack";
+import * as path from "path";
 import { isJs } from "../../utils/types";
 import {
     rollup,
@@ -10,6 +11,7 @@ import {
     RollupLogProps,
     RollupCache,
 } from "rollup";
+import { pluginCss } from "./plugin-css";
 
 interface Internal extends Plugin {
     withLoad?: boolean;
@@ -17,29 +19,19 @@ interface Internal extends Plugin {
 }
 
 export function pluginJs(): Internal {
-    let withLoad: boolean;
-    let cache: RollupCache;
-    let watcher: RollupWatcher;
     return {
         name: "plugin-js",
         filter: ({ src }) => isJs(src),
-        async load(file) {
-            withLoad = true;
-            file.watch = false;
-        },
+
         async buildEnd(build) {
             const { files } = build;
-            if (!withLoad) return;
-            withLoad = false;
-            if (watcher) {
-                watcher.close();
-                watcher = null;
-            }
-
             const filesJs: Files = {};
 
             for (let src in files) {
-                if (isJs(src)) filesJs[src] = files[src];
+                if (isJs(src)) {
+                    const file = files[src];
+                    filesJs[src] = file;
+                }
             }
 
             if (!Object.keys(filesJs).length) return;
@@ -51,34 +43,34 @@ export function pluginJs(): Internal {
                 onwarn() {
                     return "";
                 },
-                cache: cache,
+                cache: this.cache,
                 plugins: [
+                    pluginCss(build),
                     {
                         name: "plugin-estack-js",
+                        async resolveId(id, importer) {
+                            if (id.startsWith("./")) {
+                                if (build.hasFile(importer)) {
+                                    const file = build.getFile(importer);
+                                    file.addChild(id, {
+                                        write: false,
+                                        assigned: true,
+                                    });
+                                }
+                            }
+                            return null;
+                        },
                         buildStart(options) {
                             for (const src in filesJs) {
                                 const file = filesJs[src];
-                                const { base } = file;
-                                this.emitFile({
-                                    type: "chunk",
-                                    id: src,
-                                    fileName: base,
-                                });
-                                alias[base] = file;
-                            }
-                        },
-                        generateBundle(options, chunks) {
-                            for (const src in chunks) {
-                                const chunk = chunks[src] as OutputChunk;
-                                if (alias[chunk.fileName]) {
-                                    alias[chunk.fileName].content = chunk.code;
-                                } else {
-                                    const file = build.addFile(chunk.fileName, {
-                                        hash: false,
-                                        watch: false,
-                                        assigned: true,
+                                const { base, write } = file;
+                                if (write) {
+                                    this.emitFile({
+                                        type: "chunk",
+                                        id: src,
+                                        fileName: base,
                                     });
-                                    file.content = chunk.code;
+                                    alias[base] = file;
                                 }
                             }
                         },
@@ -86,61 +78,53 @@ export function pluginJs(): Internal {
                 ],
             };
 
-            const sendError = (error: RollupLogProps) => {
+            const sendError = (error: RollupLogProps, root: boolean) => {
                 if (error.loc) {
-                    this.log.errors([
-                        {
-                            src: "",
-                            items: [
+                    if (build.hasFile(error.loc.file)) {
+                        build
+                            .getFile(error.loc.file)
+                            .addError(
                                 [
-                                    error.loc.file,
-                                    error.loc.line,
-                                    error.loc.column,
-                                ].join(":"),
-                                error.frame,
-                            ],
-                        },
-                    ]);
+                                    [
+                                        error.loc.file,
+                                        error.loc.line,
+                                        error.loc.column,
+                                    ].join(":"),
+                                    error.frame,
+                                ].join("")
+                            );
+                    }
                 }
             };
 
             try {
                 const bundle = await rollup(input);
-                const output: OutputOptions = {
+
+                this.cache = bundle.cache;
+
+                const { output } = await bundle.generate({
                     format: "es",
                     sourcemap: build.options.sourcemap,
                     dir: build.options.site
                         ? build.options.destAssets
                         : build.options.dest,
-                };
-                if (build.options.watch) {
-                    cache = bundle.cache;
-                    watcher = watch({
-                        ...input,
-                        output,
-                    });
-                    let withError: boolean;
-                    watcher.on("event", (event) => {
-                        switch (event.code) {
-                            case "BUNDLE_START":
-                                this.log.clear();
-                                withError = false;
-                                break;
-                            case "ERROR":
-                                withError = true;
-                                sendError(event.error);
-                                this.log.build();
-                                break;
-                            case "BUNDLE_END":
-                                if (!withError) this.log.build();
-                                break;
-                        }
-                    });
-                } else {
-                    await bundle.generate(output);
+                });
+
+                for (const src in output) {
+                    const chunk = output[src] as OutputChunk;
+                    if (alias[chunk.fileName]) {
+                        alias[chunk.fileName].content = chunk.code;
+                    } else {
+                        const file = build.addFile(chunk.fileName, {
+                            hash: false,
+                            watch: false,
+                            assigned: true,
+                        });
+                        file.content = chunk.code;
+                    }
                 }
             } catch (error) {
-                sendError(error);
+                sendError(error, true);
             }
         },
     };

@@ -9,7 +9,7 @@
         "test": "npm run clear && ava",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:doc": "node cli.js dev example/src/index.html --js estack.js --css estack.css",
+        "dev:doc": "node cli.js dev example/src/index.html",
         "dev:js": "node cli.js dev example/{src,template}/**/*.{css,js} --server",
         "build:doc": "node cli.js build example/src/**/*.{html,md} p --js estack.js --css estack.css",
         "prepare": "npm run build && npm run test"
@@ -28,7 +28,11 @@
     },
     "dependencies": {},
     "estack": {
-        "js": {}
+        "build": {
+            "css": {
+                "cssnano": {}
+            }
+        }
     },
     "devDependencies": {
         "@atomico/kit": "^0.3.7",

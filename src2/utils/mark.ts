@@ -7,7 +7,7 @@ interface Marks {
 function toHumanTime(ms: number) {
     ms = Math.ceil(ms);
     if (ms > 300) {
-        return (ms / 1000).toFixed(2) + "s";
+        return (ms / 1000).toFixed(1) + "s";
     } else {
         return ms + "ms";
     }

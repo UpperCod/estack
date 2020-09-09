@@ -15,8 +15,16 @@ sade("estack <mode> <src> [dest]")
     .option("--sourcemap", "Enable the use of sourcemap", false)
     .option("--silent", "Prevents printing of logs", false)
     .option("--watch", "Prevents printing of logs", false)
-    .option("--js", "", "")
-    .option("--css", "", "")
+    .option(
+        "--js",
+        "define an index to use the package for importing plugins",
+        ""
+    )
+    .option(
+        "--css",
+        "define an index to use the package for importing plugins",
+        ""
+    )
     .option(
         "--minify",
         "Minify the code only if the flag --watch is not used",

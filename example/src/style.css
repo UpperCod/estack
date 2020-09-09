@@ -1,6 +1,5 @@
-@import "./b.css" (as: b);
+@import "./b.css";
 
-.body {
-    @extend b.button;
-    color: red;
+body {
+    background: tomato;
 }

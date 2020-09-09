@@ -1,4 +1,4 @@
-import { Options, OptionsBuild } from "estack";
+import { Options, OptionsBuild, PluginsExternal } from "estack";
 import * as path from "path";
 import getProp from "@uppercod/get-prop";
 import { readFile } from "./utils/fs";
@@ -10,11 +10,6 @@ const pkgDefault = {
     devDependencies: {},
     peerDependencies: {},
     scripts: {},
-};
-
-const jsDefault = {
-    jsx: "h",
-    jsxFragment: "Fragment",
 };
 
 const cssDefault = {};
@@ -90,13 +85,24 @@ export async function loadOptions({
         href,
         watch,
         server,
-        js: typeof js == "string" ? getProp(pkg, js, jsDefault) : jsDefault,
-        css:
-            typeof css == "string" ? getProp(pkg, css, cssDefault) : cssDefault,
+        js: await loadPlugins(
+            typeof js == "string" ? getProp(pkg, js, {}) : {}
+        ),
+        css: await loadPlugins(
+            typeof css == "string" ? getProp(pkg, css, {}) : {}
+        ),
         silent,
     };
 
     return options;
+}
+
+async function loadPlugins(plugins: PluginsExternal) {
+    const task = [];
+    for (let prop in plugins) {
+        task.push(import(prop).then((plugin) => plugin(plugins[prop])));
+    }
+    return Promise.all(task);
 }
 
 async function getPackage() {

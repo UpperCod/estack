@@ -1,0 +1,1 @@
+{"version":3,"file":"5eb-65e-5f9-g.js","sources":["../example/src/g.js"],"sourcesContent":["console.log(() => {\n    import(\"./b.js\").then(console.log);\n});\n"],"names":[],"mappings":"AAAA,OAAO,CAAC,GAAG,CAAC,MAAM;AAClB,IAAI,OAAO,iBAAQ,CAAC,CAAC,IAAI,CAAC,OAAO,CAAC,GAAG,CAAC,CAAC;AACvC,CAAC,CAAC"}
