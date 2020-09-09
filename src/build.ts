@@ -1,14 +1,4 @@
-import {
-    File,
-    Options,
-    Build,
-    Plugin,
-    LogBody,
-    PluginContext,
-    PluginsMessages,
-    FileOptions,
-    FileOptionsChild,
-} from "estack";
+import { File, Options, Build, LogBody, FileOptions } from "estack";
 import * as path from "path";
 import * as glob from "fast-glob";
 import createTree, { Context } from "@uppercod/imported";
