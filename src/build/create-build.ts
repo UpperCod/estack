@@ -19,6 +19,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             load = true,
             hash = false,
             assigned = false,
+            root = false,
         }: FileConfig = {}
     ): Promise<File> => {
         if (hasFile(src)) return getFile(src);
@@ -49,11 +50,10 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     const addChild = (
         file: File,
         childFile: File,
-        config: WatchConfig = {}
+        { rewrite = true }: WatchConfig = {}
     ) => {
-        file.imported.set(file.src, {
-            ...file.imported.get(childFile.src),
-            ...config,
+        file.imported.set(childFile.src, {
+            rewrite,
         });
     };
 

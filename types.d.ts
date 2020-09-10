@@ -1,5 +1,5 @@
 declare module "estack" {
-    interface Parts {
+    interface Meta {
         /**
          * The root of the path such as '/' or 'c:\'
          */
@@ -37,7 +37,8 @@ declare module "estack" {
         type: string;
         watch: boolean;
         write: boolean;
-        parts: Parts;
+        meta: Meta;
+        errors: string[];
         assigned: boolean;
         content?: string;
         imported: Map<string, WatchConfig>;
@@ -62,6 +63,8 @@ declare module "estack" {
         setLink(file: File, link: string): void;
         resolveFromFile(file: File, src: string): string;
         readFile(file: File): Promise<string>;
+        addError(file: File, error: string): void;
+        options?: Options;
     }
 
     interface Plugin {
@@ -69,6 +72,10 @@ declare module "estack" {
         mounted?: (build: Build) => Promise<void> | void;
         filter?: (file: File) => boolean;
         load?: (file: File, build: Build) => Promise<void> | void;
+        buildStart?: (build: Build) => Promise<void> | void;
+        beforeLoad?: (build: Build) => Promise<void> | void;
+        afterLoad?: (build: Build) => Promise<void> | void;
+        buildEnd?: (build: Build) => Promise<void> | void;
     }
 
     interface OptionsBuild {

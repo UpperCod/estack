@@ -1,10 +1,11 @@
 import { Plugin, OptionsBuild } from "estack";
+import * as glob from "fast-glob";
 import { Load } from "./types";
 import { createBuild } from "./create-build";
 import { loadOptions } from "./load-options";
 import { pluginHtml } from "../plugins/html";
-import * as glob from "fast-glob";
-
+import { pluginsParallel, pluginsSequential } from "./plugins";
+import { createWatch } from "../create-watch";
 export async function build(opts: OptionsBuild) {
     const options = await loadOptions(opts);
 
@@ -49,7 +50,11 @@ export async function build(opts: OptionsBuild) {
      */
     const cycle = (src: string[]) =>
         (currentCycle = new Promise(async (resolve, reject) => {
+            await pluginsSequential("buildStart", plugins, build);
+            await pluginsParallel("beforeLoad", plugins, build);
             await Promise.all(src.map((src) => build.addFile(src)));
+            await pluginsParallel("afterLoad", plugins, build);
+            await pluginsSequential("buildEnd", plugins, build);
             resolve();
         }));
 
@@ -62,7 +67,9 @@ export async function build(opts: OptionsBuild) {
          */
         {
             load,
-            watch: (file) => {},
+            watch: (file) => {
+                if (watcher.add) watcher.add(file.src);
+            },
             error: async (file) => {
                 await currentCycle;
                 console.log(file.src);
@@ -84,5 +91,14 @@ export async function build(opts: OptionsBuild) {
         }
     );
 
+    await pluginsParallel("mounted", plugins, build);
+
     await cycle(listSrc);
+
+    const watcher = options.watch
+        ? createWatch({
+              glob: options.glob,
+              listener({ change, unlink, add }) {},
+          })
+        : null;
 }

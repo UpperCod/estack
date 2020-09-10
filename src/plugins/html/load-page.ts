@@ -3,6 +3,7 @@ import { PageData } from "./types";
 import { frontmatter } from "./frontmatter";
 import { loadData } from "../data/load-data";
 import { normalizePath } from "../../utils/utils";
+import getId from "@uppercod/hash";
 
 export async function loadFile(file: File, build: Build): Promise<void> {
     const [html, metadata] = frontmatter(file.src, await build.readFile(file));
@@ -26,6 +27,7 @@ export async function loadFile(file: File, build: Build): Promise<void> {
 
     file.data = {
         ...data,
+        id: getId(file.src),
         content: html,
         link: file.link,
         file: normalizePath(file.src),
