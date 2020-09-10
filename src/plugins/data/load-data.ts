@@ -1,10 +1,9 @@
-import { File } from "estack";
+import { File, Build } from "estack";
 import mapObject from "@uppercod/map-object";
 import createCache from "@uppercod/cache";
 import getProp from "@uppercod/get-prop";
 import { request } from "@uppercod/request";
 import { safeLoad } from "js-yaml";
-
 import { isUrl } from "../../utils/types";
 
 const yamlLoad = (code: string, src: string) =>
@@ -12,29 +11,31 @@ const yamlLoad = (code: string, src: string) =>
 
 const cache = createCache();
 
-export async function loadData(rootFile: File) {
-    const value = await rootFile.read();
-    rootFile.write = false;
-    if (!rootFile.dataAsync) {
+export async function loadData(file: File, build: Build) {
+    console.log(file);
+    const value = await build.readFile(file);
+    file.write = false;
+    if (!file.data) {
         let dataValue;
         try {
-            dataValue = yamlLoad(value, rootFile.src);
+            dataValue = yamlLoad(value, file.src);
         } catch (e) {
-            rootFile.addError(e);
+            //file.addError(e);
         }
-        rootFile.dataAsync = mapObject(
+        file.data = mapObject(
             {
-                file: rootFile.src,
+                file: file.src,
                 value: dataValue,
             },
             {
                 async $link({ value }) {
-                    try {
-                        return rootFile.addLink(value);
-                    } catch (e) {
-                        rootFile.addError(e);
-                        return {};
-                    }
+                    return {};
+                    // try {
+                    //     return file.addLink(value);
+                    // } catch (e) {
+                    //     file.addError(e);
+                    //     return {};
+                    // }
                 },
                 async $ref({ value, root }) {
                     let data = root;
@@ -51,19 +52,25 @@ export async function loadData(rootFile: File) {
                                 ? yamlLoad(content, src)
                                 : content;
                         } else if (src) {
-                            const result = await rootFile.addChild(src);
-                            const { root } = await result.dataAsync;
+                            const childFile = await build.addFile(
+                                build.resolveFromFile(file, src)
+                            );
+
+                            build.addChild(file, childFile);
+
+                            const { root } = await childFile.data;
+
                             data = root;
                         }
                         return prop ? getProp(data, prop) : data;
                     } catch (e) {
-                        rootFile.addError(e);
+                        //file.addError(e);
                         return {};
                     }
                 },
             }
         );
     }
-    const { root } = await rootFile.dataAsync;
+    const { root } = await file.data;
     return root;
 }

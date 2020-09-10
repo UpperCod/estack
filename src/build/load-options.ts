@@ -1,4 +1,4 @@
-import { OptionsBuild, Options, PluginsExternal } from "estack/internal";
+import { OptionsBuild, Options, PluginsExternal } from "estack";
 import getProp from "@uppercod/get-prop";
 import { readFile } from "../utils/fs";
 import * as builtins from "builtin-modules";

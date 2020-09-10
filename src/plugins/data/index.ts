@@ -6,8 +6,8 @@ export function pluginData(): Plugin {
     return {
         name: "data",
         filter: ({ src }) => isYaml(src) || isJson(src),
-        async load(file) {
-            await loadData(file);
+        async load(file, build) {
+            await loadData(file, build);
         },
     };
 }

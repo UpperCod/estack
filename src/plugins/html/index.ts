@@ -1,6 +1,7 @@
-import { Plugin } from "estack/internal";
+import { Plugin } from "estack";
+import { readFile } from "fs/promises";
 //import { RenderData, RenderDataQuery } from "./types";
-//import { loadFile } from "./load-page";
+import { loadFile } from "./load-page";
 import { isHtml } from "../../utils/types";
 //import { createEngine, Render } from "./engine";
 //import { pageQuery } from "./query";
@@ -13,9 +14,8 @@ export function pluginHtml(): Plugin {
             //render = createEngine();
         },
         filter: ({ src }) => isHtml(src),
-        async load(file) {
-            console.log(file);
-            //await loadFile(file);
+        async load(file, build) {
+            await loadFile(file, build);
         },
         /*
         async afterLoad({ files, mode }) {

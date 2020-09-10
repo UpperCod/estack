@@ -1,4 +1,5 @@
-import { Load, Plugin, OptionsBuild } from "estack/internal";
+import { Plugin, OptionsBuild } from "estack";
+import { Load } from "./types";
 import { createBuild } from "./create-build";
 import { loadOptions } from "./load-options";
 import { pluginHtml } from "../plugins/html";

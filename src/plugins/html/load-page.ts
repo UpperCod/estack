@@ -1,38 +1,33 @@
-import { File, PageData } from "estack";
+import { File, Build } from "estack";
+import { PageData } from "./types";
 import { frontmatter } from "./frontmatter";
 import { loadData } from "../data/load-data";
 import { normalizePath } from "../../utils/utils";
 
-export async function loadFile(rootFile: File): Promise<void> {
-    const [html, metadata] = frontmatter(rootFile.src, await rootFile.read());
-    const copyRootFile = { ...rootFile };
+export async function loadFile(file: File, build: Build): Promise<void> {
+    const [html, metadata] = frontmatter(file.src, await file.read());
 
-    copyRootFile.read = async () => metadata;
+    const copyFile = { ...file };
 
-    const data: PageData = metadata ? await loadData(copyRootFile) : {};
+    copyFile.data = null;
 
-    let { link, folder = "", permalink, slug, content: _content } = data;
+    copyFile.read = async () => metadata;
 
-    /**@todo add markdown */
-    const content = _content || html;
+    const data: PageData = metadata ? await loadData(copyFile, build) : {};
 
-    const name = slug || rootFile.name;
-
-    link = link || permalink;
+    let { link } = data;
 
     if (link) {
-        rootFile.setLink(
-            (link += /\/$/.test(link) || link == "/" ? "index.html" : ".html")
+        build.setLink(
+            file,
+            link + (/\/$/.test(link) || link == "/" ? "index.html" : ".html")
         );
-    } else {
-        rootFile.setLink(folder, name + ".html");
     }
 
-    rootFile.data = {
+    file.data = {
         ...data,
-        content,
-        link: rootFile.link,
-        slug: normalizePath(name),
-        file: normalizePath(rootFile.src),
+        content: html,
+        link: file.link,
+        file: normalizePath(file.src),
     };
 }

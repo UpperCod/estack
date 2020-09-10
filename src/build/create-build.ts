@@ -1,17 +1,12 @@
-import {
-    Files,
-    File,
-    WatchConfig,
-    FileConfig,
-    ActionsBuild,
-    ConfigBuild,
-} from "estack/internal";
 import * as path from "path";
 import getHash from "@uppercod/hash";
+import * as fs from "fs/promises";
+import { Files, File, WatchConfig, FileConfig, Build } from "estack";
+import { ActionsBuild, ConfigBuild } from "./types";
 import { createNormalizeSrc } from "./create-normalize-src";
 import { normalizePath } from "../utils/utils";
 
-export function createBuild(actions: ActionsBuild, config: ConfigBuild) {
+export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     const files: Files = {};
     const getSrc = createNormalizeSrc(files);
     const getFile = (src: string) => files[getSrc(src)];
@@ -39,21 +34,31 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild) {
             type: config.types[type] || type,
             assigned,
             imported: new Map(),
-            setLink: (link) => setLink(file, link),
-            addChild(src: string, config: WatchConfig = {}) {
-                if (!hasFile(src)) return;
-                src = getSrc(src);
-                file.imported.set(src, {
-                    ...file.imported.get(src),
-                    ...config,
-                });
-            },
         };
         setLink(file, src);
         files[src] = file;
         if (watch) actions.watch(file);
         if (load) await actions.load(file);
         return file;
+    };
+
+    const resolveFromFile = (file: File, src: string) =>
+        path.join(file.parts.dir, src);
+
+    const addChild = (
+        file: File,
+        childFile: File,
+        config: WatchConfig = {}
+    ) => {
+        file.imported.set(file.src, {
+            ...file.imported.get(childFile.src),
+            ...config,
+        });
+    };
+
+    const readFile = async (file: File): Promise<string> => {
+        if (file.content) return file.content;
+        return fs.readFile(file.src, "utf8");
     };
 
     const setLink = (file: File, link: string) => {
@@ -71,5 +76,14 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild) {
             .replace(/\.html$/, "");
     };
 
-    return { files, hasFile, addFile, getFile };
+    return {
+        files,
+        hasFile,
+        addFile,
+        getFile,
+        setLink,
+        addChild,
+        readFile,
+        resolveFromFile,
+    };
 }
