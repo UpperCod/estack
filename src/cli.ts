@@ -1,5 +1,5 @@
 import * as sade from "sade";
-import { build } from "./build/build";
+import { build } from "./build";
 
 sade("estack <mode> <src> [dest]")
     .version("PKG.VERSION")

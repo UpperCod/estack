@@ -1,14 +1,14 @@
-import { Plugin, OptionsBuild, Build, File, WatchConfig } from "estack";
+import { Plugin, OptionsBuild } from "estack";
 import * as glob from "fast-glob";
-import { Load } from "./types";
-import { createBuild } from "./create-build";
-import { loadOptions } from "./load-options";
-import { createWatch } from "./create-watch";
-import { pluginsParallel, pluginsSequential } from "./plugins";
-import { pluginHtml } from "../plugins/html";
-import { pluginServer } from "../plugins/server";
-import { log } from "../utils/log";
-import { createMarks } from "../utils/mark";
+import { Load } from "./build/types";
+import { createBuild } from "./build/create-build";
+import { loadOptions } from "./build/load-options";
+import { createWatch } from "./build/create-watch";
+import { pluginsParallel, pluginsSequential } from "./build/plugins";
+import { pluginHtml } from "./plugins/html";
+import { pluginServer } from "./plugins/server";
+import { log } from "./utils/log";
+import { createMarks } from "./utils/mark";
 
 export async function build(opts: OptionsBuild) {
     const options = await loadOptions(opts);
