@@ -26,7 +26,6 @@ export function pluginJs(): Internal {
         async buildEnd(build) {
             const { files } = build;
             const filesJs: Files = {};
-
             for (let src in files) {
                 if (isJs(src)) {
                     const file = files[src];
@@ -78,7 +77,7 @@ export function pluginJs(): Internal {
                 ],
             };
 
-            const sendError = (error: RollupLogProps, root: boolean) => {
+            const sendError = (error: RollupLogProps) => {
                 if (error.loc) {
                     if (build.hasFile(error.loc.file)) {
                         build
@@ -117,14 +116,13 @@ export function pluginJs(): Internal {
                     } else {
                         const file = build.addFile(chunk.fileName, {
                             hash: false,
-                            watch: false,
                             assigned: true,
                         });
                         file.content = chunk.code;
                     }
                 }
             } catch (error) {
-                sendError(error, true);
+                sendError(error);
             }
         },
     };

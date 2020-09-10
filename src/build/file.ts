@@ -27,6 +27,7 @@ export const createSetFile = (build: Options, tree: Context) => (
                 join ? file.join(src) : src,
                 options
             );
+
             if (options.watch ?? true) {
                 tree.addChild(file.src, childFile.src);
             }

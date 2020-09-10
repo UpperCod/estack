@@ -1,4 +1,4 @@
-declare module "estack" {
+declare module "@estack" {
     export interface OptionsDest {
         assetHashPattern: string;
         assetsWithoutHash: RegExp;

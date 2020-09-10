@@ -9,9 +9,8 @@
         "test": "npm run clear && ava",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:doc": "node cli.js dev example/src/index.html",
-        "dev:js": "node cli.js dev example/{src,template}/**/*.{css,js} --server",
-        "build:doc": "node cli.js build example/src/**/*.{html,md} p --js estack.js --css estack.css",
+        "dev:doc": "node cli.js dev site/index.html",
+        "build:doc": "node cli.js build site/index.html",
         "prepare": "npm run build && npm run test"
     },
     "author": "UpperCod",

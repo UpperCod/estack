@@ -1,5 +1,5 @@
 import * as sade from "sade";
-import { build } from "./build/build";
+import { createBuild } from "./build";
 
 sade("estack <mode> <src> [dest]")
     .version("PKG.VERSION")
@@ -30,7 +30,7 @@ sade("estack <mode> <src> [dest]")
     )
     .example("dev src/index.html")
     .action((mode, src, dest, options) => {
-        build({
+        createBuild({
             ...options,
             mode,
             src,

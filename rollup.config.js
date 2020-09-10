@@ -8,7 +8,7 @@ import conditionalFsEventsImport from "./build-plugins/conditional-fsevents-impo
 import typescript from "@rollup/plugin-typescript";
 
 export default {
-    input: "src2/cli.ts",
+    input: "src/cli.ts",
     output: {
         file: "cli.js",
         format: "cjs",

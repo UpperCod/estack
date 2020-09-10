@@ -1,21 +1,23 @@
-import { Plugin, Files, File, FillData, PageData, Query } from "estack";
-import { RenderData, RenderDataQuery } from "./types";
-import { loadFile } from "./load-page";
+import { Plugin } from "estack/internal";
+//import { RenderData, RenderDataQuery } from "./types";
+//import { loadFile } from "./load-page";
 import { isHtml } from "../../utils/types";
-import { createEngine, Render } from "./engine";
-import { pageQuery } from "./query";
+//import { createEngine, Render } from "./engine";
+//import { pageQuery } from "./query";
 
 export function pluginHtml(): Plugin {
-    let render: Render;
+    //let render: Render;
     return {
         name: "html",
         mounted() {
-            render = createEngine();
+            //render = createEngine();
         },
         filter: ({ src }) => isHtml(src),
         async load(file) {
-            await loadFile(file);
+            console.log(file);
+            //await loadFile(file);
         },
+        /*
         async afterLoad({ files, mode }) {
             const templates: Files = {};
             const fragments: Files = {};
@@ -36,10 +38,8 @@ export function pluginHtml(): Plugin {
                 }
                 if (data.query) {
                     for (const prop in data.query) {
-                        /**
-                         * The queries are built using the object of this as a reference and later
-                         * retrieve the query from renderPage
-                         */
+                        //The queries are built using the object of this as a reference and later
+                        //retrieve the query from renderPage
                         refQuery.set(data.query[prop], []);
                     }
                 }
@@ -127,5 +127,6 @@ export function pluginHtml(): Plugin {
                 Promise.all(pages.map(renderTemplate))
             );
         },
+        */
     };
 }

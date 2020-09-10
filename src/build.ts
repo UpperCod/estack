@@ -16,12 +16,14 @@ import { pluginCss } from "./plugins/css";
 import { pluginWrite } from "./plugins/write";
 import { createSetFile } from "./build/file";
 import { pluginsParallel, pluginsSequential } from "./plugins";
+
 type Cycle = (listSrc: string[]) => Promise<void>;
+const cwd = process.cwd();
 
 export async function createBuild(opts: Options) {
     const options = await loadOptions(opts);
     const listSrc = await glob(options.src);
-    const cwd = process.cwd();
+
     const tree = createTree({
         format: (string) => path.relative(cwd, string),
     });
@@ -166,16 +168,13 @@ const createListenerWatcher = (tree: Context, cycle: Cycle) => (
             .map((src): string[] => {
                 if (tree.has(src)) {
                     const file: File = tree.get(src);
-                    if (file.watch) {
-                        const roots = tree.getRoots(src);
-                        unlink.push(file.src);
-                        return roots;
-                    }
+                    const roots = tree.getRoots(src);
+                    unlink.push(file.src, ...roots);
+                    return roots;
                 }
                 return [];
             })
             .flat();
-
         files.push(...change);
     }
     if (unlink) {
@@ -185,7 +184,6 @@ const createListenerWatcher = (tree: Context, cycle: Cycle) => (
     if (group.add) {
         files.push(...group.add);
     }
-
     if (files.length) {
         cycle(files);
     }
