@@ -28,10 +28,12 @@ declare module "estack" {
         load?: boolean;
         assigned?: boolean;
         hash?: boolean;
+        root?: boolean;
     }
 
     interface File {
         src: string;
+        root: boolean;
         data?: any;
         hash: boolean;
         type: string;
@@ -41,7 +43,7 @@ declare module "estack" {
         errors: string[];
         assigned: boolean;
         content?: string;
-        imported: Map<string, WatchConfig>;
+        importers: Map<string, WatchConfig>;
         dest?: string;
         link?: string;
     }
@@ -59,7 +61,8 @@ declare module "estack" {
         hasFile(src: string): boolean;
         getFile(src: string): File;
         addFile(src: string, config?: FileConfig): Promise<File>;
-        addChild(file: File, childFile: File, config?: WatchConfig): void;
+        addImporter(file: File, importer: File, config?: WatchConfig): void;
+        removeFile(src: string): void;
         setLink(file: File, link: string): void;
         resolveFromFile(file: File, src: string): string;
         readFile(file: File): Promise<string>;

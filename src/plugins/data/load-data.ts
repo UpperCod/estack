@@ -54,7 +54,7 @@ export async function loadData(file: File, build: Build) {
                                 build.resolveFromFile(file, src)
                             );
 
-                            build.addChild(file, childFile);
+                            build.addImporter(childFile, file);
 
                             const { root } = await childFile.data;
 

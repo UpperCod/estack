@@ -28,6 +28,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
         const type = meta.ext.slice(1);
         const file: File = {
             src,
+            root,
             hash,
             watch,
             write,
@@ -35,7 +36,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             errors: [],
             type: config.types[type] || type,
             assigned,
-            imported: new Map(),
+            importers: new Map(),
         };
         setLink(file, src);
         files[src] = file;
@@ -47,12 +48,12 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     const resolveFromFile = (file: File, src: string) =>
         path.join(file.meta.dir, src);
 
-    const addChild = (
+    const addImporter = (
         file: File,
-        childFile: File,
+        fileImporter: File,
         { rewrite = true }: WatchConfig = {}
     ) => {
-        file.imported.set(childFile.src, {
+        file.importers.set(fileImporter.src, {
             rewrite,
         });
     };
@@ -84,15 +85,20 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
         }
     };
 
+    const removeFile = (src: string) => {
+        delete files[getSrc(src)];
+    };
+
     return {
         files,
         hasFile,
         addFile,
         getFile,
         setLink,
-        addChild,
         addError,
         readFile,
+        removeFile,
+        addImporter,
         resolveFromFile,
     };
 }

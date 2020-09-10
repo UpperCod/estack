@@ -1,4 +1,4 @@
-import { Plugin, OptionsBuild } from "estack";
+import { Plugin, OptionsBuild, Build, File, WatchConfig } from "estack";
 import * as glob from "fast-glob";
 import { Load } from "./types";
 import { createBuild } from "./create-build";
@@ -50,13 +50,50 @@ export async function build(opts: OptionsBuild) {
      */
     const cycle = (src: string[]) =>
         (currentCycle = new Promise(async (resolve, reject) => {
+            console.log(src);
             await pluginsSequential("buildStart", plugins, build);
             await pluginsParallel("beforeLoad", plugins, build);
-            await Promise.all(src.map((src) => build.addFile(src)));
+            await Promise.all(
+                src.map((src) => build.addFile(src, { root: true }))
+            );
             await pluginsParallel("afterLoad", plugins, build);
             await pluginsSequential("buildEnd", plugins, build);
             resolve();
         }));
+
+    const watcher = options.watch
+        ? createWatch({
+              glob: options.glob,
+              listener({ change, unlink = [], add }) {
+                  const listSrc = add || [];
+                  if (change) {
+                      const files = change
+                          .map((src) => build.getFile(src))
+                          .filter((value) => value);
+
+                      const importers: Map<File, WatchConfig> = new Map();
+
+                      files.forEach((file) => {
+                          importers.set(file, { rewrite: true });
+                          getRewriteFiles(build, file, importers);
+                      });
+
+                      importers.forEach(({ rewrite }, { src }) => {
+                          if (rewrite) {
+                              listSrc.push(src);
+                              build.removeFile(src);
+                          }
+                      });
+                  }
+                  if (unlink) {
+                      unlink.forEach(build.removeFile);
+                  }
+                  if (unlink || listSrc.length) {
+                      cycle(listSrc);
+                  }
+              },
+          })
+        : null;
 
     const build = createBuild(
         /**
@@ -72,8 +109,8 @@ export async function build(opts: OptionsBuild) {
             },
             error: async (file) => {
                 await currentCycle;
-                console.log(file.src);
-                file.errors.map((error) => console.log(error));
+                //console.log(file.src);
+                //file.errors.map((error) => console.log(error));
             },
         },
         /**
@@ -94,11 +131,20 @@ export async function build(opts: OptionsBuild) {
     await pluginsParallel("mounted", plugins, build);
 
     await cycle(listSrc);
-
-    const watcher = options.watch
-        ? createWatch({
-              glob: options.glob,
-              listener({ change, unlink, add }) {},
-          })
-        : null;
 }
+
+const getRewriteFiles = (
+    build: Build,
+    file: File,
+    importers: Map<File, WatchConfig> = new Map()
+) => {
+    file.importers.forEach((config, src) => {
+        const file = build.getFile(src);
+        if (!file) return;
+        if (!importers.has(file)) {
+            importers.set(file, config);
+            getRewriteFiles(build, file, importers);
+        }
+    });
+    return importers;
+};
