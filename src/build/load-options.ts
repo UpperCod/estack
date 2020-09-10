@@ -55,7 +55,7 @@ export async function loadOptions({
             ),
             ...Object.keys(pkg.peerDependencies),
         ],
-        port: typeof port == "string" ? Number(port) : port,
+        port,
         dest,
         href,
         watch,

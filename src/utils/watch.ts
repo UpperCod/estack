@@ -14,7 +14,7 @@ interface Options {
     normalize?: (str: string) => string;
 }
 
-export function createWatch({ glob, listener, delay, normalize }: Options) {
+export function watch({ glob, listener, delay, normalize }: Options) {
     /**
      * @type {event}
      */

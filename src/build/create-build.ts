@@ -79,10 +79,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     };
 
     const addError = (file: File, error: string) => {
-        if (!file.errors.includes(error)) {
-            file.errors.push(error);
-            actions.error(file);
-        }
+        if (!file.errors.includes(error)) file.errors.push(error);
     };
 
     const removeFile = (src: string) => {

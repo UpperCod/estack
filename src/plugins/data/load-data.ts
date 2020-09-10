@@ -30,10 +30,15 @@ export async function loadData(file: File, build: Build) {
             },
             {
                 async $link({ value }) {
-                    const { link, write } = await build.addFile(
+                    const childFile = await build.addFile(
                         build.resolveFromFile(file, value)
                     );
-                    return write ? { link } : {};
+                    // Any change to the imported file will overwrite the related file.
+                    if (childFile.type == "html") {
+                        build.addImporter(childFile, file);
+                    }
+
+                    return childFile.write ? { link: childFile.link } : {};
                 },
                 async $ref({ value, root }) {
                     let data = root;
@@ -53,7 +58,7 @@ export async function loadData(file: File, build: Build) {
                             const childFile = await build.addFile(
                                 build.resolveFromFile(file, src)
                             );
-
+                            // Any change to the imported file will overwrite the related file.
                             build.addImporter(childFile, file);
 
                             const { root } = await childFile.data;

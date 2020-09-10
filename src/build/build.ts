@@ -3,15 +3,21 @@ import * as glob from "fast-glob";
 import { Load } from "./types";
 import { createBuild } from "./create-build";
 import { loadOptions } from "./load-options";
-import { pluginHtml } from "../plugins/html";
+import { createWatch } from "./create-watch";
 import { pluginsParallel, pluginsSequential } from "./plugins";
-import { createWatch } from "../create-watch";
+import { pluginHtml } from "../plugins/html";
+import { pluginServer } from "../plugins/server";
+import { log } from "../utils/log";
+import { createMarks } from "../utils/mark";
+
 export async function build(opts: OptionsBuild) {
     const options = await loadOptions(opts);
 
     const listSrc = await glob(options.glob);
 
-    const plugins: Plugin[] = [pluginHtml()];
+    const mark = createMarks();
+
+    const plugins: Plugin[] = [pluginHtml(), pluginServer()];
 
     /**
      * Load loads files into plugins for manipulation
@@ -29,7 +35,9 @@ export async function build(opts: OptionsBuild) {
         /**
          * Plugins that manipulate types run sequentially
          */
-        const pipe = plugins.filter((plugin) => plugin.filter(file));
+        const pipe = plugins.filter((plugin) =>
+            plugin.filter ? plugin.filter(file) : false
+        );
         if (pipe.length) {
             await pipe.reduce(
                 (promise, plugin) =>
@@ -38,62 +46,50 @@ export async function build(opts: OptionsBuild) {
             );
         }
     };
-    /**
-     * Capture the last cycle as a promise to execute
-     * tasks at the end of this
-     */
-    let currentCycle: Promise<void>;
+
     /**
      * The cycles are parallel processes sent from the build,
      * the cyclos communicate to the plugin the status of the build
      * @param src
      */
-    const cycle = (src: string[]) =>
-        (currentCycle = new Promise(async (resolve, reject) => {
-            console.log(src);
-            await pluginsSequential("buildStart", plugins, build);
-            await pluginsParallel("beforeLoad", plugins, build);
-            await Promise.all(
-                src.map((src) => build.addFile(src, { root: true }))
-            );
-            await pluginsParallel("afterLoad", plugins, build);
-            await pluginsSequential("buildEnd", plugins, build);
-            resolve();
-        }));
+    const rebuild = async (src: string[] = []) => {
+        const closeMark = mark("build");
+        console.log("");
+        log({ message: `[time] Build start.` });
+        await pluginsSequential("buildStart", plugins, build);
+        await pluginsParallel("beforeLoad", plugins, build);
+        await Promise.all(src.map((src) => build.addFile(src, { root: true })));
+        await pluginsParallel("afterLoad", plugins, build);
+        await pluginsSequential("buildEnd", plugins, build);
 
-    const watcher = options.watch
-        ? createWatch({
-              glob: options.glob,
-              listener({ change, unlink = [], add }) {
-                  const listSrc = add || [];
-                  if (change) {
-                      const files = change
-                          .map((src) => build.getFile(src))
-                          .filter((value) => value);
+        let errors = 0;
 
-                      const importers: Map<File, WatchConfig> = new Map();
+        for (let src in build.files) {
+            const file = build.files[src];
+            if (file.errors.length) {
+                if (!errors) console.log("");
+                errors += file.errors.length;
+                log({
+                    items: [
+                        {
+                            message: file.src,
+                            items: file.errors.map((message) => ({
+                                message,
+                            })),
+                        },
+                    ],
+                });
+            }
+        }
 
-                      files.forEach((file) => {
-                          importers.set(file, { rewrite: true });
-                          getRewriteFiles(build, file, importers);
-                      });
+        if (errors) console.log("");
 
-                      importers.forEach(({ rewrite }, { src }) => {
-                          if (rewrite) {
-                              listSrc.push(src);
-                              build.removeFile(src);
-                          }
-                      });
-                  }
-                  if (unlink) {
-                      unlink.forEach(build.removeFile);
-                  }
-                  if (unlink || listSrc.length) {
-                      cycle(listSrc);
-                  }
-              },
-          })
-        : null;
+        log({
+            message: `[time] Build end in ${closeMark()}, File errors ${errors}${
+                options.watch ? ", waiting for changes..." : ""
+            }`,
+        });
+    };
 
     const build = createBuild(
         /**
@@ -105,12 +101,7 @@ export async function build(opts: OptionsBuild) {
         {
             load,
             watch: (file) => {
-                if (watcher.add) watcher.add(file.src);
-            },
-            error: async (file) => {
-                await currentCycle;
-                //console.log(file.src);
-                //file.errors.map((error) => console.log(error));
+                if (watcher) watcher.add(file.src);
             },
         },
         /**
@@ -128,23 +119,12 @@ export async function build(opts: OptionsBuild) {
         }
     );
 
+    build.options = options;
+    build.rebuild = rebuild;
+
+    const watcher = options.watch ? createWatch(build) : null;
+
     await pluginsParallel("mounted", plugins, build);
 
-    await cycle(listSrc);
+    await rebuild(listSrc);
 }
-
-const getRewriteFiles = (
-    build: Build,
-    file: File,
-    importers: Map<File, WatchConfig> = new Map()
-) => {
-    file.importers.forEach((config, src) => {
-        const file = build.getFile(src);
-        if (!file) return;
-        if (!importers.has(file)) {
-            importers.set(file, config);
-            getRewriteFiles(build, file, importers);
-        }
-    });
-    return importers;
-};

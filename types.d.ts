@@ -67,6 +67,7 @@ declare module "estack" {
         resolveFromFile(file: File, src: string): string;
         readFile(file: File): Promise<string>;
         addError(file: File, error: string): void;
+        rebuild?: (src?: string[]) => Promise<void>;
         options?: Options;
     }
 
