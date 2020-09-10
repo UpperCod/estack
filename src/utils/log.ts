@@ -4,7 +4,7 @@ import getProp from "@uppercod/get-prop";
 interface Message {
     message?: string;
     items?: Message[];
-    params?: string[];
+    params?: (string | number)[];
 }
 
 function getTime(): string {
@@ -34,7 +34,7 @@ export function log({ message, items, params = [] }: Message) {
                   command,
                   (str: string) => str,
                   false
-              )(params[index])
+              )(params[index] + "")
           )
         : "";
 

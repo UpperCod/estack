@@ -55,7 +55,7 @@ export async function build(opts: OptionsBuild) {
     const rebuild = async (src: string[] = []) => {
         const closeMark = mark("build");
         console.log("");
-        log({ message: `[time] Build start.` });
+        log({ message: `[time] [bold.green $]`, params: ["Build start."] });
         await pluginsSequential("buildStart", plugins, build);
         await pluginsParallel("beforeLoad", plugins, build);
         await Promise.all(src.map((src) => build.addFile(src, { root: true })));
@@ -63,8 +63,9 @@ export async function build(opts: OptionsBuild) {
         await pluginsSequential("buildEnd", plugins, build);
 
         let errors = 0;
-
+        let files = 0;
         for (let src in build.files) {
+            files++;
             const file = build.files[src];
             if (file.errors.length) {
                 if (!errors) console.log("");
@@ -85,9 +86,10 @@ export async function build(opts: OptionsBuild) {
         if (errors) console.log("");
 
         log({
-            message: `[time] Build end in ${closeMark()}, File errors ${errors}${
-                options.watch ? ", waiting for changes..." : ""
-            }`,
+            message: `[time] [bold.green $], Files with errors ${
+                errors ? "[bold.red $]" : "[bold.blue $]"
+            }${options.watch ? ", waiting for changes..." : ""}`,
+            params: [`Build files in ${closeMark()}`, errors + "/" + files],
         });
     };
 

@@ -22,7 +22,7 @@ export interface PageData {
 export interface RenderData {
     file: Page;
     page: PageData;
-    categories: Categories;
+    category: Categories;
     layout: PageData;
 }
 
