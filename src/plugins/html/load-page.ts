@@ -5,13 +5,13 @@ import { loadData } from "../data/load-data";
 import { normalizePath } from "../../utils/utils";
 
 export async function loadFile(file: File, build: Build): Promise<void> {
-    const [html, metadata] = frontmatter(file.src, await file.read());
+    const [html, metadata] = frontmatter(file.src, await build.readFile(file));
 
     const copyFile = { ...file };
 
     copyFile.data = null;
 
-    copyFile.read = async () => metadata;
+    copyFile.content = metadata;
 
     const data: PageData = metadata ? await loadData(copyFile, build) : {};
 

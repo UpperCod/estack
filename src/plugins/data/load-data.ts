@@ -12,15 +12,16 @@ const yamlLoad = (code: string, src: string) =>
 const cache = createCache();
 
 export async function loadData(file: File, build: Build) {
-    console.log(file);
     const value = await build.readFile(file);
+
     file.write = false;
+
     if (!file.data) {
         let dataValue;
         try {
             dataValue = yamlLoad(value, file.src);
         } catch (e) {
-            //file.addError(e);
+            build.addError(file, e + "");
         }
         file.data = mapObject(
             {
@@ -29,13 +30,10 @@ export async function loadData(file: File, build: Build) {
             },
             {
                 async $link({ value }) {
-                    return {};
-                    // try {
-                    //     return file.addLink(value);
-                    // } catch (e) {
-                    //     file.addError(e);
-                    //     return {};
-                    // }
+                    const { link, write } = await build.addFile(
+                        build.resolveFromFile(file, value)
+                    );
+                    return write ? { link } : {};
                 },
                 async $ref({ value, root }) {
                     let data = root;
@@ -64,7 +62,6 @@ export async function loadData(file: File, build: Build) {
                         }
                         return prop ? getProp(data, prop) : data;
                     } catch (e) {
-                        //file.addError(e);
                         return {};
                     }
                 },

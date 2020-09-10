@@ -23,14 +23,15 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     ): Promise<File> => {
         if (hasFile(src)) return getFile(src);
         src = getSrc(src);
-        const parts = path.parse(src);
-        const type = parts.ext.slice(1);
+        const meta = path.parse(src);
+        const type = meta.ext.slice(1);
         const file: File = {
             src,
             hash,
             watch,
             write,
-            parts,
+            meta,
+            errors: [],
             type: config.types[type] || type,
             assigned,
             imported: new Map(),
@@ -43,7 +44,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     };
 
     const resolveFromFile = (file: File, src: string) =>
-        path.join(file.parts.dir, src);
+        path.join(file.meta.dir, src);
 
     const addChild = (
         file: File,
@@ -65,7 +66,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
         const folder = file.hash ? config.assets : "";
         const base =
             file.src == link
-                ? (file.hash ? getHash(file.src) : file.parts.name) +
+                ? (file.hash ? getHash(file.src) : file.meta.name) +
                   "." +
                   file.type
                 : link;
@@ -76,6 +77,13 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             .replace(/\.html$/, "");
     };
 
+    const addError = (file: File, error: string) => {
+        if (!file.errors.includes(error)) {
+            file.errors.push(error);
+            actions.error(file);
+        }
+    };
+
     return {
         files,
         hasFile,
@@ -83,6 +91,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
         getFile,
         setLink,
         addChild,
+        addError,
         readFile,
         resolveFromFile,
     };
