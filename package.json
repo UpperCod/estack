@@ -10,7 +10,7 @@
         "build": "rollup -c",
         "dev": "rollup -c -w",
         "dev:doc": "node cli.js dev site/index.html",
-        "build:doc": "node cli.js build site/index.html",
+        "build:doc": "node cli.js build site/index.html d",
         "prepare": "npm run build && npm run test"
     },
     "author": "UpperCod",

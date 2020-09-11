@@ -58,27 +58,27 @@ declare module "estack" {
 
     interface File {
         /**
-         * Origen del archivo
+         * Origin of the file
          */
         src: string;
         /**
-         * Declara si es una improtacion desde la build
+         * Declare if it is an import from the build
          */
         root: boolean;
         /**
-         *  Declara si el archivo debe ser cargado por un plugin
+         *  Declare if the file should be loaded by a plugin
          */
         load: boolean;
         /**
-         * **Opcional**, Puede ser usado para compartir informacion
+         * **Optional**, Can be used to share information
          */
         data?: any;
         /**
-         * Indica si el archivo debe hachear su url
+         * Indicates if the file should hack its url
          */
         hash: boolean;
         /**
-         * Define el tipo del archivo
+         * Defines the file type
          */
         type: string;
         /**
@@ -86,35 +86,35 @@ declare module "estack" {
          */
         watch: boolean;
         /**
-         * Declara que el archivo sera escrito en el modo build
+         * Declare that the file will be written in build mode
          */
         write: boolean;
         /**
-         * Meta del origen dado por `path.parse`
+         * Origin meta given by `path.parse`
          */
         meta: Meta;
         /**
-         * Errores asociado al archivo
+         * Errors associated with the file
          */
         errors: string[];
         /**
-         * Indica si el archivo a sido tomado por un plugin
+         * Indicates if the file has been taken by a plugin
          */
         assigned?: boolean;
         /**
-         * Contenido del archivo a ser usado para la escritura
+         * File content to be used for writing
          */
         content?: string;
         /**
-         * `file.src` relacionado por el archivo, permite indentificar quien importa el archivo.
+         * `file.src` related by the file, allows to identify who imports the file.
          */
         importers: Importers;
         /**
-         * Destino del archivo
+         * File destination
          */
         dest?: string;
         /**
-         * Link del archivo
+         * File link
          */
         link?: string;
     }
@@ -132,20 +132,20 @@ declare module "estack" {
         hasFile(src: string): boolean;
         getFile(src: string): File;
         /**
-         * Añade un archivo
-         * @param src - origen del archivo
-         * @param config - configuracion del archivo
+         * Add a file
+         * @param src - file origin
+         * @param config - file configuration
          */
         addFile(src: string, config?: FileConfig): Promise<File>;
         /**
-         * Asocia una relacion de importacion entre file y importer.
-         * @param file - archivo a asociar la importacion.
-         * @param importer - archivo importado.
-         * @param config - configuracion de la importacion.
+         * Associate an import relation between file and importer.
+         * @param file - file to associate the import.
+         * @param importer - imported file.
+         * @param config - import settings.
          */
         addImporter(file: File, importer: File, config?: WatchConfig): void;
         /**
-         * Elimina el registro del archivo de la build.
+         * Unregister the build file.
          * @param src
          */
         removeFile(src: string): void;

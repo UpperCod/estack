@@ -10,6 +10,7 @@ import { pluginsParallel, pluginsSequential } from "./build/plugins";
 import { pluginHtml } from "./plugins/html";
 import { pluginServer } from "./plugins/server";
 import { pluginCss } from "./plugins/css";
+import { pluginWrite } from "./plugins/write";
 
 export async function build(opts: OptionsBuild) {
     const mark = createMarks();
@@ -25,7 +26,11 @@ export async function build(opts: OptionsBuild) {
 
     const listSrc = await glob(options.glob);
 
-    const plugins: Plugin[] = [pluginHtml(), pluginCss(), pluginServer()];
+    const plugins: Plugin[] = [
+        pluginHtml(),
+        pluginCss(),
+        options.server ? pluginServer() : pluginWrite(options.dest),
+    ];
 
     /**
      * Load loads files into plugins for manipulation
@@ -104,7 +109,7 @@ export async function build(opts: OptionsBuild) {
         log({
             message: `[time] [bold.green $], Files with errors ${
                 errors ? "[bold.red $]" : "[bold.blue $]"
-            }${options.watch ? ", waiting for changes..." : ""}`,
+            }${options.watch ? ", waiting for changes..." : "."}`,
             params: [`Build files in ${closeMark()}`, errors + "/" + files],
         });
     };
