@@ -1,11 +1,12 @@
 import { Liquid } from "liquidjs";
 import createCache from "@uppercod/cache";
-import { RenderData } from "./types";
-import { Build, Files } from "estack";
+import { RenderData, RenderDataFragment, Pages } from "./types";
+import { Build } from "estack";
+import tag from "easy-tag-for-liquidjs";
 
 export interface Engine {
     render(template: string, data: RenderData): Promise<string>;
-    fragments: Files;
+    fragments: Pages;
 }
 
 export function createEngine(build: Build): Engine {
@@ -30,10 +31,27 @@ export function createEngine(build: Build): Engine {
         }
     });
 
-    const render = (template: string, data: RenderData) =>
+    engine.registerTag(
+        "fragment",
+        tag({
+            render(root, index, value) {
+                const file = context.fragments[index];
+                if (file) {
+                    const { data } = file;
+                    return render(data.content, {
+                        page: { ...data, ...value },
+                        file,
+                    });
+                }
+                return "";
+            },
+        })
+    );
+
+    const render = (template: string, data: RenderData | RenderDataFragment) =>
         engine.render(cache(parse, template), data);
 
-    const context = { render, fragments: {} };
+    const context: Engine = { render, fragments: {} };
 
     return context;
 }

@@ -9,8 +9,8 @@
         "test": "npm run clear && ava",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:doc": "node cli.js dev site/index.html",
-        "build:doc": "node cli.js build site/index.html d",
+        "dev:doc": "node cli.js dev site/**/*.html",
+        "build:doc": "node cli.js build site/**/*.html d",
         "prepare": "npm run build && npm run test"
     },
     "author": "UpperCod",
@@ -64,6 +64,7 @@
         "chokidar": "^3.3.1",
         "colors": "^1.4.0",
         "cssnano": "^4.1.10",
+        "easy-tag-for-liquidjs": "^1.0.1",
         "es-module-lexer": "^0.3.24",
         "esm": "^3.2.25",
         "fast-glob": "^3.2.4",

@@ -26,6 +26,10 @@ export interface RenderData {
     layout: PageData;
 }
 
+export interface RenderDataFragment {
+    file: Page;
+}
+
 export interface Globals {
     [index: string]: PageData;
 }
