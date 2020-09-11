@@ -25,10 +25,13 @@ declare module "estack" {
     interface FileConfig {
         watch?: boolean;
         write?: boolean;
-        load?: boolean;
         assigned?: boolean;
         hash?: boolean;
         root?: boolean;
+    }
+
+    interface Importers {
+        [importer: string]: WatchConfig;
     }
 
     interface File {
@@ -43,7 +46,7 @@ declare module "estack" {
         errors: string[];
         assigned: boolean;
         content?: string;
-        importers: Map<string, WatchConfig>;
+        importers: Importers;
         dest?: string;
         link?: string;
     }

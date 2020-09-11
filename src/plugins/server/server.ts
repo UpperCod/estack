@@ -1,4 +1,4 @@
-import { Files } from "estack";
+import { Files, File } from "estack";
 import { createReadStream } from "fs";
 import * as http from "http";
 import findPort from "@uppercod/find-port";
@@ -8,17 +8,17 @@ import { getType } from "mime";
 interface Options {
     port: number;
     proxy?: string;
+    files: Files;
 }
 
 export interface Server {
     port: number;
-    reload: (sources: Files) => void;
+    reload: () => void;
 }
 
 export async function createServer(options: Options): Promise<Server> {
     const port = await findPort(options.port, options.port + 100);
     const pathLiveReload = "/livereload";
-    let sources: Files = {};
 
     http.createServer((req, res: http.ServerResponse) => {
         if (req.url == pathLiveReload) {
@@ -29,7 +29,14 @@ export async function createServer(options: Options): Promise<Server> {
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setHeader("Cache-Control", "no-cache");
 
-        const file = sources[req.url];
+        let file: File;
+
+        for (const src in options.files) {
+            if (options.files[src].link == req.url) {
+                file = options.files[src];
+                break;
+            }
+        }
 
         if (file) {
             const mime = getType(file.type);
@@ -56,13 +63,9 @@ export async function createServer(options: Options): Promise<Server> {
     }).listen(port);
 
     const livereload = createLiveReload(pathLiveReload, port);
-
     return {
         port,
-        reload: (nextSources: Files) => {
-            sources = nextSources;
-            livereload.reload();
-        },
+        reload: () => livereload.reload(),
     };
 }
 

@@ -16,7 +16,6 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
         {
             watch = true,
             write = true,
-            load = true,
             hash = false,
             assigned = false,
             root = false,
@@ -36,12 +35,12 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             errors: [],
             type: config.types[type] || type,
             assigned,
-            importers: new Map(),
+            importers: {},
         };
         setLink(file, src);
         files[src] = file;
         if (watch) actions.watch(file);
-        if (load) await actions.load(file);
+        if (!assigned) await actions.load(file);
         return file;
     };
 
@@ -53,9 +52,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
         fileImporter: File,
         { rewrite = true }: WatchConfig = {}
     ) => {
-        file.importers.set(fileImporter.src, {
-            rewrite,
-        });
+        file.importers[fileImporter.src] = { rewrite };
     };
 
     const readFile = async (file: File): Promise<string> => {

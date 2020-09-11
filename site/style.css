@@ -1,0 +1,5 @@
+@import "./css-in-js.css";
+
+body {
+    color: red;
+}

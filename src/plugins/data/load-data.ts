@@ -4,7 +4,7 @@ import createCache from "@uppercod/cache";
 import getProp from "@uppercod/get-prop";
 import { request } from "@uppercod/request";
 import { safeLoad } from "js-yaml";
-import { isUrl } from "../../utils/types";
+import { isUrl, isHtml } from "../../utils/types";
 
 const yamlLoad = (code: string, src: string) =>
     safeLoad(code, { filename: src });
@@ -31,12 +31,15 @@ export async function loadData(file: File, build: Build) {
             {
                 async $link({ value }) {
                     const childFile = await build.addFile(
-                        build.resolveFromFile(file, value)
+                        build.resolveFromFile(file, value),
+                        {
+                            hash: !isHtml(value),
+                        }
                     );
                     // Any change to the imported file will overwrite the related file.
-                    if (childFile.type == "html") {
-                        build.addImporter(childFile, file);
-                    }
+                    build.addImporter(childFile, file, {
+                        rewrite: childFile.type == "html",
+                    });
 
                     return childFile.write ? { link: childFile.link } : {};
                 },

@@ -4,26 +4,34 @@ import { Build, File, WatchConfig } from "estack";
 export const createWatch = (build: Build) =>
     watch({
         glob: build.options.glob,
-        listener({ change, unlink = [], add }) {
+        listener({ change, unlink, add }) {
             const listSrc = add || [];
             if (change) {
                 const files = change
                     .map((src) => build.getFile(src))
                     .filter((value) => value);
 
-                const importers: Map<File, WatchConfig> = new Map();
+                const importers = {};
 
                 files.forEach((file) => {
-                    importers.set(file, { rewrite: true });
+                    getRewriteFiles(build, file, importers);
+                });
+                /*
+                files.forEach((file) => {
+                    listSrc.push(file.src);
+                    file.assigned = false;
+                    delete file.content;
                     getRewriteFiles(build, file, importers);
                 });
 
-                importers.forEach(({ rewrite }, { src }) => {
-                    listSrc.push(src);
+                importers.forEach(({ rewrite }, file) => {
+                    listSrc.push(file.src);
                     if (rewrite) {
-                        build.removeFile(src);
+                        file.assigned = false;
+                        delete file.content;
                     }
                 });
+                */
             }
             if (unlink) {
                 unlink.forEach(build.removeFile);
@@ -34,18 +42,9 @@ export const createWatch = (build: Build) =>
         },
     });
 
-const getRewriteFiles = (
-    build: Build,
-    file: File,
-    importers: Map<File, WatchConfig> = new Map()
-) => {
-    file.importers.forEach((config, src) => {
-        const file = build.getFile(src);
-        if (!file) return;
-        if (!importers.has(file)) {
-            importers.set(file, config);
-            getRewriteFiles(build, file, importers);
-        }
-    });
+const getRewriteFiles = (build: Build, file: File, importers: {}) => {
+    //file.importers.forEach((config, src) => {
+    //    const file = build.getFile(src);
+    //});
     return importers;
 };

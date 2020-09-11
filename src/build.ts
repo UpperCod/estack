@@ -4,11 +4,12 @@ import { Load } from "./build/types";
 import { createBuild } from "./build/create-build";
 import { loadOptions } from "./build/load-options";
 import { createWatch } from "./build/create-watch";
+import { log } from "./utils/log";
+import { createMarks } from "./utils/mark";
 import { pluginsParallel, pluginsSequential } from "./build/plugins";
 import { pluginHtml } from "./plugins/html";
 import { pluginServer } from "./plugins/server";
-import { log } from "./utils/log";
-import { createMarks } from "./utils/mark";
+import { pluginCss } from "./plugins/css";
 
 export async function build(opts: OptionsBuild) {
     const options = await loadOptions(opts);
@@ -17,7 +18,7 @@ export async function build(opts: OptionsBuild) {
 
     const mark = createMarks();
 
-    const plugins: Plugin[] = [pluginHtml(), pluginServer()];
+    const plugins: Plugin[] = [pluginHtml(), pluginCss(), pluginServer()];
 
     /**
      * Load loads files into plugins for manipulation
