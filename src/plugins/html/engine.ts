@@ -20,21 +20,15 @@ export function createEngine(build: Build): Engine {
 
     engine.registerFilter("asset", async function (src) {
         const { environments } = this.context;
-        //const context = environments as RenderData;
-        //if (context.file) {
-        //    const { link } = await context.file.addChild(src);
-        //    return link;
-        //}
+        const context = environments as RenderData;
+        if (context.file) {
+            const childFile = await build.addFile(
+                build.resolveFromFile(context.file, src)
+            );
+            build.addImporter(childFile, context.file);
+            return childFile.link;
+        }
     });
-
-    // engine.registerFilter("link", async function (src) {
-    //     const { environments } = this.context;
-    //     const context = environments as RenderData;
-    //     if (context.file) {
-    //         const { link } = await context.file.addLink(src);
-    //         return link;
-    //     }
-    // });
 
     const render = (template: string, data: RenderData) =>
         engine.render(cache(parse, template), data);

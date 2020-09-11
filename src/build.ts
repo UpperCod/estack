@@ -133,6 +133,9 @@ export async function build(opts: OptionsBuild) {
         {
             href: "/",
             assets: "assets/",
+            /**
+             * Lets associate file extensions for write transformations
+             */
             types: {
                 jsx: "js",
                 ts: "js",
