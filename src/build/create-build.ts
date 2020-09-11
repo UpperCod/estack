@@ -9,15 +9,26 @@ import { normalizePath } from "../utils/utils";
 export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     const files: Files = {};
     const getSrc = createNormalizeSrc(files);
-    const getFile = (src: string) => files[getSrc(src)];
-    const hasFile = (src: string): boolean => !!files[getSrc(src)];
-    const addFile = async (
+
+    const getFile: Build["getFile"] = (src: string) => files[getSrc(src)];
+
+    const hasFile: Build["hasFile"] = (src: string): boolean =>
+        !!files[getSrc(src)];
+
+    const addFile: Build["addFile"] = async (
         src: string,
         {
+            // Indica should be added to the watcher.
             watch = true,
+            // Indicates that the file must be written to disk in build mode.
             write = true,
+            // Indicates that the file can be uploaded by plugins.
+            load = true,
+            // Indicates that the file will be sent to load if it has just been created
+            autoload = true,
+            // indicates whether to generate a hash path for writing.
             hash = false,
-            assigned = false,
+            // Indicates that the file is sent from the build
             root = false,
         }: FileConfig = {}
     ): Promise<File> => {
@@ -32,22 +43,24 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             watch,
             write,
             meta,
+            load,
             errors: [],
             type: config.types[type] || type,
-            assigned,
             importers: {},
         };
         setLink(file, src);
         files[src] = file;
         if (watch) actions.watch(file);
-        if (!assigned) await actions.load(file);
+        if (autoload && load) await actions.load(file);
         return file;
     };
 
-    const resolveFromFile = (file: File, src: string) =>
-        path.join(file.meta.dir, src);
+    const resolveFromFile: Build["resolveFromFile"] = (
+        file: File,
+        src: string
+    ) => path.join(file.meta.dir, src);
 
-    const addImporter = (
+    const addImporter: Build["addImporter"] = (
         file: File,
         fileImporter: File,
         { rewrite = true }: WatchConfig = {}
@@ -55,12 +68,12 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
         file.importers[fileImporter.src] = { rewrite };
     };
 
-    const readFile = async (file: File): Promise<string> => {
+    const readFile: Build["readFile"] = async (file: File): Promise<string> => {
         if (file.content) return file.content;
         return fs.readFile(file.src, "utf8");
     };
 
-    const setLink = (file: File, link: string) => {
+    const setLink: Build["setLink"] = (file: File, link: string) => {
         const folder = file.hash ? config.assets : "";
         const base =
             file.src == link
@@ -75,11 +88,11 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             .replace(/\.html$/, "");
     };
 
-    const addError = (file: File, error: string) => {
+    const addError: Build["addError"] = (file: File, error: string) => {
         if (!file.errors.includes(error)) file.errors.push(error);
     };
 
-    const removeFile = (src: string) => {
+    const removeFile: Build["removeFile"] = (src: string) => {
         delete files[getSrc(src)];
     };
 

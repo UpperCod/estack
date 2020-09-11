@@ -1,5 +1,9 @@
 import { watch } from "../utils/watch";
-import { Build, File, WatchConfig } from "estack";
+import { Build, File } from "estack";
+
+interface MapChange {
+    [src: string]: boolean;
+}
 
 export const createWatch = (build: Build) =>
     watch({
@@ -7,31 +11,29 @@ export const createWatch = (build: Build) =>
         listener({ change, unlink, add }) {
             const listSrc = add || [];
             if (change) {
+                const importers: MapChange = {};
+                const forceImporters: MapChange = {};
                 const files = change
                     .map((src) => build.getFile(src))
                     .filter((value) => value);
 
-                const importers = {};
-
                 files.forEach((file) => {
-                    getRewriteFiles(build, file, importers);
-                });
-                /*
-                files.forEach((file) => {
+                    setMapChange(build, file, importers);
                     listSrc.push(file.src);
-                    file.assigned = false;
-                    delete file.content;
-                    getRewriteFiles(build, file, importers);
+                    forceImporters[file.src] = true;
                 });
-
-                importers.forEach(({ rewrite }, file) => {
-                    listSrc.push(file.src);
-                    if (rewrite) {
-                        file.assigned = false;
-                        delete file.content;
+                /**
+                 * Explore the imports recursively to get the src of each file related to the file paramtro
+                 */
+                const group = { ...importers, ...forceImporters };
+                for (const src in group) {
+                    if (group[src]) {
+                        delete build.files[src].data;
+                        delete build.files[src].content;
+                        delete build.files[src].assigned;
+                        if (!listSrc.includes(src)) listSrc.push(src);
                     }
-                });
-                */
+                }
             }
             if (unlink) {
                 unlink.forEach(build.removeFile);
@@ -41,10 +43,23 @@ export const createWatch = (build: Build) =>
             }
         },
     });
-
-const getRewriteFiles = (build: Build, file: File, importers: {}) => {
-    //file.importers.forEach((config, src) => {
-    //    const file = build.getFile(src);
-    //});
+/**
+ * Explore the imports recursively to get the src of each file related to the file paramtro
+ * @param build
+ * @param file
+ * @param importers
+ */
+const setMapChange = (build: Build, file: File, importers: MapChange) => {
+    for (const src in file.importers) {
+        const childFile = build.getFile(src);
+        const { rewrite } = file.importers[src];
+        const exists = !(src in importers);
+        if (childFile) {
+            importers[src] = importers[src] || rewrite;
+            if (!exists) setMapChange(build, childFile, importers);
+        } else {
+            delete file.importers[src];
+        }
+    }
     return importers;
 };

@@ -12,7 +12,6 @@ export function pluginCss(): Plugin {
         },
         async load(file, build) {
             const imports = {};
-
             const result = await postcss([
                 pluginImport({ imports, process: this.cache }),
                 ...build.options.css,
@@ -23,7 +22,7 @@ export function pluginCss(): Plugin {
             for (const src in imports) {
                 const childFile = await build.addFile(src, {
                     write: false,
-                    assigned: true,
+                    load: false,
                 });
                 build.addImporter(childFile, file);
             }

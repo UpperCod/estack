@@ -12,11 +12,18 @@ import { pluginServer } from "./plugins/server";
 import { pluginCss } from "./plugins/css";
 
 export async function build(opts: OptionsBuild) {
+    const mark = createMarks();
+
+    log({
+        message: "[time] [bold $][bold.green $]",
+        params: ["loading", "..."],
+    });
+
+    mark("build");
+
     const options = await loadOptions(opts);
 
     const listSrc = await glob(options.glob);
-
-    const mark = createMarks();
 
     const plugins: Plugin[] = [pluginHtml(), pluginCss(), pluginServer()];
 
@@ -24,7 +31,7 @@ export async function build(opts: OptionsBuild) {
      * Load loads files into plugins for manipulation
      */
     const load: Load = async (file) => {
-        if (file.assigned) return;
+        if (file.assigned || !file.load) return;
         /**
          * Clean the errors to check if they have been corrected
          */
@@ -59,7 +66,15 @@ export async function build(opts: OptionsBuild) {
         log({ message: `[time] [bold.green $]`, params: ["Build start."] });
         await pluginsSequential("buildStart", plugins, build);
         await pluginsParallel("beforeLoad", plugins, build);
-        await Promise.all(src.map((src) => build.addFile(src, { root: true })));
+        await Promise.all(
+            src.map(async (src) => {
+                const file = await build.addFile(src, {
+                    root: true,
+                    autoload: false,
+                });
+                return load(file);
+            })
+        );
         await pluginsParallel("afterLoad", plugins, build);
         await pluginsSequential("buildEnd", plugins, build);
 
