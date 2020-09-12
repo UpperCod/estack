@@ -1,6 +1,6 @@
 @import "./css-in-js.css" (as: css);
 
 body {
-    @extend css.color;
+    @extend css.color, css.root;
     color: white;
 }

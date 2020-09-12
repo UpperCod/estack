@@ -1,7 +1,7 @@
 import { Plugin, Build } from "estack";
 
 export const pluginsParallel = (
-    method: Exclude<keyof Plugin, "name" | "load" | "filter">,
+    method: Exclude<keyof Plugin, "name" | "load" | "loads" | "filter">,
     plugins: Plugin[],
     build: Build
 ) =>
@@ -13,7 +13,7 @@ export const pluginsParallel = (
     );
 
 export const pluginsSequential = (
-    method: Exclude<keyof Plugin, "name" | "load" | "filter">,
+    method: Exclude<keyof Plugin, "name" | "load" | "loads" | "filter">,
     plugins: Plugin[],
     build: Build
 ) =>

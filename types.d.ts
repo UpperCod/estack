@@ -159,6 +159,7 @@ declare module "estack" {
 
     interface Plugin {
         name: string;
+        loads?: number;
         mounted?: (build: Build) => Promise<void> | void;
         filter?: (file: File) => boolean;
         load?: (file: File, build: Build) => Promise<void> | void;

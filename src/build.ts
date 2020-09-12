@@ -10,6 +10,7 @@ import { pluginsParallel, pluginsSequential } from "./build/plugins";
 import { pluginHtml } from "./plugins/html";
 import { pluginServer } from "./plugins/server";
 import { pluginCss } from "./plugins/css";
+import { pluginJs } from "./plugins/js";
 import { pluginWrite } from "./plugins/write";
 
 export async function build(opts: OptionsBuild) {
@@ -29,6 +30,7 @@ export async function build(opts: OptionsBuild) {
     const plugins: Plugin[] = [
         pluginHtml(),
         pluginCss(),
+        pluginJs(),
         options.server ? pluginServer() : pluginWrite(options.dest),
     ];
 
@@ -54,7 +56,10 @@ export async function build(opts: OptionsBuild) {
         if (pipe.length) {
             await pipe.reduce(
                 (promise, plugin) =>
-                    promise.then(() => plugin.load(file, build)),
+                    promise.then(() => {
+                        plugin.loads++;
+                        return plugin.load(file, build);
+                    }),
                 Promise.resolve()
             );
         }
@@ -69,6 +74,8 @@ export async function build(opts: OptionsBuild) {
         const closeMark = mark("build");
         console.log("");
         log({ message: `[time] [bold.green $]`, params: ["Build start."] });
+
+        plugins.forEach((plugin) => (plugin.loads = 0));
         await pluginsSequential("buildStart", plugins, build);
         await pluginsParallel("beforeLoad", plugins, build);
         await Promise.all(
