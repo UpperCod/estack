@@ -1,18 +1,15 @@
-import { Plugin, Files, File } from "estack";
-import {
-    PageData,
-    RenderData,
-    Globals,
-    Categories,
-    Page,
-    Pages,
-} from "./types";
+import { Plugin } from "estack";
+import { Replace, RenderData, Globals, Categories, Page, Pages } from "./types";
 import { loadFile } from "./load-page";
-import { isHtml } from "../../utils/types";
+import { isHtml, isMd } from "../../utils/types";
 import { createEngine, Engine } from "./engine";
+import { escapeBlockCodeMarkdown, markdown } from "./markdown";
 
 export function pluginHtml(): Plugin {
+    const replace: Replace = {};
     let engine: Engine;
+    const replaceMark = (content: string) =>
+        content.replace(/<!--([\w-]+)-->/g, (all, id) => replace[id] ?? all);
     return {
         name: "html",
         mounted(build) {
@@ -20,6 +17,12 @@ export function pluginHtml(): Plugin {
         },
         filter: ({ src }) => isHtml(src),
         async load(file, build) {
+            if (isMd(file.src)) {
+                file.content = escapeBlockCodeMarkdown(
+                    replace,
+                    await build.readFile(file)
+                );
+            }
             await loadFile(file, build);
         },
         async afterLoad(build) {
@@ -69,6 +72,11 @@ export function pluginHtml(): Plugin {
                 };
                 try {
                     let content = await engine.render(data.content, renderData);
+
+                    content = replaceMark(content);
+
+                    content = isMd(file.src) ? markdown(content) : content;
+
                     if (filelayout) {
                         const { data: dataLayout } = filelayout;
                         renderData.file = filelayout;
@@ -76,7 +84,13 @@ export function pluginHtml(): Plugin {
                             dataLayout.content,
                             renderData
                         );
+                        content = replaceMark(content);
+
+                        content = isMd(filelayout.src)
+                            ? markdown(content)
+                            : content;
                     }
+
                     file.content = content;
                 } catch (e) {
                     build.addError(renderData.file, e + "");

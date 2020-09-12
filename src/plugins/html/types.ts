@@ -1,5 +1,9 @@
 import { File } from "estack";
 
+export interface Replace {
+    [hash: string]: string;
+}
+
 export interface Page extends Omit<File, "data"> {
     data: PageData;
 }
