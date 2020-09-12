@@ -24,7 +24,10 @@ export function createEngine(build: Build): Engine {
         const context = environments as RenderData;
         if (context.file) {
             const childFile = await build.addFile(
-                build.resolveFromFile(context.file, src)
+                build.resolveFromFile(context.file, src),
+                {
+                    hash: true,
+                }
             );
             build.addImporter(childFile, context.file);
             return childFile.link;

@@ -26,6 +26,7 @@ export function pluginHtml(): Plugin {
             await loadFile(file, build);
         },
         async afterLoad(build) {
+            if (!this.loads) return;
             const templates: Pages = {};
             const fragments: Pages = {};
             const categories: Categories = {};
