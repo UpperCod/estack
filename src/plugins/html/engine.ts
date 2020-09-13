@@ -29,7 +29,7 @@ export function createEngine(build: Build): Engine {
                     hash: true,
                 }
             );
-            build.addImporter(childFile, context.file);
+            build.addImporter(childFile, context.file, { rewrite: false });
             return childFile.link;
         }
     });

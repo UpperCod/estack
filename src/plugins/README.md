@@ -1,9 +1,9 @@
 # Plugins
 
 ```
-buildStart -> secuancial
-    loadBefore -> parallel
-        load -> secuencial and recursive
-    loadAfter -> parallel
-buildEnd -> secuencial
+buildStart->
+    loadBefore[]
+        load[]
+    loadAfter[]
+buildEnd->
 ```

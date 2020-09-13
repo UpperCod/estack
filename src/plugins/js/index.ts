@@ -65,9 +65,7 @@ export function pluginJs(): Plugin {
                 if (alias[chunk.fileName]) {
                     alias[chunk.fileName].content = chunk.code;
                 } else {
-                    const file = await build.addFile(chunk.fileName, {
-                        hash: false,
-                    });
+                    const file = await build.addFile(chunk.fileName);
                     file.content = chunk.code;
                 }
             }
