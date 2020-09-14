@@ -9,7 +9,7 @@
         "test": "npm run clear && ava",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:doc": "node cli.js dev site/**/*.{html,md};site/b.js --css estack.build.css",
+        "dev:doc": "node cli.js dev site/**/*.{html,md}",
         "build:doc": "node cli.js build site/**/*.html d",
         "prepare": "npm run build && npm run test"
     },
