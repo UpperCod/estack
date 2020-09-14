@@ -16,7 +16,13 @@ export async function loadFile(file: File, build: Build): Promise<void> {
 
     const data: PageData = metadata ? await loadData(copyFile, build) : {};
 
-    let { link } = data;
+    let { link, category, lang } = data;
+
+    category = category ? [] : [].concat(category);
+
+    if (lang && !category.includes(lang)) {
+        category.push(lang);
+    }
 
     if (link) {
         build.setLink(
@@ -31,5 +37,6 @@ export async function loadFile(file: File, build: Build): Promise<void> {
         content: html,
         link: file.link,
         file: normalizePath(file.src),
+        category,
     };
 }

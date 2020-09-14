@@ -15,6 +15,7 @@ export interface Pages {
 export interface PageData {
     id: string;
     link?: string;
+    lang?: string;
     category?: string[];
     fragment?: string;
     template?: string;

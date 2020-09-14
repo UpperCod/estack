@@ -10,6 +10,9 @@ template: default
     <link rel="stylesheet" href="{{'index.css'|asset}}">
 </head>
 <body>
+    <header>
+        {{ category[page.lang]|json }}
+    </header>
     <section class="o-content">
         <h1 class="c-titleHero">
         {{page.title}}
