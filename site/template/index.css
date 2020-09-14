@@ -56,3 +56,10 @@ h1.c-titleHero {
     box-sizing: border-box;
     line-height: 2em;
 }
+
+.o-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

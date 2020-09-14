@@ -5,6 +5,7 @@ interface Message {
     message?: string;
     items?: Message[];
     params?: (string | number)[];
+    raw?: any;
 }
 
 function getTime(): string {
@@ -28,7 +29,7 @@ const template = (
         map(command, index++)
     );
 
-export function log({ message, items, params = [] }: Message) {
+export function log({ message, items, params = [], raw }: Message) {
     const time = getTime();
 
     let header = message
@@ -46,9 +47,13 @@ export function log({ message, items, params = [] }: Message) {
 
     if (header) console.log(header);
 
-    if (items) {
+    if (items || raw) {
         console.group();
-        items.map(log);
+        if (raw) {
+            console.log(raw);
+        } else {
+            items.map(log);
+        }
         console.groupEnd();
     }
 }

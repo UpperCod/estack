@@ -10,8 +10,15 @@ template: default
     <link rel="stylesheet" href="{{'index.css'|asset}}">
 </head>
 <body>
-    <header>
-        {{ category[page.lang]|json }}
+    {% assign header = category|query: operator:"and", select: "header", select : page.lang] %}
+    <header class="o-header">
+        <div>Logo</div>
+        <menu>
+            {% for item in header %}
+                <a href="{{item.link}}">{{item.linkTitle | default: item.title }}</a>
+            {% endfor %}
+        </menu>
+        <div>Logo</div>
     </header>
     <section class="o-content">
         <h1 class="c-titleHero">
