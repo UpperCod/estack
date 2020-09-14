@@ -11,23 +11,27 @@ export function pluginCss(): Plugin {
             this.cache = {};
         },
         async load(file, build) {
-            const imports = {};
-            const result = await postcss([
-                pluginImport({ imports, process: this.cache }),
-                ...build.options.css,
-            ]).process(await build.readFile(file), {
-                from: file.src,
-            });
-
-            for (const src in imports) {
-                const childFile = await build.addFile(src, {
-                    write: false,
-                    load: false,
+            try {
+                const imports = {};
+                const result = await postcss([
+                    pluginImport({ imports, process: this.cache }),
+                    ...build.options.css,
+                ]).process(await build.readFile(file), {
+                    from: file.src,
                 });
-                build.addImporter(childFile, file);
-            }
 
-            file.content = result + "";
+                for (const src in imports) {
+                    const childFile = await build.addFile(src, {
+                        write: false,
+                        load: false,
+                    });
+                    build.addImporter(childFile, file);
+                }
+
+                file.content = result + "";
+            } catch (e) {
+                build.addError(file, e + "");
+            }
         },
     };
 }

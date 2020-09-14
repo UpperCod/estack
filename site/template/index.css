@@ -1,0 +1,58 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&family=Vollkorn:wght@700&display=swap");
+
+:root {
+    --estack_bg: linear-gradient(to bottom, #321e44, #232329);
+    --estack_clTitle: white;
+    --estack_ftBody: "Poppins", sans-serif;
+    --estack_ftTitle: "Vollkorn", serif;
+    --estack_boxPaddingTop: 1.6rem;
+    --estack_boxPaddingLeft: 3.125rem;
+    --estack_boxRadio: 0.625rem;
+    --estack_bgArticle: rgba(255, 255, 255, 0.05);
+}
+
+html {
+    font-size: 16px;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+}
+
+body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    color: var(--estack_clTitle);
+    background: var(--estack_bg);
+    font-family: var(--estack_ftBody);
+    font-size: 0.86rem;
+}
+
+.c-titleHero {
+    font-family: var(--estack_ftTitle);
+    font-weight: 700;
+    margin: 0px;
+    max-width: 60%;
+    line-height: 1em;
+
+    padding: var(--estack_boxPaddingTop) var(--estack_boxPaddingLeft);
+}
+
+h1.c-titleHero {
+    font-size: 3.2rem;
+}
+
+.o-content {
+    max-width: 920px;
+}
+
+.o-article {
+    padding: var(--estack_boxPaddingTop) var(--estack_boxPaddingLeft);
+    background: var(--estack_bgArticle);
+    border-radius: var(--estack_boxRadio);
+    box-sizing: border-box;
+    line-height: 2em;
+}
