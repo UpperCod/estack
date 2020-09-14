@@ -30,6 +30,7 @@ export interface RenderData {
     category: Categories;
     layout: PageData;
     content: string;
+    global: Globals;
 }
 
 export interface RenderDataFragment {

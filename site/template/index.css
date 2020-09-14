@@ -1,10 +1,15 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&family=Vollkorn:wght@700&display=swap");
+@import "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&family=Vollkorn:wght@700&display=swap";
+@import "https://raw.githubusercontent.com/PrismJS/prism-themes/master/themes/prism-duotone-sea.css";
 
 :root {
     --estack_bg: linear-gradient(to bottom, #321e44, #232329);
-    --estack_clTitle: white;
     --estack_ftBody: "Poppins", sans-serif;
     --estack_ftTitle: "Vollkorn", serif;
+    --estack_bgCode: rgba(0, 0, 0, 0.5);
+    --estack_clTitle: white;
+    --estack_clBody: rgba(255, 255, 255, 0.8);
+    --estack_clCode: #6395cc;
+    --estack_clLink: #47ebb4;
     --estack_boxPaddingTop: 1.6rem;
     --estack_boxPaddingLeft: 3.125rem;
     --estack_boxRadio: 0.625rem;
@@ -13,6 +18,7 @@
 
 html {
     font-size: 16px;
+    overflow: hidden;
 }
 
 html,
@@ -25,10 +31,9 @@ body {
 body {
     overflow-x: hidden;
     overflow-y: auto;
-    color: var(--estack_clTitle);
+    color: var(--estack_clBody);
     background: var(--estack_bg);
     font-family: var(--estack_ftBody);
-    font-size: 0.86rem;
 }
 
 .c-titleHero {
@@ -37,6 +42,18 @@ body {
     margin: 0px;
     max-width: 60%;
     line-height: 1em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+strong,
+b {
+    font-weight: 500;
+    color: var(--estack_clTitle);
 }
 
 h1.c-titleHero {
@@ -62,6 +79,38 @@ h1.c-titleHero {
     border-radius: var(--estack_boxRadio);
     box-sizing: border-box;
     line-height: 2em;
+}
+
+.o-article code {
+    font-size: 0.9em;
+    background: var(--estack_bgCode);
+    color: var(--estack_clCode);
+    padding: 0.2em 0.5em;
+    border-radius: 0.2em;
+}
+
+.o-article pre {
+    background: var(--estack_bgCode);
+    border-radius: var(--estack_boxRadio);
+    overflow-x: auto;
+    padding: 1rem;
+}
+.o-article a {
+    color: var(--estack_clLink);
+}
+.o-article pre .token.property,
+.o-article pre .token.function {
+    color: var(--estack_clCode);
+}
+
+.o-article pre .token.comment {
+    color: darkgoldenrod;
+}
+
+.o-article pre code {
+    background: transparent;
+    line-height: 1.2em;
+    display: block;
 }
 
 .o-header {

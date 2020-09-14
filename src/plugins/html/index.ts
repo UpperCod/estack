@@ -66,6 +66,7 @@ export function pluginHtml(): Plugin {
                 const renderData: RenderData = {
                     file,
                     page: data,
+                    global: globals,
                     category: categories,
                     content: data.content,
                     layout: filelayout ? filelayout.data : null,
