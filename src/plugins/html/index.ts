@@ -67,6 +67,7 @@ export function pluginHtml(): Plugin {
                     file,
                     page: data,
                     category: categories,
+                    content: data.content,
                     layout: filelayout ? filelayout.data : null,
                 };
                 try {
@@ -79,10 +80,13 @@ export function pluginHtml(): Plugin {
                     if (filelayout) {
                         const { data: dataLayout } = filelayout;
                         renderData.file = filelayout;
+                        renderData.content = content;
+
                         content = await engine.render(
                             dataLayout.content,
                             renderData
                         );
+
                         content = replaceMark(content);
 
                         content = isMd(filelayout.src)

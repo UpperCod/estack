@@ -6,7 +6,8 @@ template: default
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>{{page.title}}</title>
+    <meta name="description" content="{{page.description}}">
     <link rel="stylesheet" href="{{'index.css'|asset}}">
 </head>
 <body>
@@ -15,17 +16,20 @@ template: default
         <div>Logo</div>
         <menu>
             {% for item in header %}
-                <a href="{{item.link}}">{{item.linkTitle | default: item.title }}</a>
+                <a class="c-menuLink" href="{{item.link}}">{{item.linkTitle | default: item.title }}</a>
             {% endfor %}
         </menu>
         <div>Logo</div>
     </header>
     <section class="o-content">
-        <h1 class="c-titleHero">
-        {{page.title}}
-        </h1>
+        <header class="o-contentHeader">
+            <h1 class="c-titleHero">
+            {{page.title}}
+            </h1>
+            <p class="c-textHero">{{page.description}}</p>
+        </header>
         <article class="o-article">
-        {{page.content}}
+        {{content}}
         </article>
     </section>
 </body>

@@ -29,6 +29,7 @@ export interface RenderData {
     page: PageData;
     category: Categories;
     layout: PageData;
+    content: string;
 }
 
 export interface RenderDataFragment {

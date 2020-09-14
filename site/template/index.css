@@ -37,16 +37,23 @@ body {
     margin: 0px;
     max-width: 60%;
     line-height: 1em;
-
-    padding: var(--estack_boxPaddingTop) var(--estack_boxPaddingLeft);
 }
 
 h1.c-titleHero {
     font-size: 3.2rem;
 }
 
+.c-textHero {
+    font-size: 1.2rem;
+    margin: 0px;
+}
+
 .o-content {
     max-width: 920px;
+}
+
+.o-content {
+    margin: 80px auto;
 }
 
 .o-article {
@@ -62,4 +69,20 @@ h1.c-titleHero {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 1rem 10%;
+    box-sizing: border-box;
+}
+
+.c-menuLink {
+    padding: 0.25em 1em;
+    color: unset;
+    font-size: 1rem;
+}
+
+.o-contentHeader {
+    text-align: center;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    padding: var(--estack_boxPaddingTop) var(--estack_boxPaddingLeft);
 }
