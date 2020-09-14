@@ -27,7 +27,6 @@ export function pluginJs(): Plugin {
             }
             const bundle = await rollup({
                 input: Object.keys(filesJs),
-                cache: this.cache,
                 plugins: [
                     pluginLocalResolve(build, chunksJs, aliasJs, [
                         ".js",
@@ -38,8 +37,6 @@ export function pluginJs(): Plugin {
                     pluginImportCss(build),
                 ],
             });
-
-            this.cache = bundle.cache;
 
             const { output } = await bundle.generate({
                 dir: build.options.dest,

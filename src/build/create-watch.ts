@@ -53,7 +53,7 @@ const setMapChange = (build: Build, file: File, importers: MapChange) => {
     for (const src in file.importers) {
         const childFile = build.getFile(src);
         const { rewrite } = file.importers[src];
-        const exists = !(src in importers);
+        const exists = src in importers;
         if (childFile) {
             importers[src] = importers[src] || rewrite;
             if (!exists) setMapChange(build, childFile, importers);

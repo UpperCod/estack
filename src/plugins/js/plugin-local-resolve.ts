@@ -19,8 +19,8 @@ export const pluginLocalResolve = (
 ): Plugin => ({
     name: "plugin-estack-js",
     resolveId(id, importer) {
-        console.log({ id, importer });
         if (id.startsWith("./") && importer && build.hasFile(importer)) {
+            const file = build.getFile(importer);
             return new Promise((done) => {
                 resolve(
                     id,
@@ -29,8 +29,7 @@ export const pluginLocalResolve = (
                         extensions,
                     },
                     async (err, id) => {
-                        if (!err && build.hasFile(importer)) {
-                            const file = build.getFile(importer);
+                        if (!err) {
                             if (file) {
                                 const childFile = await build.addFile(id, {
                                     load: false,
@@ -52,7 +51,6 @@ export const pluginLocalResolve = (
             const { dest, write, load, hash } = file;
             const { base } = path.parse(dest);
             const fileName = (hash ? build.options.assets : "") + base;
-
             if (write && load) {
                 this.emitFile({
                     type: "chunk",

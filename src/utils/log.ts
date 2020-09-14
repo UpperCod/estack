@@ -10,10 +10,14 @@ interface Message {
 function getTime(): string {
     const date = new Date();
     const time = colors.grey(
-        [date.getHours(), date.getMinutes(), date.getSeconds()].join(":")
+        [date.getHours(), date.getMinutes(), date.getSeconds()]
+            .map(dateToFixed)
+            .join(":")
     );
     return `[${time}]`;
 }
+
+const dateToFixed = (value: number) => (value < 10 ? "0" + value : value);
 
 const template = (
     str: string,
