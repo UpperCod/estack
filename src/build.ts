@@ -73,7 +73,10 @@ export async function build(opts: OptionsBuild) {
     const rebuild = async (src: string[] = []) => {
         const closeMark = mark("build");
         console.log("");
-        log({ message: `[time] [bold.green $]`, params: ["Build start."] });
+        log({
+            message: `[time] [bold $][bold.green $]`,
+            params: ["Build start", "..."],
+        });
 
         plugins.forEach((plugin) => (plugin.loads = 0));
         await pluginsSequential("buildStart", plugins, build);

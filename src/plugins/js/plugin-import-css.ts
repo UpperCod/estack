@@ -3,7 +3,7 @@ import * as postcss from "postcss";
 import pluginImport, { Imports, Process } from "@uppercod/postcss-import";
 import { Build } from "estack";
 
-export const pluginImportCss = (build: Build): Plugin => {
+export function pluginImportCss(build: Build): Plugin {
     let process: Process = {};
     return {
         name: "plugin-import-css",
@@ -39,4 +39,4 @@ export const pluginImportCss = (build: Build): Plugin => {
             }
         },
     };
-};
+}
