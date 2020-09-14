@@ -5,13 +5,7 @@ sade("estack <mode> <src> [dest]")
     .version("PKG.VERSION")
     .option("--port", "Define the server port", 8000)
     .option("--href", "add a prefix to the resolved links", "/")
-    .option(
-        "--assetHashPattern",
-        "customize the destination name for the assets",
-        ""
-    )
     .option("--sourcemap", "Enable the use of sourcemap", false)
-    .option("--silent", "Prevents printing of logs", false)
     .option("--watch", "Prevents printing of logs", false)
     .option(
         "--js",

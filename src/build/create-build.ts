@@ -30,6 +30,8 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             hash = false,
             // Indicates that the file is sent from the build
             root = false,
+            // Indicates if the file is an asset
+            asset = false,
         }: FileConfig = {}
     ): Promise<File> => {
         if (hasFile(src)) return getFile(src);
@@ -40,6 +42,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             src,
             root,
             hash,
+            asset,
             watch,
             write,
             meta,
@@ -58,7 +61,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     const resolveFromFile: Build["resolveFromFile"] = (
         file: File,
         src: string
-    ) => path.join(file.meta.dir, src);
+    ) => path.join(file.meta.dir, getSrc(src));
 
     const addImporter: Build["addImporter"] = (
         file: File,
@@ -74,7 +77,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     };
 
     const setLink: Build["setLink"] = (file: File, link: string) => {
-        const folder = file.hash ? config.assets : "";
+        const folder = file.hash || file.asset ? config.assets : "";
         const base =
             file.src == link
                 ? (file.hash ? getHash(file.src) : file.meta.name) +

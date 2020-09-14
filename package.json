@@ -9,7 +9,7 @@
         "test": "npm run clear && ava",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:doc": "node cli.js dev site/**/*.{html,md}",
+        "dev:doc": "node cli.js dev site/**/*.{html,md};site/b.js",
         "build:doc": "node cli.js build site/**/*.html d",
         "prepare": "npm run build && npm run test"
     },
@@ -49,6 +49,7 @@
         "@types/marked": "^1.1.0",
         "@types/polka": "^0.5.1",
         "@types/prismjs": "^1.16.1",
+        "@types/resolve": "^1.17.1",
         "@types/sade": "^1.7.2",
         "@uppercod/cache": "^1.0.0",
         "@uppercod/find-port": "^1.0.0",

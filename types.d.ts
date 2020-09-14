@@ -38,6 +38,11 @@ declare module "estack" {
          */
         load?: boolean;
         /**
+         * `asset=false` : indicates if it is an asset file, by default when hash
+         * is defined the file will be recognized as an asset
+         */
+        asset?: boolean;
+        /**
          * `autoload=true` : Indicates that the file will be sent to load if it has
          * just been created
          */
@@ -77,6 +82,12 @@ declare module "estack" {
          * Indicates if the file should hack its url
          */
         hash: boolean;
+        /**
+         * Indicates if the file is an asset, by default all
+         * hash files are assets but these are made and you
+         * can declare an asset file that escapes the hash
+         */
+        asset: boolean;
         /**
          * Defines the file type
          */
@@ -175,6 +186,7 @@ declare module "estack" {
         dest?: string;
         port?: number;
         href?: string;
+        assets?: string;
         sourcemap?: boolean;
         watch?: boolean;
         js: string;

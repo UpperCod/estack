@@ -138,8 +138,8 @@ export async function build(opts: OptionsBuild) {
          * Config
          */
         {
-            href: "/",
-            assets: "assets/",
+            href: options.href,
+            assets: options.assets,
             /**
              * Lets associate file extensions for write transformations
              */
@@ -158,6 +158,5 @@ export async function build(opts: OptionsBuild) {
     const watcher = options.watch ? createWatch(build) : null;
 
     await pluginsParallel("mounted", plugins, build);
-
     await rebuild(listSrc);
 }

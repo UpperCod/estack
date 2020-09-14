@@ -60,6 +60,7 @@ export async function loadOptions({
         href,
         watch,
         server,
+        assets: "assets/",
         js: await loadPlugins(
             typeof js == "string" ? getProp(pkg, js, {}) : {}
         ),
