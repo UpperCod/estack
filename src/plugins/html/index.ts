@@ -45,14 +45,12 @@ export function pluginHtml(): Plugin {
                 } else if (data.fragment) {
                     fragments[data.fragment] = file;
                 } else {
-                    if (data.category) {
-                        data.category.forEach((category) => {
-                            categories[category] = categories[category] || [];
-                            if (!categories[category].includes(data)) {
-                                categories[category].push(data);
-                            }
-                        });
-                    }
+                    data.category.forEach((category) => {
+                        categories[category] = categories[category] || [];
+                        if (!categories[category].includes(data)) {
+                            categories[category].push(data);
+                        }
+                    });
                     pages[file.link] = file;
                 }
             }

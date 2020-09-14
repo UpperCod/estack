@@ -18,7 +18,7 @@ export async function loadFile(file: File, build: Build): Promise<void> {
 
     let { link, category, lang } = data;
 
-    category = category ? [] : [].concat(category);
+    category = category ? [].concat(category) : [];
 
     if (lang && !category.includes(lang)) {
         category.push(lang);
