@@ -1,6 +1,0 @@
-@import "./css-in-js.css" (as: css);
-
-body {
-    @extend css.color, css.root;
-    color: white;
-}

@@ -3,6 +3,7 @@ import { rollup, OutputChunk } from "rollup";
 import { isJs } from "../../utils/types";
 import { pluginLocalResolve } from "./plugin-local-resolve";
 import { pluginImportCss } from "./plugin-import-css";
+import importUrl from "rollup-plugin-import-url";
 
 export function pluginJs(): Plugin {
     return {
@@ -28,6 +29,7 @@ export function pluginJs(): Plugin {
             const bundle = await rollup({
                 input: Object.keys(filesJs),
                 plugins: [
+                    importUrl(),
                     pluginLocalResolve(build, chunksJs, aliasJs, [
                         ".js",
                         ".jsx",
