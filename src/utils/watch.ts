@@ -26,12 +26,14 @@ export function watch({ glob, listener, delay, normalize }: Options) {
             setTimeout(() => {
                 listener(currentGroup);
                 currentGroup = null;
-            }, delay || 200);
+            }, delay || 100);
         }
     };
 
     const watcher = chokidar.watch(glob, { ignoreInitial: true });
-
+    /**
+     * @todo add the listener for the rename event
+     */
     ["add", "change", "unlink"].map((type: keyof Group) => {
         watcher.on(type, (file) => {
             loadGroup();
