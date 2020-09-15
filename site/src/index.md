@@ -9,8 +9,6 @@ category:
     - header
 ---
 
-{{page.variation|log}}
-
 EStack is a modern static site generator that has a perfectly synchronized stack of tools.
 
 1. Development server.
