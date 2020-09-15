@@ -13,7 +13,7 @@ export interface Pages {
 }
 
 export interface PageData {
-    id: string;
+    id?: string;
     link?: string;
     lang?: string;
     category?: string[];

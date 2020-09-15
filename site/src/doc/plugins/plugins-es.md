@@ -1,21 +1,22 @@
 ---
 title: Plugins
+link: es/plugins
 description: Herramientas externas perfectamente sincronizadas
 linkTitle: Plugins
-lang: en
+lang: es
 category:
     - header
 ---
 
-The additional configuration to associate with EStack must exist in the package.json, you can selectively associate configurations according to your objectives.
+La configuración adicional a asociar a EStack debe existir en el package.json, tu podrá asociar configuraciones de forma selectiva según sus objetivos.
 
 ## Rollup
 
-Stack uses [Rollup](https://rollupjs.org/guide/en/) for processing files with the extension `.js, .jsx, .ts, .tsx`.
+EStack usa [Rollup](https://rollupjs.org/guide/en/) para el prosamiento de archivos de extension `.js, .jsx, .ts, .tsx`.
 
-### Adding plugins for rollup
+### Añadiendo plugins para rollup
 
-EStack allows to inject plugins into Rollup, using the `--js <pkg_property>` flag, example:
+Estack permite inyectar plugins a Rollup, mediante el flag `--js <pkg_property>`, ejemplo:
 
 ```json
 {
@@ -45,13 +46,13 @@ EStack allows to inject plugins into Rollup, using the `--js <pkg_property>` fla
 
 ## Postcss
 
-EStack uses [Postcss](http://postcss.org/) for processing files with the extension `.css`, by default EStack for postcss:
+EStack usa [Postcss](http://postcss.org/) para el prosamiento de archivos de extension `.css`, por defecto EStack para postcss:
 
 1. Plugin [@uppercod/postcss-import](https://github.com/UpperCod/postcss-import).
 
-### Adding plugins for postcss
+### Añadiendo plugins para postcss
 
-Estack allows you to inject plugins into Postcss, using the `--css <pkg_property>` flag, example:
+Estack permite inyectar plugins a Postcss, mediante el flag `--css <pkg_property>`, ejemplo:
 
 ```json
 {

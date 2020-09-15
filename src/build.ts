@@ -7,6 +7,7 @@ import { createWatch } from "./build/create-watch";
 import { log } from "./utils/log";
 import { createMarks } from "./utils/mark";
 import { pluginsParallel, pluginsSequential } from "./build/plugins";
+import { pluginData } from "./plugins/data";
 import { pluginHtml } from "./plugins/html";
 import { pluginServer } from "./plugins/server";
 import { pluginCss } from "./plugins/css";
@@ -29,6 +30,7 @@ export async function build(opts: OptionsBuild) {
 
     const plugins: Plugin[] = [
         pluginHtml(),
+        pluginData(),
         pluginCss(),
         pluginJs(),
         options.server ? pluginServer() : pluginWrite(options.dest),

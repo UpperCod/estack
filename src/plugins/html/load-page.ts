@@ -10,7 +10,7 @@ export async function loadFile(file: File, build: Build): Promise<void> {
 
     const copyFile = { ...file };
 
-    copyFile.data = null;
+    delete copyFile.data;
 
     copyFile.content = metadata;
 

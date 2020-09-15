@@ -74,6 +74,8 @@ declare module "estack" {
          *  Declare if the file should be loaded by a plugin
          */
         load: boolean;
+
+        autoload?: boolean;
         /**
          * **Optional**, Can be used to share information
          */

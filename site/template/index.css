@@ -66,7 +66,9 @@ h1.c-titleHero {
 }
 
 .o-content {
-    max-width: 920px;
+    max-width: 60rem;
+    padding: 0.5rem;
+    box-sizing: border-box;
 }
 
 .o-content {
@@ -93,7 +95,6 @@ h1.c-titleHero {
     background: var(--estack_bgCode);
     border-radius: var(--estack_boxRadio);
     overflow-x: auto;
-    padding: 1rem;
 }
 .o-article a {
     color: var(--estack_clLink);
@@ -110,7 +111,8 @@ h1.c-titleHero {
 .o-article pre code {
     background: transparent;
     line-height: 1.2em;
-    display: block;
+    display: inline-block;
+    padding: 1rem;
 }
 
 .o-header {
@@ -134,4 +136,12 @@ h1.c-titleHero {
     flex-flow: column;
     align-items: center;
     padding: var(--estack_boxPaddingTop) var(--estack_boxPaddingLeft);
+}
+
+@media (max-width: 520px) {
+    .o-article,
+    .o-contentHeader {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
 }

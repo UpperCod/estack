@@ -58,15 +58,28 @@ export async function loadData(file: File, build: Build) {
                                 ? yamlLoad(content, src)
                                 : content;
                         } else if (src) {
+                            /**
+                             * @todo file.data escapes from the asynchronous
+                             * cyclo, this prevents the internal reading
+                             * before the resolution, investigate mapObject,
+                             * it may not be generating an asynchronous
+                             * queue correctly
+                             */
                             const childFile = await build.addFile(
-                                build.resolveFromFile(file, src)
+                                build.resolveFromFile(file, src),
+                                {
+                                    load: false,
+                                    autoload: false,
+                                }
                             );
+
                             // Any change to the imported file will overwrite the related file.
                             build.addImporter(childFile, file);
 
-                            const { root } = await childFile.data;
+                            data = await loadData(childFile, build);
 
-                            data = root;
+                            // const { root } = await childFile.data;
+                            // data = root;
                         }
                         return prop ? getProp(data, prop) : data;
                     } catch (e) {

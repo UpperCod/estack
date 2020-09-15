@@ -7,7 +7,11 @@ export function pluginData(): Plugin {
         name: "data",
         filter: ({ src }) => isYaml(src) || isJson(src),
         async load(file, build) {
-            await loadData(file, build);
+            try {
+                await loadData(file, build);
+            } catch (e) {
+                build.addError(file, e + "");
+            }
         },
     };
 }

@@ -1,64 +1,63 @@
 ---
 title: Frontmatter
+description: Mágicamente Simple y Poderoso
 linkTitle: Frontmatter
-lang: es
+lang: en
 category:
     - header
-todos:
-    $ref: https://jsonplaceholder.typicode.com/todos
 ---
 
-El frontmatter mejora la experiencia de generacion de contenido estatico, con el frontmatter de EStack podra :
+The frontmatter improves the experience of generating static content, with the EStack frontmatter you can:
 
-1. Modificar link de escritura mediante la propeidad [link](#link-string)
-2. Asociar lenguaje mediante la propiedad [lang](#lang-string)
-3. Asociar categorias mediante la propiedad [category](#category-string)
-4. Asociar assets
-5. Contruir data mediante la propiedades [\$link](#link-string-1) y [\$ref](#ref-string)
-6. Realizar request a servicios
-7. Declarar paginas como templates y usarlas mediante layout
+1. Modify write link using the property [link](#link-string).
+2. Associate language using the [lang](#lang-string) property.
+3. Associate categories using the [category](#category-string) property.
+4. Associate assets.
+5. Build data using the properties [\$link](#link-string-1) and [\$ref](#ref-string).
+6. Make request to services
+7. Declare pages as templates and use them through layout
 
 ## Schema
 
 ### link: string
 
-**Alias permalink**, declara el link de la pagina para escritura, ejemplo:
+**Alias permalink**, declare the link of the page to write, example:
 
 ```yaml
 link: folder/users
 ```
 
-Esta pagina sera escrita en el destino como `folder/users.html`
+This page will be written in the destination as `folder/users.html`.
 
 ```yaml
 link: folder/users/
 ```
 
-Esta pagina sera escrita en el destino como `folder/users/index.html`
+This page will be written in the destination as `folder/users/index.html`.
 
 ### lang: string
 
-Declara un lenguaje para la pagina, lang es asociado al objeto `category` para consultas.
+Declare a language for the page, lang is associated with the `category` object for queries.
 
 ### category: string[]
 
-Declara una o mas categorias para la pagina, estas categorias se asoican al objeto `category` para consultas.
+Declare one or more categories for the page, these categories are associated with the `category` object for queries.
 
 ### fragment: string
 
-Declara la pagina como fragmento, las paginas de tipo fragmento solo se imprimen a demanda mediante el uso del tag `{{ '{% fragment myFragment with ...data %}' }}`
+Declare the page as a fragment, fragment type pages are only printed on demand by using the tag `{{'{% fragment myFragment with ... data%}'}}`.
 
 ### tempalte: string
 
-Declara la pagina como plantilla, si el tempalte se define como `default`, todas las paginas que no declaren layout heredaran la plantilla default
+Declare the page as a template, if the template is defined as `default`, all the pages that do not declare layout will inherit the default template.
 
 ### global: string
 
-Permite recuperar la pagina mediante el objeto `global`, **Esto con la finalidad de acceder a toda la data que la pagina contenga**
+It allows to retrieve the page through the `global` object, **This in order to access all the data that the page contains**.
 
 ### \$ref: string
 
-Permite relacionar archivos externos a la pagina, sea desde urls o locales, ejemplo:
+It allows to relate external files to the page, either from urls or local, example:
 
 ```yaml
 todos:
@@ -74,7 +73,7 @@ author:
 
 ### \$link: string
 
-Permite construir links, los links fuerzan la carga de los archivos a la build para la asociacion como recurso sea pagina o asset, ejemplo:
+It allows to build links, the links force the loading of the files to the build for the association as a resource, be it page or asset, example:
 
 ```yaml
 thumbnail:
