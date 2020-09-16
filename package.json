@@ -5,13 +5,13 @@
     "module": "src/cli.js",
     "main": "cli.js",
     "scripts": {
-        "clear": "rm -rf ./test/basic/dest && rm -rf ./test/basic/public",
-        "test": "mocha -r  ts-node/register tests/**/*.test.ts",
+        "clear": "rm -rf ./tests/basic/public",
+        "test": "npm run clear && mocha -r  ts-node/register tests/**/*.test.ts",
         "build": "rollup -c",
         "dev": "rollup -c -w",
         "dev:doc": "node cli.js dev site/**/*.{html,md}",
         "build:doc": "node cli.js build site/**/*.html d",
-        "prepare": "npm run build"
+        "prepare": "npm run build  && npm run test"
     },
     "author": "UpperCod",
     "license": "ISC",
