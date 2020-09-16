@@ -1,4 +1,4 @@
-import * as path from "path";
+import path from "path";
 import { Plugin } from "estack";
 import { writeFile, copyFile } from "../../utils/fs";
 

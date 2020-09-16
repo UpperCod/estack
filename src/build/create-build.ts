@@ -1,6 +1,6 @@
-import * as path from "path";
+import path from "path";
 import getHash from "@uppercod/hash";
-import * as fs from "fs/promises";
+import fs from "fs/promises";
 import { Files, File, WatchConfig, FileConfig, Build } from "estack";
 import { ActionsBuild, ConfigBuild } from "./types";
 import { createNormalizeSrc } from "./create-normalize-src";

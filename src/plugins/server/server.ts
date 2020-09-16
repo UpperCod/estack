@@ -1,9 +1,9 @@
 import { Files, File } from "estack";
 import { createReadStream } from "fs";
-import * as http from "http";
+import http from "http";
 import findPort from "@uppercod/find-port";
 import { createLiveReload } from "./livereload";
-import * as mime from "mime";
+import mime from "mime";
 
 interface Options {
     port: number;
