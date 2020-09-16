@@ -13,7 +13,7 @@ template: default
 <body>
     {% assign header = category|query: operator:"and", select: "header", select : page.lang] %}
     <header class="o-header">
-        <div>Logo</div>
+        <div><img src="{{'logo.svg'|asset}}" alt="Logo"></div>
         <menu>
             {% for item in header %}
                 <a class="c-menuLink" href="{{item.link}}">{{item.linkTitle | default: item.title }}</a>

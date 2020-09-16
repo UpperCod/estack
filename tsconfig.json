@@ -11,6 +11,10 @@
     "esModuleInterop":true,
     "lib": [
       "es2019"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "estack" : ["types.d.ts"]
+    }
   }
 }

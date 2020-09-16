@@ -3,8 +3,11 @@ import json from "@rollup/plugin-json";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import pkg from "./package.json";
-import tsconfig from "./tsconfig.json";
+import { compilerOptions } from "./tsconfig.json";
 import typescript from "@rollup/plugin-typescript";
+
+delete compilerOptions.baseDir;
+delete compilerOptions.paths;
 
 export default {
     input: "src/cli.ts",
@@ -25,7 +28,7 @@ export default {
     plugins: [
         typescript({
             tsconfig: "tsconfig.json",
-            ...tsconfig.compilerOptions,
+            ...compilerOptions,
             module: "ESnext",
         }),
         json(),
