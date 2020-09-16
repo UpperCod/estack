@@ -1,4 +1,4 @@
-import * as colors from "colors/safe";
+import colors from "colors/safe";
 import getProp from "@uppercod/get-prop";
 
 interface Message {

@@ -7,12 +7,10 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "target": "ESnext",
+    "allowSyntheticDefaultImports":true,
+    "esModuleInterop":true,
     "lib": [
       "es2019"
-    ],
-    "baseUrl": ".",
-    "paths":{
-      "estack":["./types.d.ts"]
-    }
+    ]
   }
 }

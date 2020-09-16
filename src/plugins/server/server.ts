@@ -3,7 +3,7 @@ import { createReadStream } from "fs";
 import * as http from "http";
 import findPort from "@uppercod/find-port";
 import { createLiveReload } from "./livereload";
-import { getType } from "mime";
+import * as mime from "mime";
 
 interface Options {
     port: number;
@@ -39,9 +39,11 @@ export async function createServer(options: Options): Promise<Server> {
         }
 
         if (file) {
-            const mime = getType(file.type);
+            const tmime = mime.getType(file.type);
             if (typeof file.content == "string") {
-                res.writeHead(200, { "Content-Type": mime + ";charset=utf-8" });
+                res.writeHead(200, {
+                    "Content-Type": tmime + ";charset=utf-8",
+                });
                 res.end(
                     file.type == "html"
                         ? livereload.addScriptLiveReload(file.content)
@@ -50,7 +52,7 @@ export async function createServer(options: Options): Promise<Server> {
             } else {
                 const readStream = createReadStream(file.src);
                 readStream.on("open", () => {
-                    res.writeHead(200, { "Content-Type": mime });
+                    res.writeHead(200, { "Content-Type": tmime });
                     readStream.pipe(res);
                 });
                 readStream.on("error", () => {

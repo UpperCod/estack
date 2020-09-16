@@ -1,5 +1,5 @@
 import { Plugin } from "estack";
-import * as postcss from "postcss";
+import postcss from "postcss";
 import pluginImport from "@uppercod/postcss-import";
 import { isCss } from "../../utils/types";
 

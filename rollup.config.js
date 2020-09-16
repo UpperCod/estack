@@ -1,11 +1,9 @@
-import replace from "@rollup/plugin-replace";
-import common from "@rollup/plugin-commonjs";
-import resolve from "@rollup/plugin-node-resolve";
-import json from "@rollup/plugin-json";
 import builtins from "builtin-modules";
+import json from "@rollup/plugin-json";
+import resolve from "@rollup/plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
 import pkg from "./package.json";
 import tsconfig from "./tsconfig.json";
-import conditionalFsEventsImport from "./build-plugins/conditional-fsevents-import/conditional-fsevents-import";
 import typescript from "@rollup/plugin-typescript";
 
 export default {
@@ -19,31 +17,19 @@ export default {
         interop: false,
     },
     external: [
-        "@estack/core",
+        "estack",
         ...builtins,
         ...Object.keys(pkg.dependencies),
         ...Object.keys(pkg.peerDependencies),
     ],
-    //treeshake: {
-    //  moduleSideEffects: false,
-    //  propertyReadSideEffects: false,
-    //  tryCatchDeoptimization: false,
-    //},
     plugins: [
         typescript({
             tsconfig: "tsconfig.json",
             ...tsconfig.compilerOptions,
             module: "ESnext",
         }),
-        // ...(process.env.ROLLUP_WATCH
-        //     ? []
-        //     : [
-        //           //resolve({ extensions: [".js", ".ts"] }),
-
-        //           json(),
-        //           conditionalFsEventsImport(),
-        //           //common({ extensions: [".js", ".ts"] }),
-        //           // pluginTerser({ sourcemap: true }),
-        //       ]),
+        json(),
+        resolve(),
+        commonjs(),
     ],
 };

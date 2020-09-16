@@ -1,7 +1,7 @@
 import { Plugin } from "rollup";
 import { Build, Files } from "estack";
 import * as path from "path";
-import * as resolve from "resolve";
+import resolve from "resolve";
 /**
  * This plugins resolves the local files imported by assets
  * of entry captured by EStack, this is to capture the

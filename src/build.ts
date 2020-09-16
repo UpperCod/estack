@@ -1,5 +1,5 @@
 import { Plugin, OptionsBuild } from "estack";
-import * as glob from "fast-glob";
+import glob from "fast-glob";
 import { Load } from "./build/types";
 import { createBuild } from "./build/create-build";
 import { loadOptions } from "./build/load-options";

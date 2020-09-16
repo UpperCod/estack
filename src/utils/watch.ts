@@ -1,4 +1,4 @@
-import * as chokidar from "chokidar";
+import chokidar from "chokidar";
 
 export interface Group {
     add?: string[];

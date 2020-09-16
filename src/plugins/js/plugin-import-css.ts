@@ -1,5 +1,5 @@
 import { Plugin } from "rollup";
-import * as postcss from "postcss";
+import postcss from "postcss";
 import pluginImport, { Imports, Process } from "@uppercod/postcss-import";
 import { Build } from "estack";
 

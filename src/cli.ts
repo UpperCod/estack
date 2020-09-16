@@ -1,4 +1,4 @@
-import * as sade from "sade";
+import sade from "sade";
 import { build } from "./build";
 
 sade("estack <mode> <src> [dest]")

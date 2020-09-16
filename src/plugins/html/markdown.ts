@@ -1,8 +1,8 @@
 import { getFragments, replaceFragments } from "@uppercod/str-fragment";
 import { Replace } from "./types";
 import getId from "@uppercod/hash";
-import * as marked from "marked";
-import * as Prism from "prismjs";
+import marked from "marked";
+import Prism from "prismjs";
 import { escape } from "html-escaper";
 import "prismjs/components/prism-javascript";
 import "prismjs/components/prism-typescript";

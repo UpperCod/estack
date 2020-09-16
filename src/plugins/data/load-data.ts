@@ -3,11 +3,11 @@ import mapObject from "@uppercod/map-object";
 import createCache from "@uppercod/cache";
 import getProp from "@uppercod/get-prop";
 import { request } from "@uppercod/request";
-import { safeLoad } from "js-yaml";
+import yaml from "js-yaml";
 import { isUrl, isHtml } from "../../utils/types";
 
 const yamlLoad = (code: string, src: string) =>
-    safeLoad(code, { filename: src });
+    yaml.safeLoad(code, { filename: src });
 
 const cache = createCache();
 

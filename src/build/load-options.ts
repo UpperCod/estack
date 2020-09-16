@@ -1,7 +1,7 @@
 import { OptionsBuild, Options, PluginsExternal } from "estack";
 import getProp from "@uppercod/get-prop";
 import { readFile } from "../utils/fs";
-import * as builtins from "builtin-modules";
+import builtins from "builtin-modules";
 
 const pkgDefault = {
     dependencies: {},
