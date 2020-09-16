@@ -15,7 +15,7 @@ export function pluginCss(): Plugin {
                 const imports = {};
                 const result = await postcss([
                     pluginImport({ imports, process: this.cache }),
-                    ...build.options.css,
+                    ...build.options.css.plugins,
                 ]).process(await build.readFile(file), {
                     from: file.src,
                 });

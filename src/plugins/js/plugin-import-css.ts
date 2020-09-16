@@ -17,7 +17,7 @@ export function pluginImportCss(build: Build): Plugin {
                 try {
                     const result = await postcss([
                         pluginImport({ imports, process }),
-                        ...build.options.css,
+                        ...build.options.css.plugins,
                     ]).process(code, {
                         from: id,
                     });

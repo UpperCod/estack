@@ -1,4 +1,10 @@
-import { OptionsBuild, Options, PluginsExternal } from "estack";
+import {
+    OptionsBuild,
+    Options,
+    TypesExtensions,
+    PluginsExternal,
+    PluginsExternalBuild,
+} from "estack";
 import getProp from "@uppercod/get-prop";
 import { readFile } from "../utils/fs";
 import builtins from "builtin-modules";
@@ -44,6 +50,26 @@ export async function loadOptions({
         sourcemap = sourcemap || false;
     }
 
+    const types: TypesExtensions = {
+        md: "html",
+    };
+
+    const jsConfig = await loadConfig({
+        defExtensions: ["js", "jsx", "ts", "tsx"],
+        plugins: {},
+        ...getProp(pkg, js),
+    });
+
+    jsConfig.extensions.forEach((type) => (types[type] = "js"));
+
+    const cssConfig = await loadConfig({
+        defExtensions: ["css"],
+        plugins: {},
+        ...getProp(pkg, css),
+    });
+
+    cssConfig.extensions.forEach((type) => (types[type] = "css"));
+
     const options: Options = {
         mode,
         glob,
@@ -61,23 +87,30 @@ export async function loadOptions({
         watch,
         server,
         assets: "assets/",
-        js: await loadPlugins(
-            typeof js == "string" ? getProp(pkg, js, {}) : {}
-        ),
-        css: await loadPlugins(
-            typeof css == "string" ? getProp(pkg, css, {}) : {}
-        ),
+        js: jsConfig,
+        css: cssConfig,
+        types,
     };
 
     return options;
 }
 
-async function loadPlugins(plugins: PluginsExternal) {
+async function loadConfig({
+    plugins,
+    defExtensions,
+    extensions = [],
+}: PluginsExternal): Promise<PluginsExternalBuild> {
     const task = [];
     for (let prop in plugins) {
         task.push(import(prop).then((plugin) => plugin(plugins[prop])));
     }
-    return Promise.all(task);
+    return {
+        extensions: [
+            ...defExtensions,
+            ...extensions.filter((type) => !defExtensions.includes(type)),
+        ],
+        plugins: await Promise.all(task),
+    };
 }
 
 async function getPackage() {

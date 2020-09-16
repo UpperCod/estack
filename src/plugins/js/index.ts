@@ -30,14 +30,14 @@ export function pluginJs(): Plugin {
                 input: Object.keys(filesJs),
                 plugins: [
                     importUrl(),
-                    pluginLocalResolve(build, chunksJs, aliasJs, [
-                        ".js",
-                        ".jsx",
-                        ".ts",
-                        ".tsx",
-                    ]),
+                    pluginLocalResolve(
+                        build,
+                        chunksJs,
+                        aliasJs,
+                        build.options.js.extensions.map((type) => "." + type)
+                    ),
                     pluginImportCss(build),
-                    ...build.options.js,
+                    ...build.options.js.plugins,
                 ],
             });
 

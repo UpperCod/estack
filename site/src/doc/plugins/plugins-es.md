@@ -8,7 +8,7 @@ category:
     - header
 ---
 
-La configuración adicional a asociar a EStack debe existir en el package.json, tu podrá asociar configuraciones de forma selectiva según sus objetivos.
+La configuración adicional a asociar a EStack debe existir en el package.json, tu podrá asociar configuraciones de forma selectiva según script.
 
 ## Rollup
 
@@ -27,17 +27,21 @@ Estack permite inyectar plugins a Rollup, mediante el flag `--js <pkg_property>`
     "estack": {
         "dev": {
             "js": {
-                "@rollup/plugin-typescript": {
-                    "tsconfig": "tsconfig.json"
+                "plugins": {
+                    "@rollup/plugin-typescript": {
+                        "tsconfig": "tsconfig.json"
+                    }
                 }
             }
         },
         "build": {
             "js": {
-                "@rollup/plugin-typescript": {
-                    "tsconfig": "tsconfig.json"
-                },
-                "rollup-plugin-terser": {}
+                "plugins": {
+                    "@rollup/plugin-typescript": {
+                        "tsconfig": "tsconfig.json"
+                    },
+                    "rollup-plugin-terser": {}
+                }
             }
         }
     }
@@ -63,13 +67,17 @@ Estack permite inyectar plugins a Postcss, mediante el flag `--css <pkg_property
     "estack": {
         "dev": {
             "css": {
-                "postcss-preset-env": {}
+                "plugins": {
+                    "postcss-preset-env": {}
+                }
             }
         },
         "build": {
             "css": {
-                "postcss-preset-env": {},
-                "cssnano": {}
+                "plugins": {
+                    "postcss-preset-env": {},
+                    "cssnano": {}
+                }
             }
         }
     }

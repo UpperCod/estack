@@ -148,12 +148,7 @@ export async function build(opts: OptionsBuild) {
             /**
              * Lets associate file extensions for write transformations
              */
-            types: {
-                jsx: "js",
-                ts: "js",
-                tsx: "js",
-                md: "html",
-            },
+            types: options.types,
         }
     );
 

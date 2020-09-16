@@ -26,17 +26,21 @@ EStack allows to inject plugins into Rollup, using the `--js <pkg_property>` fla
     "estack": {
         "dev": {
             "js": {
-                "@rollup/plugin-typescript": {
-                    "tsconfig": "tsconfig.json"
+                "plugins": {
+                    "@rollup/plugin-typescript": {
+                        "tsconfig": "tsconfig.json"
+                    }
                 }
             }
         },
         "build": {
             "js": {
-                "@rollup/plugin-typescript": {
-                    "tsconfig": "tsconfig.json"
-                },
-                "rollup-plugin-terser": {}
+                "plugins": {
+                    "@rollup/plugin-typescript": {
+                        "tsconfig": "tsconfig.json"
+                    },
+                    "rollup-plugin-terser": {}
+                }
             }
         }
     }
@@ -62,13 +66,17 @@ Estack allows you to inject plugins into Postcss, using the `--css <pkg_property
     "estack": {
         "dev": {
             "css": {
-                "postcss-preset-env": {}
+                "plugins": {
+                    "postcss-preset-env": {}
+                }
             }
         },
         "build": {
             "css": {
-                "postcss-preset-env": {},
-                "cssnano": {}
+                "plugins": {
+                    "postcss-preset-env": {},
+                    "cssnano": {}
+                }
             }
         }
     }

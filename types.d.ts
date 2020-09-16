@@ -196,14 +196,30 @@ declare module "estack" {
         external?: string[];
     }
 
-    export interface PluginsExternal {
+    export interface PluginsExternalMap {
         [plugin: string]: any;
     }
 
+    export interface PluginsExternal {
+        defExtensions: string[];
+        extensions: string[];
+        plugins: PluginsExternalMap;
+    }
+
+    export interface PluginsExternalBuild {
+        extensions: string[];
+        plugins: any[];
+    }
+
+    export interface TypesExtensions {
+        [type: string]: string;
+    }
+
     export interface Options extends Omit<OptionsBuild, "src" | "js" | "css"> {
-        js: any[];
-        css: any[];
+        js: PluginsExternalBuild;
+        css: PluginsExternalBuild;
         glob: string[];
+        types: TypesExtensions;
         server?: boolean;
     }
 }
