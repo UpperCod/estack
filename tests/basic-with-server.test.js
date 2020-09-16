@@ -1,5 +1,5 @@
 import test from "ava";
-import { createBuild } from "../src/create-build";
+import { build } from "../src/build";
 import puppeteer from "puppeteer";
 import utils from "./utils";
 
@@ -8,14 +8,12 @@ let dest = "./test/basic/public";
 let port = 8000;
 
 test.before(async () => {
-    await createBuild({
+    await build({
+        mode: "dev",
         src,
         dest,
         server: true,
         port,
-        silent: true,
-        assetsDir: "",
-        hashAllAssets: false,
     });
 });
 

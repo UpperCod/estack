@@ -4,6 +4,7 @@ import resolve from "@rollup/plugin-node-resolve";
 import json from "@rollup/plugin-json";
 import builtins from "builtin-modules";
 import pkg from "./package.json";
+import tsconfig from "./tsconfig.json";
 import conditionalFsEventsImport from "./build-plugins/conditional-fsevents-import/conditional-fsevents-import";
 import typescript from "@rollup/plugin-typescript";
 
@@ -31,6 +32,8 @@ export default {
     plugins: [
         typescript({
             tsconfig: "tsconfig.json",
+            ...tsconfig.compilerOptions,
+            module: "ESnext",
         }),
         // ...(process.env.ROLLUP_WATCH
         //     ? []

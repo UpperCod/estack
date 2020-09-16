@@ -191,9 +191,9 @@ declare module "estack" {
         assets?: string;
         sourcemap?: boolean;
         watch?: boolean;
-        js: string;
-        css: string;
-        external: string[];
+        js?: string;
+        css?: string;
+        external?: string[];
     }
 
     interface PluginsExternal {

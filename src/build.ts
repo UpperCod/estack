@@ -164,4 +164,6 @@ export async function build(opts: OptionsBuild) {
 
     await pluginsParallel("mounted", plugins, build);
     await rebuild(listSrc);
+
+    return build;
 }

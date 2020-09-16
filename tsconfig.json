@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "moduleResolution":"Node",
-    "module": "ESNext",
+    "module": "CommonJS",
     "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
@@ -9,6 +9,10 @@
     "target": "ESnext",
     "lib": [
       "es2019"
-    ]
-  },
+    ],
+    "baseUrl": ".",
+    "paths":{
+      "estack":["./types.d.ts"]
+    }
+  }
 }
