@@ -8,7 +8,7 @@ import importUrl from "rollup-plugin-import-url";
 export function pluginJs(): Plugin {
     return {
         name: "plugin-js",
-        filter: ({ src }) => isJs(src),
+        filter: ({ type }) => type == "js",
         load() {},
         async buildEnd(build) {
             if (!this.loads) return;

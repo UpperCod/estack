@@ -32,8 +32,9 @@
     },
     "estack": {
         "build": {
-            "css": {
-                "cssnano": {}
+            "js": {
+                "extensions": [],
+                "plugins": {}
             }
         }
     },

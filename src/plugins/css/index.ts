@@ -6,7 +6,7 @@ import { isCss } from "../../utils/types";
 export function pluginCss(): Plugin {
     return {
         name: "plugin-css",
-        filter: ({ src }) => isCss(src),
+        filter: ({ type }) => type == "css",
         beforeLoad() {
             this.cache = {};
         },

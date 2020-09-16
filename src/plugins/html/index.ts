@@ -15,7 +15,7 @@ export function pluginHtml(): Plugin {
         mounted(build) {
             engine = createEngine(build);
         },
-        filter: ({ src }) => isHtml(src),
+        filter: ({ type }) => type == "html",
         async load(file, build) {
             if (isMd(file.src)) {
                 file.content = escapeBlockCodeMarkdown(
