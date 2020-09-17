@@ -31,8 +31,6 @@ export default {
             ...compilerOptions,
             module: "ESnext",
         }),
-        json(),
-        resolve(),
-        commonjs(),
+        ...(process.env.ROLLUP_WATCH ? [] : [json(), resolve(), commonjs()]),
     ],
 };

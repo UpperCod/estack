@@ -1,12 +1,14 @@
 import {
-    OptionsBuild,
     Options,
+    OptionsBuild,
     TypesExtensions,
     PluginsExternal,
     PluginsExternalBuild,
 } from "estack";
+import path from "path";
 import getProp from "@uppercod/get-prop";
 import { readFile } from "../utils/fs";
+import { normalizePath } from "../utils/utils";
 import builtins from "builtin-modules";
 
 const pkgDefault = {
@@ -36,13 +38,13 @@ export async function loadOptions({
 
     const glob: string[] = Array.isArray(src) ? src : src.split(/ *; */g);
 
-    const site = useHtml(glob);
+    const witHtml = useHtml(glob);
 
     dest = dest || "public";
 
     if (mode == "dev") {
         sourcemap = true;
-        server = site;
+        server = witHtml;
         watch = true;
     }
 
@@ -70,7 +72,15 @@ export async function loadOptions({
 
     cssConfig.extensions.forEach((type) => (types[type] = "css"));
 
+    const assets = "assets/";
+
+    const site = {
+        href: href,
+        assets: normalizePath(path.join(href, assets)),
+    };
+
     const options: Options = {
+        site,
         mode,
         glob,
         sourcemap,
@@ -86,7 +96,7 @@ export async function loadOptions({
         href,
         watch,
         server,
-        assets: "assets/",
+        assets,
         js: jsConfig,
         css: cssConfig,
         types,

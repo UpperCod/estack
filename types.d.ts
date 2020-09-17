@@ -221,5 +221,9 @@ declare module "estack" {
         glob: string[];
         types: TypesExtensions;
         server?: boolean;
+        site: {
+            href: string;
+            assets: string;
+        };
     }
 }

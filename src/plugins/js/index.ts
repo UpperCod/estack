@@ -44,7 +44,9 @@ export function pluginJs(): Plugin {
             const { output } = await bundle.generate({
                 dir: build.options.dest,
                 format: "esm",
-                chunkFileNames: build.options.assets + "[hash].js",
+                chunkFileNames: (
+                    build.options.site.assets + "[hash].js"
+                ).replace(/^\//, ""),
             });
 
             await Promise.all(

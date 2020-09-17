@@ -3,11 +3,13 @@ title: EStack
 description: Modern static site builder
 linkTitle: Welcome
 lang: en
-variation:
-    $ref: lang.yaml
+langs:
+    $ref: langs.yaml
 category:
     - header
 ---
+
+<script src="{{'index.js'|asset}}" type="module"></script>
 
 EStack is a modern static site generator that has a perfectly synchronized stack of tools.
 

@@ -2,7 +2,7 @@
 template: default
 ---
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{page.lang}}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +19,13 @@ template: default
                 <a class="c-menuLink" href="{{item.link}}">{{item.linkTitle | default: item.title }}</a>
             {% endfor %}
         </menu>
-        <div>Logo</div>
+        <div>
+            <select onchange="location.href=event.target.value">
+                {% for item in page.langs %}
+                    <option value="{{item.link}}" {% if item.lang == page.lang %} selected {% endif %}>{{item.lang}}</option>
+                {% endfor %}
+            </select>
+        </div>
     </header>
     <section class="o-content">
         <header class="o-contentHeader">

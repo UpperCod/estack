@@ -40,8 +40,27 @@ export async function loadData(file: File, build: Build) {
                     build.addImporter(childFile, file, {
                         rewrite: childFile.type == "html",
                     });
-
-                    return childFile.write ? { link: childFile.link } : {};
+                    if (childFile.type == "html") {
+                        const file = childFile;
+                        return {
+                            get link() {
+                                return file.data.link;
+                            },
+                            get lang() {
+                                return file.data.lang;
+                            },
+                            get linkTitle() {
+                                return file.data.linkTitle || file.data.title;
+                            },
+                        };
+                    } else {
+                        return childFile.write
+                            ? {
+                                  link: childFile.link,
+                                  linkTitle: childFile.meta.base,
+                              }
+                            : {};
+                    }
                 },
                 async $ref({ value, root }) {
                     let data = root;
@@ -90,5 +109,6 @@ export async function loadData(file: File, build: Build) {
         );
     }
     const { root } = await file.data;
+
     return root;
 }

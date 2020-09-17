@@ -143,8 +143,8 @@ export async function build(opts: OptionsBuild) {
          * Config
          */
         {
-            href: options.href,
-            assets: options.assets,
+            href: options.site.href,
+            assets: options.site.assets,
             /**
              * Lets associate file extensions for write transformations
              */

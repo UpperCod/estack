@@ -4,8 +4,8 @@ link: es/estack
 description: Generador de sitios estáticos moderno
 linkTitle: Welcome
 lang: es
-variation:
-    $ref: lang.yaml
+langs:
+    $ref: langs.yaml
 category:
     - header
 ---
