@@ -3,10 +3,16 @@ title: EStack
 description: Modern static site builder
 linkTitle: Welcome
 lang: en
-langs:
-    $ref: langs.yaml
+version:
+    for: ./index.md
+    name:
+        $ref: ~lang
+    order: 0
 category:
     - header
+    - $ref: ~lang
+langs:
+    $ref: langs.yaml
 ---
 
 <script src="{{'index.js'|asset}}" type="module"></script>

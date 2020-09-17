@@ -1,7 +1,7 @@
 import { Plugin } from "estack";
 import { Replace, RenderData, Globals, Categories, Page, Pages } from "./types";
 import { loadFile } from "./load-page";
-import { isHtml, isMd } from "../../utils/types";
+import { isMd } from "../../utils/types";
 import { createEngine, Engine } from "./engine";
 import { escapeBlockCodeMarkdown, markdown } from "./markdown";
 
@@ -17,13 +17,17 @@ export function pluginHtml(): Plugin {
         },
         filter: ({ type }) => type == "html",
         async load(file, build) {
-            if (isMd(file.src)) {
-                file.content = escapeBlockCodeMarkdown(
-                    replace,
-                    await build.readFile(file)
-                );
+            try {
+                if (isMd(file.src)) {
+                    file.content = escapeBlockCodeMarkdown(
+                        replace,
+                        await build.readFile(file)
+                    );
+                }
+                await loadFile(file, build);
+            } catch (e) {
+                build.addError(file, e + "");
             }
-            await loadFile(file, build);
         },
         async afterLoad(build) {
             if (!this.loads) return;
@@ -32,10 +36,9 @@ export function pluginHtml(): Plugin {
             const categories: Categories = {};
             const pages: Pages = {};
             const globals: Globals = {};
-
             for (const src in build.files) {
                 const file = build.files[src] as Page;
-                if (file.type != "html") continue;
+                if (file.type != "html" || file.errors.length) continue;
                 const { data } = file;
                 if (data.global) {
                     globals[data.global] = data;
