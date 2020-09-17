@@ -25,7 +25,7 @@ export function pluginImportCss(build: Build): Plugin {
                         const file = build.getFile(id);
                         await Promise.all(
                             Object.keys(imports).map(async (src) => {
-                                const childFile = await build.addFile(src, {
+                                const childFile = build.addFile(src, {
                                     load: false,
                                     write: false,
                                 });

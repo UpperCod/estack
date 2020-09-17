@@ -54,7 +54,7 @@ export function pluginJs(): Plugin {
                     if (aliasJs[chunk.fileName]) {
                         aliasJs[chunk.fileName].content = chunk.code;
                     } else {
-                        const file = await build.addFile(chunk.fileName, {
+                        const file = build.addFile(chunk.fileName, {
                             load: false,
                             asset: true,
                         });

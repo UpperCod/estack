@@ -31,7 +31,7 @@ export const pluginLocalResolve = (
                     async (err, id) => {
                         if (!err) {
                             if (file) {
-                                const childFile = await build.addFile(id, {
+                                const childFile = build.addFile(id, {
                                     load: false,
                                 });
                                 childFile.write = false;

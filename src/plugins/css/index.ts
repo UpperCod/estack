@@ -21,7 +21,7 @@ export function pluginCss(): Plugin {
                 });
 
                 for (const src in imports) {
-                    const childFile = await build.addFile(src, {
+                    const childFile = build.addFile(src, {
                         write: false,
                         load: false,
                     });

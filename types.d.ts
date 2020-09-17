@@ -43,11 +43,6 @@ declare module "estack" {
          */
         asset?: boolean;
         /**
-         * `autoload=true` : Indicates that the file will be sent to load if it has
-         * just been created
-         */
-        autoload?: boolean;
-        /**
          * `hash=false` : indicates whether to generate a hash path for writing.
          */
         hash?: boolean;
@@ -73,7 +68,7 @@ declare module "estack" {
         /**
          *  Declare if the file should be loaded by a plugin
          */
-        load: boolean;
+        load?: () => Promise<void>;
 
         autoload?: boolean;
         /**
@@ -149,7 +144,7 @@ declare module "estack" {
          * @param src - file origin
          * @param config - file configuration
          */
-        addFile(src: string, config?: FileConfig): Promise<File>;
+        addFile(src: string, config?: FileConfig): File;
         /**
          * Associate an import relation between file and importer.
          * @param file - file to associate the import.

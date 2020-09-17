@@ -1,4 +1,4 @@
-import { Plugin, OptionsBuild } from "estack";
+import { Plugin, OptionsBuild, Files } from "estack";
 import glob from "fast-glob";
 import { Load } from "./build/types";
 import { createBuild } from "./build/create-build";
@@ -14,6 +14,10 @@ import { pluginCss } from "./plugins/css";
 import { pluginJs } from "./plugins/js";
 import { pluginWrite } from "./plugins/write";
 
+interface CyclesTask {
+    [index: number]: Promise<void>[];
+}
+
 export async function build(opts: OptionsBuild) {
     const mark = createMarks();
 
@@ -23,6 +27,9 @@ export async function build(opts: OptionsBuild) {
     });
 
     mark("build");
+
+    const cyclesTask: CyclesTask = {};
+    let cyclesTaskCount = 0;
 
     const options = await loadOptions(opts);
 
@@ -73,6 +80,7 @@ export async function build(opts: OptionsBuild) {
      * @param src
      */
     const rebuild = async (src: string[] = []) => {
+        const cycleTaskId = ++cyclesTaskCount;
         const closeMark = mark("build");
         console.log("");
         log({
@@ -83,15 +91,21 @@ export async function build(opts: OptionsBuild) {
         plugins.forEach((plugin) => (plugin.loads = 0));
         await pluginsSequential("buildStart", plugins, build);
         await pluginsParallel("beforeLoad", plugins, build);
+        // Create a subtask of unresolved processes in the main load
+        cyclesTask[cycleTaskId] = [];
         await Promise.all(
             src.map(async (src) => {
-                const file = await build.addFile(src, {
+                const file = build.addFile(src, {
                     root: true,
-                    autoload: false,
                 });
+
                 return load(file);
             })
         );
+        // Wait for the subtasks to finish to run correctly the plugin cylco
+        await Promise.all(cyclesTask[cycleTaskId]);
+        // Clean up tasks
+        delete cyclesTask[cycleTaskId];
         await pluginsParallel("afterLoad", plugins, build);
         await pluginsSequential("buildEnd", plugins, build);
 
@@ -134,7 +148,13 @@ export async function build(opts: OptionsBuild) {
          * watch processes from the build
          */
         {
-            load,
+            load: async (file) => {
+                if (!file.assigned && cyclesTask[cyclesTaskCount]) {
+                    const task = load(file);
+                    cyclesTask[cyclesTaskCount].push(task);
+                    return task;
+                }
+            },
             watch: (file) => {
                 if (watcher) watcher.add(file.src);
             },

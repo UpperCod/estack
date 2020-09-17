@@ -15,7 +15,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     const hasFile: Build["hasFile"] = (src: string): boolean =>
         !!files[getSrc(src)];
 
-    const addFile: Build["addFile"] = async (
+    const addFile: Build["addFile"] = (
         src: string,
         {
             // Indica should be added to the watcher.
@@ -24,8 +24,6 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             write = true,
             // Indicates that the file can be uploaded by plugins.
             load = true,
-            // Indicates that the file will be sent to load if it has just been created
-            autoload = true,
             // indicates whether to generate a hash path for writing.
             hash = false,
             // Indicates that the file is sent from the build
@@ -33,16 +31,8 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             // Indicates if the file is an asset
             asset = false,
         }: FileConfig = {}
-    ): Promise<File> => {
-        if (hasFile(src)) {
-            const file = getFile(src);
-            // a file marked as load autoload and assigned will
-            // be sent if it is added again for asset reassignment
-            if (!file.assigned && file.autoload && file.load) {
-                await actions.load(file);
-            }
-            return file;
-        }
+    ): File => {
+        if (hasFile(src)) return getFile(src);
         src = getSrc(src);
         const meta = path.parse(src);
         const type = meta.ext.slice(1);
@@ -54,16 +44,18 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
             watch,
             write,
             meta,
-            load,
+            load: load ? () => actions.load(file) : null,
             errors: [],
-            autoload,
             type: config.types[type] || type,
             importers: {},
         };
+
         setLink(file, src);
+
         files[src] = file;
+
         if (watch) actions.watch(file);
-        if (autoload && load) await actions.load(file);
+
         return file;
     };
 

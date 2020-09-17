@@ -32,13 +32,16 @@ export function createEngine(build: Build): Engine {
         const { environments } = this.context;
         const context = environments as RenderData;
         if (context.file) {
-            const childFile = await build.addFile(
+            const childFile = build.addFile(
                 build.resolveFromFile(context.file, src),
                 {
                     hash: true,
                 }
             );
             build.addImporter(childFile, context.file, { rewrite: false });
+
+            await childFile.load();
+
             return childFile.link;
         }
     });

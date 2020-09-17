@@ -40,13 +40,31 @@ export async function loadData(
                 async $link({ value }) {
                     const subSrc = build.resolveFromFile(file, value);
 
-                    const childFile = await build.addFile(subSrc, {
+                    const childFile = build.addFile(subSrc, {
                         hash: !isHtml(value),
                     });
+
                     // Any change to the imported file will overwrite the related file.
                     build.addImporter(childFile, file, {
                         rewrite: childFile.type == "html",
                     });
+
+                    // preload it but don't expect it
+                    childFile.load();
+                    // If the file is of type html, a proxy is generated for the extraction of the link
+                    if (childFile.type == "html") {
+                        return {
+                            get link() {
+                                return childFile.data.link;
+                            },
+                            get linkTitle() {
+                                return (
+                                    childFile.data.linkTitle ||
+                                    childFile.data.title
+                                );
+                            },
+                        };
+                    }
 
                     return childFile.write
                         ? {
@@ -77,11 +95,10 @@ export async function loadData(
                              * it may not be generating an asynchronous
                              * queue correctly
                              */
-                            const childFile = await build.addFile(
+                            const childFile = build.addFile(
                                 build.resolveFromFile(file, src),
                                 {
                                     load: false,
-                                    autoload: false,
                                 }
                             );
 
