@@ -11,7 +11,15 @@ const yamlLoad = (code: string, src: string) =>
 
 const cache = createCache();
 
-export async function loadData(file: File, build: Build) {
+interface Parallel {
+    [src: string]: Promise<any>;
+}
+
+export async function loadData(
+    file: File,
+    build: Build,
+    parallel: Parallel = {}
+) {
     const value = await build.readFile(file);
 
     file.write = false;
@@ -30,37 +38,22 @@ export async function loadData(file: File, build: Build) {
             },
             {
                 async $link({ value }) {
-                    const childFile = await build.addFile(
-                        build.resolveFromFile(file, value),
-                        {
-                            hash: !isHtml(value),
-                        }
-                    );
+                    const subSrc = build.resolveFromFile(file, value);
+
+                    const childFile = await build.addFile(subSrc, {
+                        hash: !isHtml(value),
+                    });
                     // Any change to the imported file will overwrite the related file.
                     build.addImporter(childFile, file, {
                         rewrite: childFile.type == "html",
                     });
-                    if (childFile.type == "html") {
-                        const file = childFile;
-                        return {
-                            get link() {
-                                return file.data.link;
-                            },
-                            get lang() {
-                                return file.data.lang;
-                            },
-                            get linkTitle() {
-                                return file.data.linkTitle || file.data.title;
-                            },
-                        };
-                    } else {
-                        return childFile.write
-                            ? {
-                                  link: childFile.link,
-                                  linkTitle: childFile.meta.base,
-                              }
-                            : {};
-                    }
+
+                    return childFile.write
+                        ? {
+                              link: childFile.link,
+                              linkTitle: childFile.meta.base,
+                          }
+                        : {};
                 },
                 async $ref({ value, root }) {
                     let data = root;
@@ -95,7 +88,15 @@ export async function loadData(file: File, build: Build) {
                             // Any change to the imported file will overwrite the related file.
                             build.addImporter(childFile, file);
 
-                            data = await loadData(childFile, build);
+                            if (!parallel[childFile.src]) {
+                                parallel[childFile.src] = loadData(
+                                    childFile,
+                                    build,
+                                    parallel
+                                );
+                            }
+
+                            data = await parallel[childFile.src];
 
                             // const { root } = await childFile.data;
                             // data = root;

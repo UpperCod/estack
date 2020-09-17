@@ -9,7 +9,7 @@
         "test": "npm run clear && mocha -r  ts-node/register tests/**/*.test.ts",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:doc": "node cli.js dev site/**/*.{html,md}",
+        "dev:doc": "node cli.js dev site/src/index.md",
         "build:doc": "node cli.js build site/**/*.html d",
         "prepare": "npm run build  && npm run test"
     },
