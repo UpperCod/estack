@@ -11,7 +11,9 @@ template: default
     <link rel="stylesheet" href="{{'index.css'|asset}}">
 </head>
 <body>
-    {% assign header = category|query: select: "header", select : page.lang,sort:"order",order:1] %}
+
+    {% assign header = category | select: "header", page.lang | order: "order" %}
+
     <header class="o-header">
         <div><img src="{{'logo.svg'|asset}}" alt="Logo"></div>
         <menu>

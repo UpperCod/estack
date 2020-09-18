@@ -1,17 +1,10 @@
 import { Liquid } from "liquidjs";
 import { Build } from "estack";
 import createCache from "@uppercod/cache";
-import getProp from "@uppercod/get-prop";
 import { log } from "../../utils/log";
-import {
-    RenderData,
-    RenderDataFragment,
-    Pages,
-    PageData,
-    Categories,
-} from "./types";
-
+import { RenderData, RenderDataFragment, Pages, Categories } from "./types";
 import tag, { Fill } from "easy-tag-for-liquidjs";
+import { select, limit, order } from "./query";
 
 export interface Engine {
     render(template: string, data: RenderData): Promise<string>;
@@ -41,62 +34,25 @@ export function createEngine(build: Build): Engine {
 
             build.addImporter(childFile, context.file, { rewrite: false });
 
-            await childFile.load();
+            childFile.load();
 
             return childFile.link;
         }
     });
 
-    engine.registerFilter("query", function (
-        category: Categories,
-        ...data: [string, any]
-    ) {
-        let sort = "date";
-        let order = -1;
-        let operator = "and";
-        let empty: PageData[] = [];
-        const items: PageData[] = data.reduce(
-            (items: PageData[], [type, value]) => {
-                switch (type) {
-                    case "operator":
-                        operator = value;
-                        break;
-                    case "select":
-                        if (items == empty) return category[value] ?? [];
-                        let values = category[value] ?? [];
-                        return operator == "or"
-                            ? [
-                                  ...items,
-                                  ...values.filter(
-                                      (data) => !items.includes(data)
-                                  ),
-                              ]
-                            : [
-                                  ...items.filter((data) =>
-                                      values.includes(data)
-                                  ),
-                              ];
-                    case "limit":
-                        return items.slice(0, value);
-                    case "sort":
-                        sort = value;
-                        break;
-                    case "order":
-                        order = value;
-                        break;
-                }
-                return items;
-            },
-            empty
-        );
+    engine.registerFilter(
+        "select",
+        (category: Categories, ...values: string[]) => select(category, values)
+    );
 
-        return items.sort((dataA: PageData, dataB: PageData) =>
-            getProp(dataA, sort, Number.MAX_SAFE_INTEGER) >
-            getProp(dataB, sort, Number.MAX_SAFE_INTEGER)
-                ? order
-                : order * -1
-        );
-    });
+    engine.registerFilter("limit", (items: any[], size: number) =>
+        limit(items, size)
+    );
+
+    engine.registerFilter(
+        "order",
+        (items: any[], ...values: [string, number]) => order(items, values)
+    );
 
     engine.registerFilter("log", function (data: Fill) {
         const { environments } = this.context;
