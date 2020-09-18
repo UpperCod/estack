@@ -210,15 +210,17 @@ declare module "estack" {
         [type: string]: string;
     }
 
+    export interface Site {
+        href: string;
+        assets: string;
+    }
+
     export interface Options extends Omit<OptionsBuild, "src" | "js" | "css"> {
         js: PluginsExternalBuild;
         css: PluginsExternalBuild;
         glob: string[];
         types: TypesExtensions;
         server?: boolean;
-        site: {
-            href: string;
-            assets: string;
-        };
+        site: Site;
     }
 }

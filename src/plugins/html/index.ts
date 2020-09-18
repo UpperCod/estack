@@ -54,6 +54,7 @@ export function pluginHtml(): Plugin {
                             categories[category].push(data);
                         }
                     });
+
                     pages[file.link] = file;
                 }
             }
@@ -68,6 +69,7 @@ export function pluginHtml(): Plugin {
                 const filelayout = templates[layout];
                 const renderData: RenderData = {
                     file,
+                    site: build.options.site,
                     page: data,
                     global: globals,
                     category: categories,

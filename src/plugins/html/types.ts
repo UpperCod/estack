@@ -1,4 +1,4 @@
-import { File } from "estack";
+import { File, Site } from "estack";
 
 export interface Replace {
     [hash: string]: string;
@@ -32,6 +32,7 @@ export interface RenderData {
     layout: PageData;
     content: string;
     global: Globals;
+    site: Site;
 }
 
 export interface RenderDataFragment {
