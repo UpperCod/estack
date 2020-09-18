@@ -2,7 +2,7 @@
 template: default
 ---
 <!DOCTYPE html>
-<html lang="{{page.lang}}">
+<html lang="{{page.lang | default: site.config.lang}}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,10 +12,11 @@ template: default
 </head>
 <body>
 
-    {% assign header = category | select: "header", page.lang | order: "order" %}
+    {% assign header = category.header | where: "lang", page.lang  | order: "order" %}
+
 
     <header class="o-header">
-        <div><img src="{{'logo.svg'|asset}}" alt="Logo"></div>
+        <div><a href="{{site.href}}"><img src="{{'logo.svg'|asset}}" alt="Logo"></a></div>
         <menu>
             {% for item in header %}
                 <a class="c-menuLink" href="{{item.link}}">{{item.linkTitle | default: item.title }}</a>
@@ -23,8 +24,12 @@ template: default
         </menu>
         <div>
             <select onchange="location.href=event.target.value">
-                {% for item in page.langs %}
-                    <option value="{{item.link}}" {% if item.lang == page.lang %} selected {% endif %}>{{item.lang}}</option>
+                {% for data in page.langs %}
+                    {% assign lang = data[0] %}
+                    {% assign item = data[1] %}
+                    <option value="{{item.link}}" {% if item.lang == page.lang %} selected {% endif %}>
+                        {{site.config.langs[ item.lang ] | default: item.lang }}
+                    </option>
                 {% endfor %}
             </select>
         </div>

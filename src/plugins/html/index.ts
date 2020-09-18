@@ -1,5 +1,12 @@
 import { Plugin } from "estack";
-import { Replace, RenderData, Categories, Page, Pages } from "./types";
+import {
+    Page,
+    Pages,
+    Replace,
+    RenderData,
+    Categories,
+    ParentLangs,
+} from "./types";
 import { loadFile } from "./load-page";
 import { isMd } from "../../utils/types";
 import { createEngine, Engine } from "./engine";
@@ -31,10 +38,12 @@ export function pluginHtml(): Plugin {
         },
         async afterLoad(build) {
             if (!this.loads) return;
+            const { site } = build.options;
             const templates: Pages = {};
             const fragments: Pages = {};
             const categories: Categories = {};
             const pages: Pages = {};
+            const parentLangs: ParentLangs = {};
             for (const src in build.files) {
                 const file = build.files[src] as Page;
                 if (file.type != "html" || file.errors.length) continue;
@@ -45,6 +54,27 @@ export function pluginHtml(): Plugin {
                 } else if (data.fragment) {
                     fragments[data.fragment] = file;
                 } else {
+                    // Creates or associates the parens reference that groups the page languages
+                    if (data.parentLang) {
+                        if (!parentLangs[data.parentLang]) {
+                            parentLangs[data.parentLang] = {};
+                        }
+                        parentLangs[data.parentLang][data.lang] = data;
+                        data.langs = parentLangs[data.parentLang];
+                    }
+                    //  If it finds the parent in the iteration, it relates it to the group
+                    if (parentLangs[data.file]) {
+                        parentLangs[data.file][data.lang] = data;
+                        data.langs = parentLangs[data.file];
+                    }
+
+                    if (!data.lang) {
+                        data.lang = site.config
+                            ? site.config.lang || "en"
+                            : "en";
+                    }
+                    // Associate the categories, use the data as an index to
+                    // avoid duplicating the page in the category
                     data.category.forEach((category) => {
                         categories[category] = categories[category] || [];
                         if (!categories[category].includes(data)) {
@@ -65,8 +95,8 @@ export function pluginHtml(): Plugin {
                 const { layout = "default" } = data;
                 const filelayout = templates[layout];
                 const renderData: RenderData = {
+                    site,
                     file,
-                    site: build.options.site,
                     page: data,
                     category: categories,
                     content: data.content,

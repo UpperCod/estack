@@ -3,7 +3,6 @@ title: Plugins
 link: es/plugins
 description: Herramientas externas perfectamente sincronizadas
 linkTitle: Plugins
-lang: es
 category:
     - header
 ---

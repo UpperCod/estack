@@ -3,9 +3,6 @@ title: EStack
 link: es/estack
 description: Generador de sitios estáticos moderno
 linkTitle: Welcome
-lang: es
-langs:
-    $ref: langs.yaml
 category:
     - header
 ---

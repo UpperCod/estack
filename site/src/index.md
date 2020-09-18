@@ -2,16 +2,11 @@
 title: EStack
 description: Modern static site builder
 linkTitle: Welcome
-lang: en
 order: 1
 category:
     - header
     - $ref: ~lang
-langs:
-    $ref: langs.yaml
 ---
-
-{{site}}
 
 <script src="{{'index.js'|asset}}" type="module"></script>
 

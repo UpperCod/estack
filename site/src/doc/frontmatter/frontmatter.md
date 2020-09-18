@@ -3,9 +3,6 @@ title: Frontmatter
 description: Mágicamente Simple y Poderoso
 linkTitle: Frontmatter
 order: 2
-lang: en
-langs:
-    $ref: langs.yaml
 category:
     - header
 ---

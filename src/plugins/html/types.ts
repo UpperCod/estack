@@ -12,16 +12,23 @@ export interface Pages {
     [link: string]: Page;
 }
 
+export interface Langs {
+    [lang: string]: PageData;
+}
+
 export interface PageData {
     id?: string;
     link?: string;
+    file?: string;
     lang?: string;
+    langs?: Langs;
     category?: string[];
     fragment?: string;
     template?: string;
     layout?: string;
     content?: string;
     date?: string;
+    parentLang?: string;
 }
 
 export interface RenderData {
@@ -39,4 +46,8 @@ export interface RenderDataFragment {
 
 export interface Categories {
     [category: string]: PageData[];
+}
+
+export interface ParentLangs {
+    [parent: string]: Langs;
 }

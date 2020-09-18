@@ -14,7 +14,7 @@ Stack obtains assets declared in HTML and Markdown documents thanks to [Liquidjs
 Render data is the data context to LiquidJs for rendering HTML and Markdown files.
 
 ```ts
-import { File } from "estack";
+import { File, Site } from "estack";
 
 export interface Page extends Omit<File, "data"> {
     data: PageData;
@@ -25,15 +25,18 @@ export interface Pages {
 }
 
 export interface PageData {
-    id: string;
+    id?: string;
     link?: string;
+    file?: string;
     lang?: string;
+    langs?: Langs;
     category?: string[];
     fragment?: string;
     template?: string;
     layout?: string;
-    global?: string;
     content?: string;
+    date?: string;
+    parentLang?: string;
 }
 
 export interface RenderData {
@@ -42,7 +45,23 @@ export interface RenderData {
     category: Categories;
     layout: PageData;
     content: string;
-    global: Globals;
+    site: Site;
+}
+
+export interface RenderDataFragment {
+    file: Page;
+}
+
+export interface Categories {
+    [category: string]: PageData[];
+}
+
+export interface Langs {
+    [lang: string]: PageData;
+}
+
+export interface ParentLangs {
+    [parent: string]: Langs;
 }
 ```
 

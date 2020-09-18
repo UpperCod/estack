@@ -22,6 +22,16 @@ export async function loadFile(file: File, build: Build): Promise<void> {
 
     let { link, category, lang, date } = data;
 
+    const test = file.src.match(/(.+)\.(\w+)\.(md|html)$/);
+
+    let parentLang;
+
+    if (test) {
+        const [, _parentLang, _lang, ext] = test;
+        parentLang = normalizePath(_parentLang + "." + ext);
+        lang = _lang;
+    }
+
     if (!date) {
         try {
             const { birthtime } = await cache(stat, file.src);
@@ -30,10 +40,6 @@ export async function loadFile(file: File, build: Build): Promise<void> {
     }
 
     category = category ? [].concat(category) : [];
-
-    if (lang && !category.includes(lang)) {
-        category.push(lang);
-    }
 
     if (link) {
         build.setLink(
@@ -44,7 +50,9 @@ export async function loadFile(file: File, build: Build): Promise<void> {
 
     file.data = {
         ...data,
+        parentLang,
         date,
+        lang,
         id: getId(file.src),
         content: html,
         link: file.link,
