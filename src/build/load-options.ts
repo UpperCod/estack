@@ -62,7 +62,7 @@ export async function loadOptions({
     const jsConfig = await loadConfig({
         defExtensions: ["js", "jsx", "ts", "tsx"],
         plugins: {},
-        ...getProp(pkg, js),
+        ...getProp(pkg, js || ""),
     });
 
     jsConfig.extensions.forEach((type) => (types[type] = "js"));
@@ -70,7 +70,7 @@ export async function loadOptions({
     const cssConfig = await loadConfig({
         defExtensions: ["css"],
         plugins: {},
-        ...getProp(pkg, css),
+        ...getProp(pkg, css || ""),
     });
 
     cssConfig.extensions.forEach((type) => (types[type] = "css"));
