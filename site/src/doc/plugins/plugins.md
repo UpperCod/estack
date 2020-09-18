@@ -3,6 +3,7 @@ title: Plugins
 description: Herramientas externas perfectamente sincronizadas
 linkTitle: Plugins
 lang: en
+order: 3
 category:
     - header
 ---

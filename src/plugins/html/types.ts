@@ -22,6 +22,7 @@ export interface PageData {
     layout?: string;
     global?: string;
     content?: string;
+    date?: string;
 }
 
 export interface RenderData {

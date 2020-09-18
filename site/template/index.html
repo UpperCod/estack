@@ -11,7 +11,7 @@ template: default
     <link rel="stylesheet" href="{{'index.css'|asset}}">
 </head>
 <body>
-    {% assign header = category|query: operator:"and", select: "header", select : page.lang] %}
+    {% assign header = category|query: select: "header", select : page.lang,sort:"order",order:1] %}
     <header class="o-header">
         <div><img src="{{'logo.svg'|asset}}" alt="Logo"></div>
         <menu>

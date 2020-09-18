@@ -105,8 +105,12 @@ export async function build(opts: OptionsBuild) {
         // Wait for the subtasks to finish to run correctly the plugin cylco
         await Promise.all(cyclesTask[cycleTaskId]);
         // Clean up tasks
-        delete cyclesTask[cycleTaskId];
+        cyclesTask[cycleTaskId] = [];
         await pluginsParallel("afterLoad", plugins, build);
+        // Wait for the subtasks to finish to run correctly the plugin cylco
+        await Promise.all(cyclesTask[cycleTaskId]);
+        // Clean up tasks
+        delete cyclesTask[cycleTaskId];
         await pluginsSequential("buildEnd", plugins, build);
 
         let errors = 0;

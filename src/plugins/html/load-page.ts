@@ -3,7 +3,11 @@ import { PageData } from "./types";
 import { frontmatter } from "./frontmatter";
 import { loadData } from "../data/load-data";
 import { normalizePath } from "../../utils/utils";
+import { stat } from "fs/promises";
 import getId from "@uppercod/hash";
+import createCache from "@uppercod/cache";
+
+const cache = createCache();
 
 export async function loadFile(file: File, build: Build): Promise<void> {
     const [html, metadata] = frontmatter(file.src, await build.readFile(file));
@@ -16,7 +20,14 @@ export async function loadFile(file: File, build: Build): Promise<void> {
 
     const data: PageData = metadata ? await loadData(copyFile, build) : {};
 
-    let { link, category, lang } = data;
+    let { link, category, lang, date } = data;
+
+    if (!date) {
+        try {
+            const { birthtime } = await cache(stat, file.src);
+            date = birthtime;
+        } catch (e) {}
+    }
 
     category = category ? [].concat(category) : [];
 
@@ -33,6 +44,7 @@ export async function loadFile(file: File, build: Build): Promise<void> {
 
     file.data = {
         ...data,
+        date,
         id: getId(file.src),
         content: html,
         link: file.link,

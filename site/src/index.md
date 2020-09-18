@@ -3,6 +3,7 @@ title: EStack
 description: Modern static site builder
 linkTitle: Welcome
 lang: en
+order: 1
 version:
     for: ./index.md
     name:

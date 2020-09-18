@@ -1,6 +1,7 @@
 ---
 title: Template
 lang: en
+order: 4
 category:
     - header
 description: Sincronización perfecta entre Liquidjs y Estack

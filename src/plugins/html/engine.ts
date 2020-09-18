@@ -38,6 +38,7 @@ export function createEngine(build: Build): Engine {
                     hash: true,
                 }
             );
+
             build.addImporter(childFile, context.file, { rewrite: false });
 
             await childFile.load();
@@ -50,49 +51,51 @@ export function createEngine(build: Build): Engine {
         category: Categories,
         ...data: [string, any]
     ) {
-        let sort = ["date", "order"];
+        let sort = "date";
         let order = -1;
-        let operator = "or";
+        let operator = "and";
         let empty: PageData[] = [];
-        const items = data.reduce((items: PageData[], [type, value]) => {
-            switch (type) {
-                case "operator":
-                    operator = value;
-                    break;
-                case "select":
-                    if (items == empty) return category[value] ?? [];
-                    let values = category[value] ?? [];
-                    return operator == "or"
-                        ? [
-                              ...items,
-                              ...values.filter((data) => !items.includes(data)),
-                          ]
-                        : [...items.filter((data) => values.includes(data))];
-                case "limit":
-                    return items.slice(0, value);
-                case "sort":
-                    sort = [value];
-                    break;
-                case "order":
-                    order = value;
-                    break;
-            }
-            return items;
-        }, empty);
+        const items: PageData[] = data.reduce(
+            (items: PageData[], [type, value]) => {
+                switch (type) {
+                    case "operator":
+                        operator = value;
+                        break;
+                    case "select":
+                        if (items == empty) return category[value] ?? [];
+                        let values = category[value] ?? [];
+                        return operator == "or"
+                            ? [
+                                  ...items,
+                                  ...values.filter(
+                                      (data) => !items.includes(data)
+                                  ),
+                              ]
+                            : [
+                                  ...items.filter((data) =>
+                                      values.includes(data)
+                                  ),
+                              ];
+                    case "limit":
+                        return items.slice(0, value);
+                    case "sort":
+                        sort = value;
+                        break;
+                    case "order":
+                        order = value;
+                        break;
+                }
+                return items;
+            },
+            empty
+        );
 
-        const getAnyValue = (
-            data: any,
-            props: string[],
-            optional: any
-        ): any => {
-            return props.find((prop) => getProp(data, prop)) ?? optional;
-        };
-
-        return items.sort((dataA: PageData, dataB: PageData) => {
-            getAnyValue(dataA, sort, 0) > getAnyValue(dataB, sort, 0)
+        return items.sort((dataA: PageData, dataB: PageData) =>
+            getProp(dataA, sort, Number.MAX_SAFE_INTEGER) >
+            getProp(dataB, sort, Number.MAX_SAFE_INTEGER)
                 ? order
-                : order * -1;
-        });
+                : order * -1
+        );
     });
 
     engine.registerFilter("log", function (data: Fill) {
