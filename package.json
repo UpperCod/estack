@@ -9,8 +9,8 @@
         "test": "npm run clear && mocha -r  ts-node/register tests/**/*.test.ts",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:doc": "node cli.js dev site/**/*.{html,md};site/src/config.yaml",
-        "build:doc": "node cli.js build site/**/*.html d",
+        "dev:site": "node cli.js dev site/**/*.{html,md};site/src/config.yaml",
+        "build:site": "node cli.js build site/**/*.html docs",
         "prepare": "npm run build  && npm run test"
     },
     "author": "UpperCod",
