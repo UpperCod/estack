@@ -1,6 +1,6 @@
 ---
 title: Frontmatter
-link: es/frontmatter
+order: 2
 description: Mágicamente Simple y Poderoso
 linkTitle: Frontmatter
 lang: es

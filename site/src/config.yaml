@@ -2,3 +2,5 @@ lang: en
 langs:
     en: English
     es: Español
+logo:
+    $link: logo.svg

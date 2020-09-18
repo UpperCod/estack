@@ -22,6 +22,7 @@ export interface PageData {
     file?: string;
     lang?: string;
     langs?: Langs;
+    slug?: string;
     category?: string[];
     fragment?: string;
     template?: string;

@@ -20,7 +20,7 @@ export async function loadFile(file: File, build: Build): Promise<void> {
 
     const data: PageData = metadata ? await loadData(copyFile, build) : {};
 
-    let { link, category, lang, date } = data;
+    let { link, category, lang, date, slug = file.meta.name } = data;
 
     const test = file.src.match(/(.+)\.(\w+)\.(md|html)$/);
 
@@ -30,6 +30,7 @@ export async function loadFile(file: File, build: Build): Promise<void> {
         const [, _parentLang, _lang, ext] = test;
         parentLang = normalizePath(_parentLang + "." + ext);
         lang = _lang;
+        slug = slug.replace(/\.(\w+)$/, "");
     }
 
     if (!date) {
@@ -40,6 +41,11 @@ export async function loadFile(file: File, build: Build): Promise<void> {
     }
 
     category = category ? [].concat(category) : [];
+    // to avoid conflict by language extension the language folder
+    // is created to avoid conflict by links
+    if (lang && !link) {
+        link = lang + (slug == "index" ? "" : "/" + slug);
+    }
 
     if (link) {
         build.setLink(

@@ -1,6 +1,6 @@
 ---
 title: Plugins
-link: es/plugins
+order: 3
 description: Herramientas externas perfectamente sincronizadas
 linkTitle: Plugins
 category:

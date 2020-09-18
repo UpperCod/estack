@@ -118,6 +118,7 @@ h1.c-titleHero {
 .o-header {
     width: 100%;
     display: flex;
+    flex-flow: row wrap;
     align-items: center;
     justify-content: space-between;
     padding: 1rem 10%;
@@ -138,10 +139,26 @@ h1.c-titleHero {
     padding: var(--estack_boxPaddingTop) var(--estack_boxPaddingLeft);
 }
 
+.c-langs {
+    padding: 0.1rem 0.25rem;
+    border-radius: var(--estack_boxRadio);
+}
+
 @media (max-width: 520px) {
     .o-article,
     .o-contentHeader {
         padding-left: 1rem;
         padding-right: 1rem;
+    }
+
+    .o-header_logo,
+    .o-header_menu2 {
+        order: 1;
+    }
+    .o-header_menu1 {
+        order: 2;
+        padding: 0px;
+        display: flex;
+        overflow-x: auto;
     }
 }

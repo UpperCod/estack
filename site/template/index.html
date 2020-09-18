@@ -16,14 +16,14 @@ template: default
 
 
     <header class="o-header">
-        <div><a href="{{site.href}}"><img src="{{'logo.svg'|asset}}" alt="Logo"></a></div>
-        <menu>
+        <div class="o-header_logo"><a href="{{site.href}}"><img src="{{site.config.logo.link}}" alt="Logo"></a></div>
+        <menu class="o-header_menu1">
             {% for item in header %}
                 <a class="c-menuLink" href="{{item.link}}">{{item.linkTitle | default: item.title }}</a>
             {% endfor %}
         </menu>
-        <div>
-            <select onchange="location.href=event.target.value">
+        <div class="o-header_menu2">
+            <select class="c-langs" onchange="location.href=event.target.value">
                 {% for data in page.langs %}
                     {% assign lang = data[0] %}
                     {% assign item = data[1] %}
