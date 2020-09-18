@@ -4,7 +4,6 @@ import { build } from "./build";
 sade("estack <mode> <src> [dest]")
     .version("PKG.VERSION")
     .option("--port", "Define the server port", 8000)
-    .option("--domain", "add a prefix to the resolved links", "/")
     .option("--href", "add a prefix to the resolved links", "/")
     .option("--sourcemap", "Enable the use of sourcemap", false)
     .option("--watch", "Prevents printing of logs", false)

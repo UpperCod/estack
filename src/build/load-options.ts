@@ -28,6 +28,7 @@ export async function loadOptions({
     href,
     sourcemap,
     watch,
+    site,
 }: OptionsBuild) {
     const pkg = await getPackage();
 
@@ -37,6 +38,8 @@ export async function loadOptions({
     dest = dest || "";
 
     const glob: string[] = Array.isArray(src) ? src : src.split(/ *; */g);
+
+    if (site) glob.push(site);
 
     const witHtml = useHtml(glob);
 
@@ -74,13 +77,11 @@ export async function loadOptions({
 
     const assets = "assets/";
 
-    const site = {
-        href: href,
-        assets: normalizePath(path.join(href, assets)),
-    };
-
     const options: Options = {
-        site,
+        site: {
+            href: href,
+            assets: normalizePath(path.join(href, assets)),
+        },
         mode,
         glob,
         sourcemap,

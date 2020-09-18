@@ -126,7 +126,13 @@ export async function loadData(
             }
         );
     }
+
     const { root } = await file.data;
+
+    if (file.root && file.type != "html") {
+        const name = file.meta.name || root.name;
+        build.options.site[name] = root;
+    }
 
     return root;
 }

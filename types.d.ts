@@ -186,6 +186,7 @@ declare module "estack" {
         assets?: string;
         sourcemap?: boolean;
         watch?: boolean;
+        site?: string;
         js?: string;
         css?: string;
         external?: string[];
@@ -210,12 +211,17 @@ declare module "estack" {
         [type: string]: string;
     }
 
-    export interface Site {
+    export interface Fill {
+        [name: string]: any;
+    }
+
+    export interface Site extends Fill {
         href: string;
         assets: string;
     }
 
-    export interface Options extends Omit<OptionsBuild, "src" | "js" | "css"> {
+    export interface Options
+        extends Omit<OptionsBuild, "src" | "js" | "css" | "site"> {
         js: PluginsExternalBuild;
         css: PluginsExternalBuild;
         glob: string[];

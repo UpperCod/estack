@@ -20,7 +20,6 @@ export interface PageData {
     fragment?: string;
     template?: string;
     layout?: string;
-    global?: string;
     content?: string;
     date?: string;
 }
@@ -31,16 +30,11 @@ export interface RenderData {
     category: Categories;
     layout: PageData;
     content: string;
-    global: Globals;
     site: Site;
 }
 
 export interface RenderDataFragment {
     file: Page;
-}
-
-export interface Globals {
-    [index: string]: PageData;
 }
 
 export interface Categories {

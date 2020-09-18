@@ -1,5 +1,5 @@
 import { Plugin } from "estack";
-import { Replace, RenderData, Globals, Categories, Page, Pages } from "./types";
+import { Replace, RenderData, Categories, Page, Pages } from "./types";
 import { loadFile } from "./load-page";
 import { isMd } from "../../utils/types";
 import { createEngine, Engine } from "./engine";
@@ -35,14 +35,11 @@ export function pluginHtml(): Plugin {
             const fragments: Pages = {};
             const categories: Categories = {};
             const pages: Pages = {};
-            const globals: Globals = {};
             for (const src in build.files) {
                 const file = build.files[src] as Page;
                 if (file.type != "html" || file.errors.length) continue;
                 const { data } = file;
-                if (data.global) {
-                    globals[data.global] = data;
-                }
+
                 if (data.template) {
                     templates[data.template] = file;
                 } else if (data.fragment) {
@@ -71,7 +68,6 @@ export function pluginHtml(): Plugin {
                     file,
                     site: build.options.site,
                     page: data,
-                    global: globals,
                     category: categories,
                     content: data.content,
                     layout: filelayout ? filelayout.data : null,
