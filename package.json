@@ -11,7 +11,7 @@
         "dev": "rollup -c -w",
         "dev:site": "node cli.js dev site/**/*.{html,md};site/src/config.yaml",
         "build:site": "node cli.js build site/**/*.{html,md};site/src/config.yaml docs --href /estack/",
-        "prepare": "npm run build  && npm run test"
+        "prepare": "npm run build && build:site && npm run test"
     },
     "author": "UpperCod",
     "license": "ISC",
@@ -28,7 +28,8 @@
     "dependencies": {
         "chokidar": "^3.4.2",
         "postcss": "^8.0.5",
-        "rollup": "^2.27.1"
+        "rollup": "^2.27.1",
+        "sade": "^1.7.3"
     },
     "estack": {
         "build": {
@@ -78,7 +79,6 @@
         "prismjs": "^1.19.0",
         "resolve": "^1.17.0",
         "rollup-plugin-import-url": "^1.0.1",
-        "sade": "^1.7.3",
         "ts-node": "^9.0.0",
         "typescript": "^4.0.2"
     },

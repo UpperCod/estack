@@ -26,11 +26,11 @@ export default {
         ...Object.keys(pkg.peerDependencies),
     ],
     plugins: [
+        ...(process.env.ROLLUP_WATCH ? [] : [json(), resolve(), commonjs()]),
         typescript({
             tsconfig: "tsconfig.json",
             ...compilerOptions,
             module: "ESnext",
         }),
-        ...(process.env.ROLLUP_WATCH ? [] : [json(), resolve(), commonjs()]),
     ],
 };
