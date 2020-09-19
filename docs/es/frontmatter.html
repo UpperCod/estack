@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontmatter</title>
+    <meta name="description" content="Mágicamente Simple y Poderoso">
+    <link rel="stylesheet" href="/estack/assets/8e5-958-8e5.css">
+</head>
+<body>
+
+    
+
+
+    <header class="o-header">
+        <div class="o-header_logo"><a href="/estack/"><img src="/estack/assets/67d-6e4-671.svg" alt="Logo"></a></div>
+        <menu class="o-header_menu1">
+            
+                <a class="c-menuLink" href="/estack/es">Welcome</a>
+            
+                <a class="c-menuLink" href="/estack/es/frontmatter">Frontmatter</a>
+            
+                <a class="c-menuLink" href="/estack/es/plugins">Plugins</a>
+            
+                <a class="c-menuLink" href="/estack/es/template">Template</a>
+            
+        </menu>
+        <div class="o-header_menu2">
+            <select class="c-langs" onchange="location.href=event.target.value">
+                
+                    
+                    
+                    <option value="/estack/es/frontmatter"  selected >
+                        Español
+                    </option>
+                
+                    
+                    
+                    <option value="/estack/frontmatter" >
+                        English
+                    </option>
+                
+            </select>
+        </div>
+    </header>
+    <section class="o-content">
+        <header class="o-contentHeader">
+            <h1 class="c-titleHero">
+            Frontmatter
+            </h1>
+            <p class="c-textHero">Mágicamente Simple y Poderoso</p>
+        </header>
+        <article class="o-article">
+        <p>El frontmatter mejora la experiencia de generacion de contenido estatico, con el frontmatter de EStack podrás:</p>
+<ol>
+<li>Modificar link de escritura mediante la propeidad <a href="#link-string">link</a>.</li>
+<li>Asociar lenguaje mediante la propiedad <a href="#lang-string">lang</a>.</li>
+<li>Asociar categorias mediante la propiedad <a href="#category-string">category</a>.</li>
+<li>Asociar assets.</li>
+<li>Contruir data mediante la propiedades <a href="#link-string-1">$link</a> y <a href="#ref-string">$ref</a>.</li>
+<li>Realizar request a servicios.</li>
+<li>Declarar paginas como templates y usarlas mediante layout.</li>
+</ol>
+<h2 id="schema">Schema</h2>
+<h3 id="link-string">link: string</h3>
+<p><strong>Alias permalink</strong>, declara el link de la pagina para escritura, ejemplo:</p>
+<pre><code class="language-yaml"><span class="token key atrule">link</span><span class="token punctuation">:</span> folder/users</code></pre>
+<p>Esta pagina será escrita en el destino como <code>folder/users.html</code></p>
+<pre><code class="language-yaml"><span class="token key atrule">link</span><span class="token punctuation">:</span> folder/users/</code></pre>
+<p>Esta pagina sera escrita en el destino como <code>folder/users/index.html</code></p>
+<h3 id="lang-string">lang: string</h3>
+<p>Declara un lenguaje para la pagina, lang es asociado al objeto <code>category</code> para consultas.</p>
+<h3 id="category-string">category: string[]</h3>
+<p>Declara una o mas categorias para la pagina, estas categorias se asoican al objeto <code>category</code> para consultas.</p>
+<h3 id="fragment-string">fragment: string</h3>
+<p>Declara la pagina como fragmento, las paginas de tipo fragmento solo se imprimen a demanda mediante el uso del tag <code>{% fragment myFragment with ...data %}</code></p>
+<h3 id="tempalte-string">tempalte: string</h3>
+<p>Declara la pagina como plantilla, si el tempalte se define como <code>default</code>, todas las paginas que no declaren layout heredaran la plantilla default</p>
+<h3 id="global-string">global: string</h3>
+<p>Permite recuperar la pagina mediante el objeto <code>global</code>, <strong>Esto con la finalidad de acceder a toda la data que la pagina contenga</strong></p>
+<h3 id="ref-string">$ref: string</h3>
+<p>Permite relacionar archivos externos a la pagina, sea desde urls o locales, ejemplo:</p>
+<pre><code class="language-yaml"><span class="token key atrule">todos</span><span class="token punctuation">:</span>
+    <span class="token key atrule">$ref</span><span class="token punctuation">:</span> https<span class="token punctuation">:</span>//jsonplaceholder.typicode.com/todos
+<span class="token key atrule">users</span><span class="token punctuation">:</span>
+    <span class="token key atrule">$ref</span><span class="token punctuation">:</span> users.yaml
+<span class="token key atrule">menu</span><span class="token punctuation">:</span>
+    <span class="token key atrule">$ref</span><span class="token punctuation">:</span> site.yaml~menu
+<span class="token key atrule">author</span><span class="token punctuation">:</span>
+    <span class="token key atrule">$ref</span><span class="token punctuation">:</span> autors.yaml~uppercod
+    <span class="token key atrule">label</span><span class="token punctuation">:</span> autor</code></pre>
+<h3 id="link-string-1">$link: string</h3>
+<p>Permite construir links, los links fuerzan la carga de los archivos a la build para la asociacion como recurso sea pagina o asset, ejemplo:</p>
+<pre><code class="language-yaml"><span class="token key atrule">thumbnail</span><span class="token punctuation">:</span>
+    <span class="token key atrule">$link</span><span class="token punctuation">:</span> thumbnail<span class="token punctuation">-</span>320x220.jpg
+<span class="token key atrule">menu</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">$link</span><span class="token punctuation">:</span> home.md
+    <span class="token punctuation">-</span> <span class="token key atrule">$link</span><span class="token punctuation">:</span> user.md
+    <span class="token punctuation">-</span> <span class="token key atrule">$link</span><span class="token punctuation">:</span> contact.md</code></pre>
+
+        </article>
+    </section>
+</body>
+</html>

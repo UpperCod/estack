@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugins</title>
+    <meta name="description" content="Herramientas externas perfectamente sincronizadas">
+    <link rel="stylesheet" href="/estack/assets/8e5-958-8e5.css">
+</head>
+<body>
+
+    
+
+
+    <header class="o-header">
+        <div class="o-header_logo"><a href="/estack/"><img src="/estack/assets/67d-6e4-671.svg" alt="Logo"></a></div>
+        <menu class="o-header_menu1">
+            
+                <a class="c-menuLink" href="/estack/">Welcome</a>
+            
+                <a class="c-menuLink" href="/estack/frontmatter">Frontmatter</a>
+            
+                <a class="c-menuLink" href="/estack/plugins">Plugins</a>
+            
+                <a class="c-menuLink" href="/estack/template">Template</a>
+            
+        </menu>
+        <div class="o-header_menu2">
+            <select class="c-langs" onchange="location.href=event.target.value">
+                
+                    
+                    
+                    <option value="/estack/es/plugins" >
+                        Español
+                    </option>
+                
+                    
+                    
+                    <option value="/estack/plugins"  selected >
+                        English
+                    </option>
+                
+            </select>
+        </div>
+    </header>
+    <section class="o-content">
+        <header class="o-contentHeader">
+            <h1 class="c-titleHero">
+            Plugins
+            </h1>
+            <p class="c-textHero">Herramientas externas perfectamente sincronizadas</p>
+        </header>
+        <article class="o-article">
+        <p>The additional configuration to associate with EStack must exist in the package.json, you can selectively associate configurations according to your objectives.</p>
+<h2 id="rollup">Rollup</h2>
+<p>Stack uses <a href="https://rollupjs.org/guide/en/">Rollup</a> for processing files with the extension <code>.js, .jsx, .ts, .tsx</code>.</p>
+<h3 id="adding-plugins-for-rollup">Adding plugins for rollup</h3>
+<p>EStack allows to inject plugins into Rollup, using the <code>--js &lt;pkg_property&gt;</code> flag, example:</p>
+<pre><code class="language-json"><span class="token punctuation">{</span>
+    <span class="token property">"scripts"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"dev"</span><span class="token operator">:</span> <span class="token string">"estack dev src/**/*.html --js estack.dev.js"</span><span class="token punctuation">,</span>
+        <span class="token property">"build"</span><span class="token operator">:</span> <span class="token string">"estack build src/**/*.html public --js estack.build.js"</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">"estack"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"dev"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">"js"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">"plugins"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">"@rollup/plugin-typescript"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">"tsconfig"</span><span class="token operator">:</span> <span class="token string">"tsconfig.json"</span>
+                    <span class="token punctuation">}</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+        <span class="token property">"build"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">"js"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">"plugins"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">"@rollup/plugin-typescript"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                        <span class="token property">"tsconfig"</span><span class="token operator">:</span> <span class="token string">"tsconfig.json"</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">"rollup-plugin-terser"</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<h2 id="postcss">Postcss</h2>
+<p>EStack uses <a href="http://postcss.org/">Postcss</a> for processing files with the extension <code>.css</code>, by default EStack for postcss:</p>
+<ol>
+<li>Plugin <a href="https://github.com/UpperCod/postcss-import">@uppercod/postcss-import</a>.</li>
+</ol>
+<h3 id="adding-plugins-for-postcss">Adding plugins for postcss</h3>
+<p>Estack allows you to inject plugins into Postcss, using the <code>--css &lt;pkg_property&gt;</code> flag, example:</p>
+<pre><code class="language-json"><span class="token punctuation">{</span>
+    <span class="token property">"scripts"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"dev"</span><span class="token operator">:</span> <span class="token string">"estack dev src/**/*.html --css estack.dev.css"</span><span class="token punctuation">,</span>
+        <span class="token property">"build"</span><span class="token operator">:</span> <span class="token string">"estack build src/**/*.html public --css estack.build.css"</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">"estack"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">"dev"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">"css"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">"plugins"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">"postcss-preset-env"</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span><span class="token punctuation">,</span>
+        <span class="token property">"build"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+            <span class="token property">"css"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                <span class="token property">"plugins"</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+                    <span class="token property">"postcss-preset-env"</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token property">"cssnano"</span><span class="token operator">:</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+
+        </article>
+    </section>
+</body>
+</html>

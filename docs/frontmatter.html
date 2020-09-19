@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontmatter</title>
+    <meta name="description" content="Mágicamente Simple y Poderoso">
+    <link rel="stylesheet" href="/estack/assets/8e5-958-8e5.css">
+</head>
+<body>
+
+    
+
+
+    <header class="o-header">
+        <div class="o-header_logo"><a href="/estack/"><img src="/estack/assets/67d-6e4-671.svg" alt="Logo"></a></div>
+        <menu class="o-header_menu1">
+            
+                <a class="c-menuLink" href="/estack/">Welcome</a>
+            
+                <a class="c-menuLink" href="/estack/frontmatter">Frontmatter</a>
+            
+                <a class="c-menuLink" href="/estack/plugins">Plugins</a>
+            
+                <a class="c-menuLink" href="/estack/template">Template</a>
+            
+        </menu>
+        <div class="o-header_menu2">
+            <select class="c-langs" onchange="location.href=event.target.value">
+                
+                    
+                    
+                    <option value="/estack/es/frontmatter" >
+                        Español
+                    </option>
+                
+                    
+                    
+                    <option value="/estack/frontmatter"  selected >
+                        English
+                    </option>
+                
+            </select>
+        </div>
+    </header>
+    <section class="o-content">
+        <header class="o-contentHeader">
+            <h1 class="c-titleHero">
+            Frontmatter
+            </h1>
+            <p class="c-textHero">Mágicamente Simple y Poderoso</p>
+        </header>
+        <article class="o-article">
+        <p>The frontmatter improves the experience of generating static content, with the EStack frontmatter you can:</p>
+<ol>
+<li>Modify write link using the property <a href="#link-string">link</a>.</li>
+<li>Associate language using the <a href="#lang-string">lang</a> property.</li>
+<li>Associate categories using the <a href="#category-string">category</a> property.</li>
+<li>Associate assets.</li>
+<li>Build data using the properties <a href="#link-string-1">$link</a> and <a href="#ref-string">$ref</a>.</li>
+<li>Make request to services</li>
+<li>Declare pages as templates and use them through layout</li>
+</ol>
+<h2 id="schema">Schema</h2>
+<h3 id="link-string">link: string</h3>
+<p><strong>Alias permalink</strong>, declare the link of the page to write, example:</p>
+<pre><code class="language-yaml"><span class="token key atrule">link</span><span class="token punctuation">:</span> folder/users</code></pre>
+<p>This page will be written in the destination as <code>folder/users.html</code>.</p>
+<pre><code class="language-yaml"><span class="token key atrule">link</span><span class="token punctuation">:</span> folder/users/</code></pre>
+<p>This page will be written in the destination as <code>folder/users/index.html</code>.</p>
+<h3 id="lang-string">lang: string</h3>
+<p>Declare a language for the page, lang is associated with the <code>category</code> object for queries.</p>
+<h3 id="category-string">category: string[]</h3>
+<p>Declare one or more categories for the page, these categories are associated with the <code>category</code> object for queries.</p>
+<h3 id="fragment-string">fragment: string</h3>
+<p>Declare the page as a fragment, fragment type pages are only printed on demand by using the tag <code>{% fragment myFragment with ... data%}</code>.</p>
+<h3 id="tempalte-string">tempalte: string</h3>
+<p>Declare the page as a template, if the template is defined as <code>default</code>, all the pages that do not declare layout will inherit the default template.</p>
+<h3 id="global-string">global: string</h3>
+<p>It allows to retrieve the page through the <code>global</code> object, <strong>This in order to access all the data that the page contains</strong>.</p>
+<h3 id="ref-string">$ref: string</h3>
+<p>It allows to relate external files to the page, either from urls or local, example:</p>
+<pre><code class="language-yaml"><span class="token key atrule">todos</span><span class="token punctuation">:</span>
+    <span class="token key atrule">$ref</span><span class="token punctuation">:</span> https<span class="token punctuation">:</span>//jsonplaceholder.typicode.com/todos
+<span class="token key atrule">users</span><span class="token punctuation">:</span>
+    <span class="token key atrule">$ref</span><span class="token punctuation">:</span> users.yaml
+<span class="token key atrule">menu</span><span class="token punctuation">:</span>
+    <span class="token key atrule">$ref</span><span class="token punctuation">:</span> site.yaml~menu
+<span class="token key atrule">author</span><span class="token punctuation">:</span>
+    <span class="token key atrule">$ref</span><span class="token punctuation">:</span> autors.yaml~uppercod
+    <span class="token key atrule">label</span><span class="token punctuation">:</span> autor</code></pre>
+<h3 id="link-string-1">$link: string</h3>
+<p>It allows to build links, the links force the loading of the files to the build for the association as a resource, be it page or asset, example:</p>
+<pre><code class="language-yaml"><span class="token key atrule">thumbnail</span><span class="token punctuation">:</span>
+    <span class="token key atrule">$link</span><span class="token punctuation">:</span> thumbnail<span class="token punctuation">-</span>320x220.jpg
+<span class="token key atrule">menu</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">$link</span><span class="token punctuation">:</span> home.md
+    <span class="token punctuation">-</span> <span class="token key atrule">$link</span><span class="token punctuation">:</span> user.md
+    <span class="token punctuation">-</span> <span class="token key atrule">$link</span><span class="token punctuation">:</span> contact.md</code></pre>
+
+        </article>
+    </section>
+</body>
+</html>

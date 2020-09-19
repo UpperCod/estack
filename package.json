@@ -1,6 +1,6 @@
 {
     "name": "estack",
-    "version": "0.16.0",
+    "version": "0.16.1",
     "description": "simple bundle generator",
     "module": "src/cli.js",
     "main": "cli.js",

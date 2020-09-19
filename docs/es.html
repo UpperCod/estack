@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EStack</title>
+    <meta name="description" content="Generador de sitios estáticos moderno">
+    <link rel="stylesheet" href="/estack/assets/8e5-958-8e5.css">
+</head>
+<body>
+
+    
+
+
+    <header class="o-header">
+        <div class="o-header_logo"><a href="/estack/"><img src="/estack/assets/67d-6e4-671.svg" alt="Logo"></a></div>
+        <menu class="o-header_menu1">
+            
+                <a class="c-menuLink" href="/estack/es">Welcome</a>
+            
+                <a class="c-menuLink" href="/estack/es/frontmatter">Frontmatter</a>
+            
+                <a class="c-menuLink" href="/estack/es/plugins">Plugins</a>
+            
+                <a class="c-menuLink" href="/estack/es/template">Template</a>
+            
+        </menu>
+        <div class="o-header_menu2">
+            <select class="c-langs" onchange="location.href=event.target.value">
+                
+                    
+                    
+                    <option value="/estack/es"  selected >
+                        Español
+                    </option>
+                
+                    
+                    
+                    <option value="/estack/" >
+                        English
+                    </option>
+                
+            </select>
+        </div>
+    </header>
+    <section class="o-content">
+        <header class="o-contentHeader">
+            <h1 class="c-titleHero">
+            EStack
+            </h1>
+            <p class="c-textHero">Generador de sitios estáticos moderno</p>
+        </header>
+        <article class="o-article">
+        <p>EStack es un generador de sitios estáticos moderno que posee un stack de herramientas perfectamente sincronizadas.</p>
+<ol>
+<li>Servidor de desarrollo.</li>
+<li>Frontmatter.</li>
+<li>Gestión assets: Estack resuelve los assets de forma relativa a la importación.</li>
+<li>Rollup y Postcss:</li>
+<li>Procesamiento incremental, el observador de EStack relaciona las dependencias de assets entre archivos, por lo que solo reprocesa los archivos que cambian directa o indirectamente.</li>
+</ol>
+<h2 id="cli-minimalista">CLI minimalista</h2>
+<pre><code class="language-bash"><span class="token comment">## Desarrollo</span>
+estack dev src/**/*.<span class="token punctuation">{</span>html,md<span class="token punctuation">}</span>
+<span class="token comment">## Producción</span>
+estack build src/**/*.<span class="token punctuation">{</span>html,md<span class="token punctuation">}</span> docs</code></pre>
+<h2 id="template">Template</h2>
+<p>Estack usa <a href="https://liquidjs.com/">Liquidjs</a> para lograr capturar assets desde la plantilla mediante el uso del tag <code>asset</code>.</p>
+<pre><code class="language-html">---
+title: My page
+lang: es
+category:
+    - header
+---
+
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>h1</span><span class="token punctuation">></span></span>{{page.title}}<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>h1</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>img</span> <span class="token attr-name">src</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>{{<span class="token punctuation">'</span>logo.svg<span class="token punctuation">'</span>|asset}}<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>link</span> <span class="token attr-name">rel</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>stylesheet<span class="token punctuation">"</span></span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>{{<span class="token punctuation">'</span>index.css<span class="token punctuation">'</span>|asset}}<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>script</span> <span class="token attr-name">src</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>{{<span class="token punctuation">'</span>index.js<span class="token punctuation">'</span>|asset}}<span class="token punctuation">"</span></span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>module<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>script</span><span class="token punctuation">></span></span></code></pre>
+
+        </article>
+    </section>
+</body>
+</html>
