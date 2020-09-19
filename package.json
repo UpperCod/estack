@@ -10,7 +10,7 @@
         "build": "rollup -c",
         "dev": "rollup -c -w",
         "dev:site": "node cli.js dev site/**/*.{html,md};site/src/config.yaml",
-        "build:site": "node cli.js build site/**/*.html docs",
+        "build:site": "node cli.js build site/**/*.{html,md};site/src/config.yaml docs --href /estack/",
         "prepare": "npm run build  && npm run test"
     },
     "author": "UpperCod",

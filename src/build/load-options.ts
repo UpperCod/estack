@@ -80,7 +80,7 @@ export async function loadOptions({
     const options: Options = {
         site: {
             href: href,
-            assets: normalizePath(path.join(href, assets)),
+            assets,
         },
         mode,
         glob,

@@ -85,9 +85,9 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
                   "." +
                   file.type
                 : link;
-        const dest = normalizePath(config.href + folder + base);
+        const dest = normalizePath(folder + base);
         file.dest = dest;
-        file.link = dest
+        file.link = normalizePath("/" + config.href + "/" + dest)
             .replace(/\/(index\.html)$/, "/")
             .replace(/\.html$/, "");
     };

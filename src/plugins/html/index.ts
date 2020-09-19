@@ -47,12 +47,15 @@ export function pluginHtml(): Plugin {
             for (const src in build.files) {
                 const file = build.files[src] as Page;
                 if (file.type != "html" || file.errors.length) continue;
+
                 const { data } = file;
 
                 if (data.template) {
                     templates[data.template] = file;
+                    file.write = false;
                 } else if (data.fragment) {
                     fragments[data.fragment] = file;
+                    file.write = false;
                 } else {
                     // Creates or associates the parens reference that groups the page languages
                     if (data.parentLang) {
