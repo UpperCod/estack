@@ -1,5 +1,6 @@
 import { Files, Plugin } from "estack";
 import { rollup, OutputChunk } from "rollup";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { isJs } from "../../utils/types";
 import { pluginLocalResolve } from "./plugin-local-resolve";
 import { pluginImportCss } from "./plugin-import-css";
@@ -26,17 +27,16 @@ export function pluginJs(): Plugin {
                     }
                 }
             }
+            const extensions = build.options.js.extensions.map(
+                (type) => "." + type
+            );
             const bundle = await rollup({
                 input: Object.keys(filesJs),
                 plugins: [
                     importUrl(),
-                    pluginLocalResolve(
-                        build,
-                        chunksJs,
-                        aliasJs,
-                        build.options.js.extensions.map((type) => "." + type)
-                    ),
+                    pluginLocalResolve(build, chunksJs, aliasJs, extensions),
                     pluginImportCss(build),
+                    nodeResolve({ extensions }),
                     ...build.options.js.plugins,
                 ],
             });
