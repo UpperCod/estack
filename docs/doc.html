@@ -1,11 +1,11 @@
 
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EStack</title>
-    <meta name="description" content="Generador de sitios estáticos moderno">
+    <meta name="description" content="Modern static site builder">
     <link rel="stylesheet" href="/estack/assets/8e5-958-8e5.css">
 </head>
 <body>
@@ -16,23 +16,23 @@
         <div class="o-header_logo"><a href="/estack/"><img src="/estack/assets/67d-6e4-671.svg" alt="Logo"></a></div>
         <menu class="o-header_menu1">
             
-                <a class="c-menuLink" href="/estack/es">Welcome</a>
+                <a class="c-menuLink" href="/estack/doc">Welcome</a>
             
-                <a class="c-menuLink" href="/estack/es/frontmatter">Frontmatter</a>
+                <a class="c-menuLink" href="/estack/frontmatter">Frontmatter</a>
             
-                <a class="c-menuLink" href="/estack/es/plugins">Plugins</a>
+                <a class="c-menuLink" href="/estack/plugins">Plugins</a>
             
-                <a class="c-menuLink" href="/estack/es/template">Template</a>
+                <a class="c-menuLink" href="/estack/template">Template</a>
             
         </menu>
         <div class="o-header_menu2">
             <select class="c-langs" onchange="location.href=event.target.value">
                 
-                    <option value="/estack/es"  selected >
+                    <option value="/estack/es" >
                         Español
                     </option>
                 
-                    <option value="/estack/doc" >
+                    <option value="/estack/doc"  selected >
                         English
                     </option>
                 
@@ -44,24 +44,26 @@
             <h1 class="c-titleHero">
             EStack
             </h1>
-            <p class="c-textHero">Generador de sitios estáticos moderno</p>
+            <p class="c-textHero">Modern static site builder</p>
         </header>
         <article class="o-article">
-        <p>EStack es un generador de sitios estáticos moderno que posee un stack de herramientas perfectamente sincronizadas.</p>
+        <script src="/estack/assets/665-6d8-665.js" type="module"></script>
+
+<p>EStack is a modern static site generator that has a perfectly synchronized stack of tools.</p>
 <ol>
-<li>Servidor de desarrollo.</li>
+<li>Development server.</li>
 <li>Frontmatter.</li>
-<li>Gestión assets: Estack resuelve los assets de forma relativa a la importación.</li>
-<li>Rollup y Postcss:</li>
-<li>Procesamiento incremental, el observador de EStack relaciona las dependencias de assets entre archivos, por lo que solo reprocesa los archivos que cambian directa o indirectamente.</li>
+<li>Asset management: Estack resolves assets relative to import.</li>
+<li>Rollup and Postcss:</li>
+<li>Incremental processing, the EStack observer relates the asset dependencies between files, so it only reprocesses the files that change directly or indirectly.</li>
 </ol>
-<h2 id="cli-minimalista">CLI minimalista</h2>
-<pre><code class="language-bash"><span class="token comment">## Desarrollo</span>
+<h2 id="minimalist-cli">Minimalist CLI</h2>
+<pre><code class="language-bash"><span class="token comment">## Development: Files are not written to disk</span>
 estack dev src/**/*.<span class="token punctuation">{</span>html,md<span class="token punctuation">}</span>
-<span class="token comment">## Producción</span>
+<span class="token comment">## Production: Files are written to disk</span>
 estack build src/**/*.<span class="token punctuation">{</span>html,md<span class="token punctuation">}</span> docs</code></pre>
 <h2 id="template">Template</h2>
-<p>Estack usa <a href="https://liquidjs.com/">Liquidjs</a> para lograr capturar assets desde la plantilla mediante el uso del tag <code>asset</code>.</p>
+<p>Estack uses <a href="https://liquidjs.com/">Liquidjs</a> to get assets from html and markdown <code>asset</code> files.</p>
 <pre><code class="language-html">---
 title: My page
 lang: es

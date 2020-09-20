@@ -27,7 +27,7 @@
     },
     "dependencies": {
         "chokidar": "^3.4.2",
-        "postcss": "^8.0.5",
+        "postcss": "^8.0.6",
         "rollup": "^2.27.1",
         "sade": "^1.7.3"
     },
@@ -83,7 +83,8 @@
         "typescript": "^4.0.2"
     },
     "peerDependencies": {
-        "postcss": "^7.0.32"
+        "postcss": "8.x",
+        "rollup": "2.x"
     },
     "prettier": {
         "tabWidth": 4,
