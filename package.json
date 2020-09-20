@@ -71,7 +71,7 @@
         "fast-glob": "^3.2.4",
         "html-escaper": "^3.0.0",
         "js-yaml": "^3.14.0",
-        "liquidjs": "^9.14.0",
+        "liquidjs": "^9.15.0",
         "magic-string": "^0.25.7",
         "marked": "^1.1.1",
         "mime": "^2.4.6",

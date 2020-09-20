@@ -11,6 +11,7 @@ import { loadFile } from "./load-page";
 import { isMd } from "../../utils/types";
 import { createEngine, Engine } from "./engine";
 import { escapeBlockCodeMarkdown, markdown } from "./markdown";
+import getProp from "@uppercod/get-prop";
 
 export function pluginHtml(): Plugin {
     const replace: Replace = {};
@@ -44,6 +45,7 @@ export function pluginHtml(): Plugin {
             const categories: Categories = {};
             const pages: Pages = {};
             const parentLangs: ParentLangs = {};
+            const defaultLang = getProp<string>(site, "config.lang", "en");
             for (const src in build.files) {
                 const file = build.files[src] as Page;
                 if (file.type != "html" || file.errors.length) continue;
@@ -71,11 +73,8 @@ export function pluginHtml(): Plugin {
                         data.langs = parentLangs[data.file];
                     }
 
-                    if (!data.lang) {
-                        data.lang = site.config
-                            ? site.config.lang || "en"
-                            : "en";
-                    }
+                    data.lang = data.lang ?? defaultLang;
+
                     // Associate the categories, use the data as an index to
                     // avoid duplicating the page in the category
                     data.category.forEach((category) => {

@@ -36,8 +36,8 @@ export async function build(opts: OptionsBuild) {
     const listSrc = await glob(options.glob);
 
     const plugins: Plugin[] = [
-        pluginHtml(),
         pluginData(),
+        pluginHtml(),
         pluginCss(),
         pluginJs(),
         options.server ? pluginServer() : pluginWrite(options.dest),
