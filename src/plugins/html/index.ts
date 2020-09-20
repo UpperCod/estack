@@ -62,14 +62,18 @@ export function pluginHtml(): Plugin {
                     // Creates or associates the parens reference that groups the page languages
                     if (data.parentLang) {
                         if (!parentLangs[data.parentLang]) {
-                            parentLangs[data.parentLang] = {};
+                            parentLangs[data.parentLang] = [];
                         }
-                        parentLangs[data.parentLang][data.lang] = data;
+                        if (!parentLangs[data.parentLang].includes(data)) {
+                            parentLangs[data.parentLang].push(data);
+                        }
                         data.langs = parentLangs[data.parentLang];
                     }
                     //  If it finds the parent in the iteration, it relates it to the group
                     if (parentLangs[data.file]) {
-                        parentLangs[data.file][data.lang] = data;
+                        if (!parentLangs[data.file].includes(data)) {
+                            parentLangs[data.file].push(data);
+                        }
                         data.langs = parentLangs[data.file];
                     }
 

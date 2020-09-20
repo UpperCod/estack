@@ -23,11 +23,9 @@ template: default
         </menu>
         <div class="o-header_menu2">
             <select class="c-langs" onchange="location.href=event.target.value">
-                {% for data in page.langs %}
-                    {% assign lang = data[0] %}
-                    {% assign item = data[1] %}
-                    <option value="{{item.link}}" {% if item.lang == page.lang %} selected {% endif %}>
-                        {{site.config.langs[ item.lang ] | default: item.lang }}
+                {% for subPage in page.langs %}
+                    <option value="{{subPage.link}}" {% if subPage.lang == page.lang %} selected {% endif %}>
+                        {{site.config.langs[ subPage.lang ] | default: subPage.lang }}
                     </option>
                 {% endfor %}
             </select>

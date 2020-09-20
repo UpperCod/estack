@@ -12,16 +12,12 @@ export interface Pages {
     [link: string]: Page;
 }
 
-export interface Langs {
-    [lang: string]: PageData;
-}
-
 export interface PageData {
     id?: string;
     link?: string;
     file?: string;
     lang?: string;
-    langs?: Langs;
+    langs?: PageData[];
     slug?: string;
     category?: string[];
     fragment?: string;
@@ -50,5 +46,5 @@ export interface Categories {
 }
 
 export interface ParentLangs {
-    [parent: string]: Langs;
+    [parent: string]: PageData[];
 }
