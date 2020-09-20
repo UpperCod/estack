@@ -54,6 +54,9 @@ export async function loadData(
                     // If the file is of type html, a proxy is generated for the extraction of the link
                     if (childFile.type == "html") {
                         return {
+                            get data() {
+                                return childFile.data;
+                            },
                             get link() {
                                 return childFile.data.link;
                             },

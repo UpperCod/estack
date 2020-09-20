@@ -1,6 +1,6 @@
 {
     "name": "estack",
-    "version": "0.16.5",
+    "version": "0.16.6",
     "description": "simple bundle generator",
     "module": "src/cli.js",
     "main": "cli.js",
@@ -9,8 +9,8 @@
         "test": "npm run clear && mocha -r  ts-node/register tests/**/*.test.ts",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:site": "node cli.js dev site/**/*.{html,md};site/src/config.yaml",
-        "build:site": "node cli.js build site/**/*.{html,md};site/src/config.yaml docs --href /estack/",
+        "dev:site": "node cli.js dev site/**/*.{html,md};site/src/*.yaml",
+        "build:site": "node cli.js build site/**/*.{html,md};site/src/*.yaml docs --href /estack/",
         "prepare": "npm run build && npm run build:site && npm run test"
     },
     "author": "UpperCod",

@@ -5,6 +5,9 @@ description: Generador de sitios estáticos moderno
 linkTitle: Welcome
 category:
     - header
+related:
+    next:
+        $link: index.md
 ---
 
 EStack es un generador de sitios estáticos moderno que posee un stack de herramientas perfectamente sincronizadas.
