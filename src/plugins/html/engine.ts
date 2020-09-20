@@ -21,7 +21,7 @@ export function createEngine(build: Build): Engine {
 
     const parse = (template: string) => engine.parse(template);
 
-    engine.registerFilter("asset", async function (src) {
+    engine.registerFilter("asset", async function (src: string) {
         const { environments } = this.context;
         const context = environments as RenderData;
         if (context.file) {
@@ -38,6 +38,18 @@ export function createEngine(build: Build): Engine {
 
             return childFile.link;
         }
+    });
+
+    engine.registerFilter("t", async function (text: string) {
+        const { environments } = this.context;
+        const context = environments as RenderData;
+        if (context.page) {
+            const { langs } = build.options.site;
+            if (langs && langs[text]) {
+                return langs[text][context.page.lang] ?? text;
+            }
+        }
+        return text;
     });
 
     engine.registerFilter(
