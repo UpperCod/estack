@@ -1,5 +1,6 @@
 ---
 title: EStack
+link: doc
 description: Modern static site builder
 linkTitle: Welcome
 order: 1

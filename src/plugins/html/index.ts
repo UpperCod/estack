@@ -39,7 +39,8 @@ export function pluginHtml(): Plugin {
         },
         async afterLoad(build) {
             if (!this.loads) return;
-            const { site } = build.options;
+            const { options } = build;
+            const { site } = options;
             const templates: Pages = {};
             const fragments: Pages = {};
             const categories: Categories = {};
@@ -51,6 +52,11 @@ export function pluginHtml(): Plugin {
                 if (file.type != "html" || file.errors.length) continue;
 
                 const { data } = file;
+
+                if (data.draft && options.mode == "build") {
+                    file.write = false;
+                    continue;
+                }
 
                 if (data.template) {
                     templates[data.template] = file;
@@ -87,8 +93,16 @@ export function pluginHtml(): Plugin {
                             categories[category].push(data);
                         }
                     });
-
-                    pages[file.link] = file;
+                    if (pages[file.link]) {
+                        build.addError(
+                            file,
+                            `Page link already reserved by ${
+                                pages[file.link].src
+                            }`
+                        );
+                    } else {
+                        pages[file.link] = file;
+                    }
                 }
             }
 

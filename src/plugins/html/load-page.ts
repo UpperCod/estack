@@ -47,12 +47,12 @@ export async function loadFile(file: File, build: Build): Promise<void> {
         link = lang + (slug == "index" ? "" : "/" + slug);
     }
 
-    if (link) {
-        build.setLink(
-            file,
-            link + (/\/$/.test(link) || link == "/" ? "index.html" : ".html")
-        );
-    }
+    link = link ?? slug;
+
+    build.setLink(
+        file,
+        link + (/\/$/.test(link) || link == "/" ? "index.html" : ".html")
+    );
 
     file.data = {
         ...data,

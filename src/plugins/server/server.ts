@@ -33,8 +33,11 @@ export async function createServer(options: Options): Promise<Server> {
 
         for (const src in options.files) {
             if (options.files[src].link == req.url) {
-                file = options.files[src];
-                break;
+                const item = options.files[src];
+                if (item && item.write) {
+                    file = item;
+                    break;
+                }
             }
         }
 

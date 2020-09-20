@@ -15,6 +15,7 @@ export interface Pages {
 export interface PageData {
     id?: string;
     link?: string;
+    draft?: boolean;
     file?: string;
     lang?: string;
     langs?: PageData[];
