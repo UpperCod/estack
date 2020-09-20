@@ -1,6 +1,6 @@
 {
     "name": "estack",
-    "version": "0.16.2",
+    "version": "0.16.3",
     "description": "simple bundle generator",
     "module": "src/cli.js",
     "main": "cli.js",
@@ -11,7 +11,7 @@
         "dev": "rollup -c -w",
         "dev:site": "node cli.js dev site/**/*.{html,md};site/src/config.yaml",
         "build:site": "node cli.js build site/**/*.{html,md};site/src/config.yaml docs --href /estack/",
-        "prepare": "npm run build && build:site && npm run test"
+        "prepare": "npm run build && npm run build:site && npm run test"
     },
     "author": "UpperCod",
     "license": "ISC",
