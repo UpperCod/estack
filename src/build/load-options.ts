@@ -74,13 +74,14 @@ export async function loadOptions({
     const assets = "assets/";
 
     const addExternal: string[] =
-        typeof external == "string"
+        external &&
+        (typeof external == "string"
             ? external.split(/ *, */).map((str) => str.trim())
-            : external;
+            : external);
 
     const nextExternal = witHtml
         ? []
-        : addExternal.length
+        : external && addExternal.length
         ? addExternal
         : Object.keys(pkg.dependencies);
 
