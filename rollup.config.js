@@ -2,6 +2,7 @@ import builtins from "builtin-modules";
 import json from "@rollup/plugin-json";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
+import replace from "@rollup/plugin-replace";
 import pkg from "./package.json";
 import { compilerOptions } from "./tsconfig.json";
 import typescript from "@rollup/plugin-typescript";
@@ -26,6 +27,7 @@ export default {
         ...Object.keys(pkg.peerDependencies),
     ],
     plugins: [
+        replace({ "PKG.VERSION": pkg.version }),
         ...(process.env.ROLLUP_WATCH ? [] : [json(), resolve(), commonjs()]),
         typescript({
             tsconfig: "tsconfig.json",
