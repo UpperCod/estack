@@ -30,38 +30,51 @@ export function pluginJs(): Plugin {
             const extensions = build.options.js.extensions.map(
                 (type) => "." + type
             );
-            const bundle = await rollup({
-                input: Object.keys(filesJs),
-                plugins: [
-                    importUrl(),
-                    pluginLocalResolve(build, chunksJs, aliasJs, extensions),
-                    pluginImportCss(build),
-                    nodeResolve({ extensions }),
-                    ...build.options.js.plugins,
-                ],
-            });
+            try {
+                const bundle = await rollup({
+                    input: Object.keys(filesJs),
+                    plugins: [
+                        //importUrl(),
+                        pluginLocalResolve(
+                            build,
+                            chunksJs,
+                            aliasJs,
+                            extensions
+                        ),
+                        pluginImportCss(build),
+                        nodeResolve({ extensions }),
+                        ...build.options.js.plugins,
+                    ],
+                });
 
-            const { output } = await bundle.generate({
-                dir: build.options.dest,
-                format: "esm",
-                chunkFileNames: (
-                    build.options.site.assets + "[hash].js"
-                ).replace(/^\//, ""),
-            });
+                const { output } = await bundle.generate({
+                    dir: build.options.dest,
+                    format: "esm",
+                    chunkFileNames: (
+                        build.options.site.assets + "[hash].js"
+                    ).replace(/^\//, ""),
+                });
 
-            await Promise.all(
-                output.map(async (chunk: OutputChunk) => {
-                    if (aliasJs[chunk.fileName]) {
-                        aliasJs[chunk.fileName].content = chunk.code;
-                    } else {
-                        const file = build.addFile(chunk.fileName, {
-                            load: false,
-                            asset: true,
-                        });
-                        file.content = chunk.code;
+                await Promise.all(
+                    output.map(async (chunk: OutputChunk) => {
+                        if (aliasJs[chunk.fileName]) {
+                            aliasJs[chunk.fileName].content = chunk.code;
+                        } else {
+                            const file = build.addFile(chunk.fileName, {
+                                load: false,
+                                asset: true,
+                            });
+                            file.content = chunk.code;
+                        }
+                    })
+                );
+            } catch (e) {
+                e.message.replace(/\((.+)\)\.$/, (all: string, src: string) => {
+                    if (files[src]) {
+                        build.addError(files[src], e + "");
                     }
-                })
-            );
+                });
+            }
         },
     };
 }

@@ -15,11 +15,12 @@ const normalizes: Normalizes = {};
 export const createNormalizeSrc = (records: Records) => (src: string) => {
     if (records[src]) return src;
     if (!normalizes[src]) {
-        if (src.startsWith(cwd)) {
-            normalizes[src] = src;
-        } else {
-            normalizes[src] = path.join(cwd, src);
-        }
+        // if (src.startsWith(cwd)) {
+        //     normalizes[src] = src;
+        // } else {
+        //     normalizes[src] = path.join(cwd, src);
+        // }
+        normalizes[src] = "." + path.sep + path.relative(cwd, src);
     }
     return normalizes[src];
 };

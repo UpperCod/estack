@@ -142,6 +142,10 @@ export async function build(opts: OptionsBuild) {
             }${options.watch ? ", waiting for changes..." : "."}`,
             params: [`Build files in ${closeMark()}`, errors + "/" + files],
         });
+
+        if (options.mode == "build" && errors) {
+            throw "";
+        }
     };
 
     const build = createBuild(
