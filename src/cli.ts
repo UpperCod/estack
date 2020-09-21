@@ -6,7 +6,7 @@ sade("estack <mode> <src> [dest]")
     .option("--port", "Define the server port", 8000)
     .option("--href", "add a prefix to the resolved links", "/")
     .option("--sourcemap", "Enable the use of sourcemap", false)
-    .option("--external", "define external dependencies", "")
+    .option("--external", "define external dependencies")
     .option("--watch", "Prevents printing of logs", false)
     .option(
         "--js",
