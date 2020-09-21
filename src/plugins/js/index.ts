@@ -4,7 +4,6 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { isJs } from "../../utils/types";
 import { pluginLocalResolve } from "./plugin-local-resolve";
 import { pluginImportCss } from "./plugin-import-css";
-import path from "path";
 
 export function pluginJs(): Plugin {
     return {
@@ -76,8 +75,6 @@ export function pluginJs(): Plugin {
                                 load: false,
                                 asset: onlyRoot,
                             });
-
-                        console.log([file.write]);
 
                         if (chunk.map) {
                             // The map file is associated with the file that demands it, so the path is relative to it

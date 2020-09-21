@@ -38,7 +38,7 @@ export function pluginCss(): Plugin {
                     const fileMap = build.addFile(fileNameMap, {
                         watch: false,
                         load: false,
-                        asset: true,
+                        asset: file.asset,
                     });
                     fileMap.content = JSON.stringify(result.map);
                 }
