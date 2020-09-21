@@ -17,22 +17,32 @@ export function pluginJs(): Plugin {
             const filesJs: Files = {};
             const chunksJs: Files = {};
             const aliasJs: Files = {};
+            let onlyRoot = true;
             for (const src in files) {
                 const file = files[src];
                 if (isJs(src) && file.load) {
-                    if (file.hash) {
-                        chunksJs[src] = file;
-                    } else {
-                        filesJs[src] = file;
-                    }
+                    // if (file.hash) {
+                    chunksJs[src] = file;
+                    // } else {
+                    //     filesJs[src] = file;
+                    // }
                 }
             }
             const extensions = build.options.js.extensions.map(
                 (type) => "." + type
             );
+
+            // if (!onlyRoot) {
+            //     for (const src in filesJs) {
+            //         filesJs[src].write = false;
+            //         chunksJs[src] = filesJs[src];
+            //         delete filesJs[src];
+            //     }
+            // }
+
             try {
                 const bundle = await rollup({
-                    input: Object.keys(filesJs),
+                    input: [], //Object.keys(filesJs),
                     plugins: [
                         //importUrl(),
                         pluginLocalResolve(
@@ -48,7 +58,7 @@ export function pluginJs(): Plugin {
                 });
 
                 const { output } = await bundle.generate({
-                    dir: build.options.dest,
+                    dir: "", //build.options.dest,
                     format: "esm",
                     sourcemap: build.options.sourcemap,
                     chunkFileNames: (
@@ -64,8 +74,10 @@ export function pluginJs(): Plugin {
                             aliasJs[fileName] ||
                             build.addFile(fileName, {
                                 load: false,
-                                asset: true,
+                                asset: onlyRoot,
                             });
+
+                        console.log([file.write]);
 
                         if (chunk.map) {
                             // The map file is associated with the file that demands it, so the path is relative to it
@@ -75,7 +87,7 @@ export function pluginJs(): Plugin {
 
                             const fileMap = build.addFile(fileNameMap, {
                                 load: false,
-                                asset: true,
+                                asset: file.asset,
                                 watch: false,
                             });
 

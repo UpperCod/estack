@@ -33,8 +33,9 @@ export const pluginLocalResolve = (
                             if (file) {
                                 const childFile = build.addFile(id, {
                                     load: false,
+                                    write: false,
                                 });
-                                childFile.write = false;
+                                //childFile.write = false;
                                 build.addImporter(childFile, file);
                             }
                         }
