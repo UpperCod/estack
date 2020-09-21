@@ -186,7 +186,6 @@ declare module "estack" {
         assets?: string;
         sourcemap?: boolean;
         watch?: boolean;
-        site?: string;
         js?: string;
         css?: string;
         external?: string[];
