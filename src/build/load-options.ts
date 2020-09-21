@@ -5,10 +5,8 @@ import {
     PluginsExternal,
     PluginsExternalBuild,
 } from "estack";
-import path from "path";
 import getProp from "@uppercod/get-prop";
 import { readFile } from "../utils/fs";
-import { normalizePath } from "../utils/utils";
 import builtins from "builtin-modules";
 
 const pkgDefault = {
@@ -74,6 +72,15 @@ export async function loadOptions({
 
     const assets = "assets/";
 
+    const external = witHtml
+        ? []
+        : [
+              ...Object.keys(pkg.dependencies).filter(
+                  (prop) => pkg.peerDependencies[prop]
+              ),
+              ...Object.keys(pkg.peerDependencies),
+          ];
+
     const options: Options = {
         site: {
             href: href,
@@ -82,13 +89,7 @@ export async function loadOptions({
         mode,
         glob,
         sourcemap,
-        external: [
-            ...builtins,
-            ...Object.keys(pkg.dependencies).filter(
-                (prop) => pkg.peerDependencies[prop]
-            ),
-            ...Object.keys(pkg.peerDependencies),
-        ],
+        external: [...builtins, ...external],
         port,
         dest,
         href,
