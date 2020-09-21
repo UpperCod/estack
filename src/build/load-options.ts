@@ -47,7 +47,7 @@ export async function loadOptions({
     }
 
     if (mode == "build") {
-        sourcemap = sourcemap || false;
+        sourcemap = sourcemap ?? false;
     }
 
     const types: TypesExtensions = {

@@ -6,7 +6,7 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
-    "target": "ESnext",
+    "target": "ES2016",
     "allowSyntheticDefaultImports":true,
     "esModuleInterop":true,
     "lib": [
