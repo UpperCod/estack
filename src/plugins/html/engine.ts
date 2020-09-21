@@ -29,6 +29,7 @@ export function createEngine(build: Build): Engine {
                 build.resolveFromFile(context.file, src),
                 {
                     hash: true,
+                    asset: true,
                 }
             );
 
