@@ -62,7 +62,7 @@ export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
     const resolveFromFile: Build["resolveFromFile"] = (
         file: File,
         src: string
-    ) => path.join(file.meta.dir, getSrc(src));
+    ) => path.join(file.meta.dir, src);
 
     const addImporter: Build["addImporter"] = (
         file: File,
