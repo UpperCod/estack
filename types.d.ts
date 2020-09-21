@@ -192,7 +192,7 @@ declare module "estack" {
         watch?: boolean;
         js?: string;
         css?: string;
-        external?: string[];
+        external?: string | string[];
     }
 
     export interface PluginsExternalMap {

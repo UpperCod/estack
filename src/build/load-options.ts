@@ -26,6 +26,7 @@ export async function loadOptions({
     href,
     sourcemap,
     watch,
+    external,
 }: OptionsBuild) {
     const pkg = await getPackage();
 
@@ -72,14 +73,16 @@ export async function loadOptions({
 
     const assets = "assets/";
 
-    const external = witHtml
+    const addExternal: string[] =
+        typeof external == "string"
+            ? external.split(/ *, */).map((str) => str.trim())
+            : external;
+
+    const nextExternal = witHtml
         ? []
-        : [
-              ...Object.keys(pkg.dependencies).filter(
-                  (prop) => pkg.peerDependencies[prop]
-              ),
-              ...Object.keys(pkg.peerDependencies),
-          ];
+        : addExternal.length
+        ? addExternal
+        : Object.keys(pkg.dependencies);
 
     const options: Options = {
         site: {
@@ -89,7 +92,11 @@ export async function loadOptions({
         mode,
         glob,
         sourcemap,
-        external: [...builtins, ...external],
+        external: [
+            ...builtins,
+            ...nextExternal,
+            ...Object.keys(pkg.peerDependencies),
+        ],
         port,
         dest,
         href,
