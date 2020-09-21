@@ -125,6 +125,10 @@ declare module "estack" {
          * File link
          */
         link?: string;
+        /**
+         * base
+         */
+        base?: string;
     }
 
     export interface Files {

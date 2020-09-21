@@ -13,11 +13,17 @@ export function pluginCss(): Plugin {
         async load(file, build) {
             try {
                 const imports = {};
+                const fileNameMap = file.base + ".map";
+
                 const result = await postcss([
                     pluginImport({ imports, process: this.cache }),
                     ...build.options.css.plugins,
                 ]).process(await build.readFile(file), {
                     from: file.src,
+                    map: {
+                        inline: false,
+                        annotation: fileNameMap,
+                    },
                 });
 
                 for (const src in imports) {
@@ -28,7 +34,16 @@ export function pluginCss(): Plugin {
                     build.addImporter(childFile, file);
                 }
 
-                file.content = result + "";
+                if (result.map) {
+                    const fileMap = build.addFile(fileNameMap, {
+                        watch: false,
+                        load: false,
+                        asset: true,
+                    });
+                    fileMap.content = JSON.stringify(result.map);
+                }
+
+                file.content = result.css;
             } catch (e) {
                 build.addError(file, e + "");
             }

@@ -69,8 +69,7 @@ export function pluginJs(): Plugin {
 
                         if (chunk.map) {
                             // The map file is associated with the file that demands it, so the path is relative to it
-                            const fileNameMap =
-                                path.parse(fileName).base + ".map";
+                            const fileNameMap = file.base + ".map";
 
                             code += `\n//# sourceMappingURL=${fileNameMap}`;
 
