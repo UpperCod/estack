@@ -21,28 +21,25 @@ export const pluginLocalResolve = (
     resolveId(id, importer) {
         if (id.startsWith("./") && importer && build.hasFile(importer)) {
             const file = build.getFile(importer);
-            return new Promise((done) => {
-                resolve(
-                    id,
-                    {
-                        basedir: path.dirname(importer),
-                        extensions,
-                    },
-                    async (err, id) => {
-                        if (!err) {
-                            if (file) {
-                                const childFile = build.addFile(id, {
-                                    load: false,
-                                    write: false,
-                                });
-                                //childFile.write = false;
-                                build.addImporter(childFile, file);
-                            }
+            resolve(
+                id,
+                {
+                    basedir: path.dirname(importer),
+                    extensions,
+                },
+                async (err, id) => {
+                    if (!err) {
+                        if (file) {
+                            const childFile = build.addFile(id, {
+                                load: false,
+                                write: false,
+                            });
+                            //childFile.write = false;
+                            build.addImporter(childFile, file);
                         }
-                        done(id);
                     }
-                );
-            });
+                }
+            );
         }
         return null;
     },
