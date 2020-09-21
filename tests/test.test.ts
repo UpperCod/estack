@@ -8,7 +8,7 @@ const org = "./tests/basic/src";
 const dest = "./tests/basic/public";
 
 describe("Build", () => {
-    it("check read and write", async () => {
+    it("check read and write", async function () {
         const { files } = await build({
             mode: "build",
             src,
@@ -26,7 +26,7 @@ describe("Build", () => {
             expect(files[src]).is.not.null;
         });
         // check content
-        Promise.all(
+        await Promise.all(
             filesSrc.map(async (src) => {
                 const content = await readFile(src, "utf8");
                 expect(files[src].content.trim()).to.equal(content.trim());

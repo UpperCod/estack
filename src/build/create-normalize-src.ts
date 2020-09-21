@@ -20,7 +20,7 @@ export const createNormalizeSrc = (records: Records) => (src: string) => {
         // } else {
         //     normalizes[src] = path.join(cwd, src);
         // }
-        normalizes[src] = "." + path.sep + path.relative(cwd, src);
+        normalizes[src] = path.relative(cwd, src);
     }
     return normalizes[src];
 };

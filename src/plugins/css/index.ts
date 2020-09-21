@@ -20,10 +20,12 @@ export function pluginCss(): Plugin {
                     ...build.options.css.plugins,
                 ]).process(await build.readFile(file), {
                     from: file.src,
-                    map: {
-                        inline: false,
-                        annotation: fileNameMap,
-                    },
+                    map: build.options.sourcemap
+                        ? {
+                              inline: false,
+                              annotation: fileNameMap,
+                          }
+                        : false,
                 });
 
                 for (const src in imports) {
