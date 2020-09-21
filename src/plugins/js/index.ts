@@ -16,7 +16,6 @@ export function pluginJs(): Plugin {
             const filesJs: Files = {};
             const chunksJs: Files = {};
             const aliasJs: Files = {};
-            let onlyRoot = true;
             for (const src in files) {
                 const file = files[src];
                 if (isJs(src) && file.load) {
@@ -39,68 +38,56 @@ export function pluginJs(): Plugin {
             //     }
             // }
 
-            try {
-                const bundle = await rollup({
-                    input: [], //Object.keys(filesJs),
-                    plugins: [
-                        //importUrl(),
-                        pluginLocalResolve(
-                            build,
-                            chunksJs,
-                            aliasJs,
-                            extensions
-                        ),
-                        pluginImportCss(build),
-                        nodeResolve({ extensions }),
-                        ...build.options.js.plugins,
-                    ],
-                });
+            const bundle = await rollup({
+                input: [], //Object.keys(filesJs),
+                external: build.options.external,
+                plugins: [
+                    //importUrl(),
+                    pluginLocalResolve(build, chunksJs, aliasJs, extensions),
+                    pluginImportCss(build),
+                    nodeResolve({ extensions }),
+                    ...build.options.js.plugins,
+                ],
+            });
 
-                const { output } = await bundle.generate({
-                    dir: "", //build.options.dest,
-                    format: "esm",
-                    sourcemap: build.options.sourcemap,
-                    chunkFileNames: (
-                        build.options.site.assets + "c-[hash].js"
-                    ).replace(/^\//, ""),
-                });
+            const { output } = await bundle.generate({
+                dir: "", //build.options.dest,
+                format: "esm",
+                sourcemap: build.options.sourcemap,
+                chunkFileNames: (
+                    build.options.site.assets + "c-[hash].js"
+                ).replace(/^\//, ""),
+            });
 
-                await Promise.all(
-                    output.map(async (chunk: OutputChunk) => {
-                        let { code, fileName } = chunk;
+            await Promise.all(
+                output.map(async (chunk: OutputChunk) => {
+                    let { code, fileName } = chunk;
 
-                        const file =
-                            aliasJs[fileName] ||
-                            build.addFile(fileName, {
-                                load: false,
-                                asset: onlyRoot,
-                            });
+                    const file =
+                        aliasJs[fileName] ||
+                        build.addFile(fileName, {
+                            load: false,
+                            asset: true,
+                        });
 
-                        if (chunk.map) {
-                            // The map file is associated with the file that demands it, so the path is relative to it
-                            const fileNameMap = file.base + ".map";
+                    if (chunk.map) {
+                        // The map file is associated with the file that demands it, so the path is relative to it
+                        const fileNameMap = file.base + ".map";
 
-                            code += `\n//# sourceMappingURL=${fileNameMap}`;
+                        code += `\n//# sourceMappingURL=${fileNameMap}`;
 
-                            const fileMap = build.addFile(fileNameMap, {
-                                load: false,
-                                asset: file.asset,
-                                watch: false,
-                            });
+                        const fileMap = build.addFile(fileNameMap, {
+                            load: false,
+                            asset: file.asset,
+                            watch: false,
+                        });
 
-                            fileMap.content = chunk.map + "";
-                        }
-
-                        file.content = code;
-                    })
-                );
-            } catch (e) {
-                e.message.replace(/\((.+)\)\.$/, (all: string, src: string) => {
-                    if (files[src]) {
-                        build.addError(files[src], e + "");
+                        fileMap.content = chunk.map + "";
                     }
-                });
-            }
+
+                    file.content = code;
+                })
+            );
         },
     };
 }

@@ -1,6 +1,6 @@
 {
     "name": "estack",
-    "version": "0.17.9",
+    "version": "0.17.12",
     "description": "simple bundle generator",
     "module": "src/cli.js",
     "main": "cli.js",
@@ -10,6 +10,7 @@
         "build": "rollup -c",
         "dev": "rollup -c -w",
         "dev:site": "node cli.js dev site/**/*.{html,md};site/src/*.{yaml,json}",
+        "dev:bug": "node cli.js dev site/bug/index.html",
         "build:site": "node cli.js build site/**/*.{html,md};site/src/*.{yaml,json} docs --href /estack/",
         "build:site:npm": "node cli.js build site/src/index.{js,css} dist --sourcemap",
         "prepare": "npm run build && npm run build:site && npm run test"
@@ -64,6 +65,7 @@
         "@uppercod/postcss-import": "^1.3.0",
         "@uppercod/request": "^1.1.2",
         "@uppercod/str-fragment": "^1.2.1",
+        "atomico": "^1.2.1",
         "builtin-modules": "^3.1.0",
         "chai": "^4.2.0",
         "colors": "^1.4.0",
