@@ -4,7 +4,7 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { isJs } from "../../utils/types";
 import { pluginLocalResolve } from "./plugin-local-resolve";
 import { pluginImportCss } from "./plugin-import-css";
-import importUrl from "rollup-plugin-import-url";
+import path from "path";
 
 export function pluginJs(): Plugin {
     return {
@@ -50,22 +50,40 @@ export function pluginJs(): Plugin {
                 const { output } = await bundle.generate({
                     dir: build.options.dest,
                     format: "esm",
+                    sourcemap: build.options.sourcemap,
                     chunkFileNames: (
-                        build.options.site.assets + "[hash].js"
+                        build.options.site.assets + "c-[hash].js"
                     ).replace(/^\//, ""),
                 });
 
                 await Promise.all(
                     output.map(async (chunk: OutputChunk) => {
-                        if (aliasJs[chunk.fileName]) {
-                            aliasJs[chunk.fileName].content = chunk.code;
-                        } else {
-                            const file = build.addFile(chunk.fileName, {
+                        let { code, fileName } = chunk;
+
+                        const file =
+                            aliasJs[fileName] ||
+                            build.addFile(fileName, {
                                 load: false,
                                 asset: true,
                             });
-                            file.content = chunk.code;
+
+                        if (chunk.map) {
+                            // The map file is associated with the file that demands it, so the path is relative to it
+                            const fileNameMap =
+                                path.parse(fileName).base + ".map";
+
+                            code += `\n//# sourceMappingURL=${fileNameMap}`;
+
+                            const fileMap = build.addFile(fileNameMap, {
+                                load: false,
+                                asset: true,
+                                watch: false,
+                            });
+
+                            fileMap.content = chunk.map + "";
                         }
+
+                        file.content = code;
                     })
                 );
             } catch (e) {
