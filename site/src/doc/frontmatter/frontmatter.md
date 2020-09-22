@@ -3,8 +3,7 @@ title: Frontmatter
 description: Mágicamente Simple y Poderoso
 linkTitle: Frontmatter
 order: 2
-category:
-    - header
+category: aside
 ---
 
 The frontmatter improves the experience of generating static content, with the EStack frontmatter you can:

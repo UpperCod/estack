@@ -3,8 +3,7 @@ title: Plugins
 order: 3
 description: Herramientas externas perfectamente sincronizadas
 linkTitle: Plugins
-category:
-    - header
+category: aside
 ---
 
 La configuración adicional a asociar a EStack debe existir en el package.json, tu podrá asociar configuraciones de forma selectiva según script.

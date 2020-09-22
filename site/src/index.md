@@ -1,46 +1,81 @@
 ---
 title: EStack
-description: Modern static site builder
-linkTitle: Welcome
+description: Static site generator for modern development
 order: 1
-category:
-    - header
-    - $ref: ~lang
+linkTitle: Introducción
+category: aside
 ---
 
-<script src="{{'index.js'|asset}}" type="module"></script>
+EStack brings together in a single observer a series of recurring tools for scalable modern development:
 
-EStack is a modern static site generator that has a perfectly synchronized stack of tools.
+<doc-row col="1fr 1fr 1fr, 1fr 1fr 520w" gap="2rem">
 
-1. Development server.
-2. Frontmatter.
-3. Asset management: Estack resolves assets relative to import.
-4. Rollup and Postcss:
-5. Incremental processing, the EStack observer relates the asset dependencies between files, so it only reprocesses the files that change directly or indirectly.
+<div>
 
-## Minimalist CLI
+### Development server
+
+The `dev` mode creates a server with livereload that
+delete prevents writing to disk.
+
+</div>
+
+<div>
+
+### Frontmatter
+
+page variables in the
+document header
+
+```yaml
+title: my page...
+items:
+    $ref: items.json
+thumbnail:
+    $link: header.jpg
+```
+
+</div>
+
+<div>
+
+### Multilanguage
+
+EStack relates the language from page to base
+extensions, eg:
 
 ```bash
-## Development: Files are not written to disk
-estack dev src/**/*.{html,md}
-## Production: Files are written to disk
-estack build src/**/*.{html,md} docs
+index.es.md # Spanish
+index.fr.md # French
+index.md    # English
 ```
 
-## Template
+</div>
 
-Estack uses [Liquidjs](https://liquidjs.com/) to get assets from html and markdown `asset` files.
+<div>
 
-```html
----
-title: My page
-lang: es
-category:
-    - header
----
+### Manage Assets
 
-<h1>{{page.title}}</h1>
-<img src="{{'logo.svg'|asset}}" />
-<link rel="stylesheet" href="{{'index.css'|asset}}" />
-<script src="{{'index.js'|asset}}" type="module"></script>
-```
+Estack captures all assets
+declared in the frontmatter or template
+
+</div>
+
+<div>
+
+### Manage CSS
+
+CSS type assets are processed
+by Postcss
+
+</div>
+
+<div>
+
+### Manage JS
+
+JS type assets are processed by
+Rollup
+
+</div>
+
+</doc-row>

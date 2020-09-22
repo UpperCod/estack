@@ -1,4 +1,0 @@
-@import "./sub.css" (as: body);
-body {
-    @extend body.color;
-}

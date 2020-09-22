@@ -16,5 +16,6 @@
     "paths": {
       "estack" : ["types.d.ts"]
     }
-  }
+  },
+  "exclude":["site"]
 }

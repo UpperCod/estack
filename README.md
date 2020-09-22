@@ -6,3 +6,5 @@ A magically simple Static Site Builder with support for:
 2. Management of relative assets.
 3. Multilanguage sites without the need for configuration.
 4. Incremental observer.
+
+## [📚 Documentation](http://uppercod.github.io/estack/)

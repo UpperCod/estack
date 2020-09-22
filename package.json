@@ -1,6 +1,6 @@
 {
     "name": "estack",
-    "version": "0.17.15",
+    "version": "0.17.16",
     "description": "simple bundle generator",
     "module": "src/cli.js",
     "main": "cli.js",
@@ -9,10 +9,8 @@
         "test": "npm run clear && mocha -r  ts-node/register {tests,src}/**/*.test.ts",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "dev:site": "node cli.js dev site/**/*.{html,md};site/src/*.{yaml,json}",
-        "dev:bug": "node cli.js dev site/bug/index.html",
-        "build:site": "node cli.js build site/**/*.{html,md};site/src/*.{yaml,json} docs --href /estack/",
-        "build:site:npm": "node cli.js build site/src/index.{js,css} dist --sourcemap",
+        "dev:site": "node cli.js dev site/**/*.{html,md};site/src/*.yaml --js estack.js",
+        "build:site": "node cli.js build site/**/*.{html,md};site/src/*.yaml docs --href /estack/ --js estack.js",
         "prepare": "npm run build && npm run build:site && npm run test"
     },
     "author": "UpperCod",
@@ -34,10 +32,19 @@
         "sade": "^1.7.3"
     },
     "estack": {
-        "build": {
-            "js": {
-                "extensions": [],
-                "plugins": {}
+        "js": {
+            "plugins": {
+                "@rollup/plugin-sucrase": {
+                    "jsxPragma": "h",
+                    "production": true,
+                    "exclude": [
+                        "node_modules/**"
+                    ],
+                    "transforms": [
+                        "jsx",
+                        "typescript"
+                    ]
+                }
             }
         }
     },
@@ -46,6 +53,7 @@
         "@rollup/plugin-json": "^4.0.3",
         "@rollup/plugin-node-resolve": "^9.0.0",
         "@rollup/plugin-replace": "^2.3.3",
+        "@rollup/plugin-sucrase": "^3.1.0",
         "@rollup/plugin-typescript": "^5.0.2",
         "@types/chai": "^4.2.12",
         "@types/colors": "^1.2.1",

@@ -3,14 +3,12 @@ title: Frontmatter
 order: 2
 description: Mágicamente Simple y Poderoso
 linkTitle: Frontmatter
-lang: es
-category:
-    - header
+category: aside
 ---
 
 El frontmatter mejora la experiencia de generacion de contenido estatico, con el frontmatter de EStack podrás:
 
-1. Modificar link de escritura mediante la propeidad [link](#link-string).
+1. Modificar link de escritura mediante la propiedad [link](#link-string).
 2. Asociar lenguaje mediante la propiedad [lang](#lang-string).
 3. Asociar categorias mediante la propiedad [category](#category-string).
 4. Asociar assets.
@@ -38,7 +36,7 @@ Esta pagina sera escrita en el destino como `folder/users/index.html`
 
 ### lang: string
 
-Declara un lenguaje para la pagina, lang es asociado al objeto `category` para consultas.
+Declara un lenguaje para la pagina, esta propiedad es capas de remplaza el uso de lenguaje por extension en el nombre de fichero.
 
 ### category: string[]
 
@@ -51,10 +49,6 @@ Declara la pagina como fragmento, las paginas de tipo fragmento solo se imprimen
 ### tempalte: string
 
 Declara la pagina como plantilla, si el tempalte se define como `default`, todas las paginas que no declaren layout heredaran la plantilla default
-
-### global: string
-
-Permite recuperar la pagina mediante el objeto `global`, **Esto con la finalidad de acceder a toda la data que la pagina contenga**
 
 ### \$ref: string
 

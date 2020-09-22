@@ -1,46 +1,81 @@
 ---
 title: EStack
+description: Generador de sitios estático para un desarrollo moderno
 order: 1
-description: Generador de sitios estáticos moderno
-linkTitle: Welcome
-category:
-    - header
-related:
-    next:
-        $link: index.md
+linkTitle: Introducción
+category: aside
 ---
 
-EStack es un generador de sitios estáticos moderno que posee un stack de herramientas perfectamente sincronizadas.
+EStack agrupa bajo un único observador una serie de herramientas recurrentes para un desarrollo moderno escalable:
 
-1. Servidor de desarrollo.
-2. Frontmatter.
-3. Gestión assets: Estack resuelve los assets de forma relativa a la importación.
-4. Rollup y Postcss:
-5. Procesamiento incremental, el observador de EStack relaciona las dependencias de assets entre archivos, por lo que solo reprocesa los archivos que cambian directa o indirectamente.
+<doc-row col="1fr 1fr 1fr, 1fr 1fr 520w" gap="2rem">
 
-## CLI minimalista
+<div>
+
+### Servidor de desarrollo
+
+El modo `dev` crea un servidor con livereload que
+elimina evita la escritura en disco.
+
+</div>
+
+<div>
+
+### Frontmatter
+
+variables de pagina en la
+cabecera del documento
+
+```yaml
+title: my page...
+items:
+    $ref: items.json
+thumbnail:
+    $link: header.jpg
+```
+
+</div>
+
+<div>
+
+### Multilenguaje
+
+EStack relaciona el lenguaje de página a base
+de extensiones, ej:
 
 ```bash
-## Desarrollo
-estack dev src/**/*.{html,md}
-## Producción
-estack build src/**/*.{html,md} docs
+index.es.md # Español
+index.fr.md # Francés
+index.md    # Ingles
 ```
 
-## Template
+</div>
 
-Estack usa [Liquidjs](https://liquidjs.com/) para lograr capturar assets desde la plantilla mediante el uso del tag `asset`.
+<div>
 
-```html
----
-title: My page
-lang: es
-category:
-    - header
----
+### Gestionar Assets
 
-<h1>{{page.title}}</h1>
-<img src="{{'logo.svg'|asset}}" />
-<link rel="stylesheet" href="{{'index.css'|asset}}" />
-<script src="{{'index.js'|asset}}" type="module"></script>
-```
+Estack captura todos los assets
+declarados en el frontmatter o template
+
+</div>
+
+<div>
+
+### Gestionar CSS
+
+Los assets de tipo CSS son procesados
+por Postcss
+
+</div>
+
+<div>
+
+### Gestionar JS
+
+Los assets de tipo JS son procesados por
+Rollup
+
+</div>
+
+</doc-row>

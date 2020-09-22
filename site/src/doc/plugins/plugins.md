@@ -3,8 +3,7 @@ title: Plugins
 description: Herramientas externas perfectamente sincronizadas
 linkTitle: Plugins
 order: 3
-category:
-    - header
+category: aside
 ---
 
 The additional configuration to associate with EStack must exist in the package.json, you can selectively associate configurations according to your objectives.

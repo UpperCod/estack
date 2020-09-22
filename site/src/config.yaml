@@ -1,6 +1,15 @@
 lang: en
-langs:
-    en: English
-    es: Español
 logo:
     $link: logo.svg
+repo: https://github.com/atomicojs/atomicojs.github.io/tree/master
+socials:
+    github: uppercod/estack
+    twitter: uppercod
+menu:
+    - title:
+          es: Documentación
+          en: Documentation
+      category: aside
+aside:
+    content:
+        title: Contenido
