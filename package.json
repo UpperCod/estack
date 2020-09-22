@@ -6,7 +6,7 @@
     "main": "cli.js",
     "scripts": {
         "clear": "rm -rf ./tests/basic/public",
-        "test": "npm run clear && mocha -r  ts-node/register tests/**/*.test.ts",
+        "test": "npm run clear && mocha -r  ts-node/register {tests,src}/**/*.test.ts",
         "build": "rollup -c",
         "dev": "rollup -c -w",
         "dev:site": "node cli.js dev site/**/*.{html,md};site/src/*.{yaml,json}",
