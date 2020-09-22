@@ -1,8 +1,8 @@
 import { File } from "estack";
 import { expect } from "chai";
-import { createBuild } from "../create-build";
+import { createBuildContext } from "../create-build-context";
 
-const build = createBuild(
+const build = createBuildContext(
     {
         // actions must dispatch in order, first watch and then load
         async load(file) {},
@@ -17,7 +17,7 @@ const build = createBuild(
     }
 );
 
-describe("createBuild", function () {
+describe("createBuildContext", function () {
     /**
      * activation of actions
      */
@@ -43,7 +43,7 @@ describe("createBuild", function () {
                 }, 10);
             }
         };
-        const build = createBuild(
+        const build = createBuildContext(
             {
                 // actions must dispatch in order, first watch and then load
                 async load(file) {
@@ -68,7 +68,7 @@ describe("createBuild", function () {
     /**
      * file properties
      */
-    it("createBuild and addFile", function () {
+    it("createBuildContext and addFile", function () {
         const src = "file.ts";
         const file = build.addFile(src);
         expect(build.getFile(src)).to.equal(file);

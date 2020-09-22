@@ -1,116 +1,178 @@
-import path from "path";
-import getHash from "@uppercod/hash";
-import fs from "fs/promises";
-import { Files, File, WatchConfig, FileConfig, Build } from "estack";
-import { ActionsBuild, ConfigBuild } from "./types";
-import { createNormalizeSrc } from "./create-normalize-src";
-import { normalizePath } from "../utils/utils";
+import { Plugin, OptionsBuild } from "estack";
+import glob from "fast-glob";
+import { Load } from "./types";
+import { createBuildContext } from "./create-build-context";
+import { loadOptions } from "./load-options";
+import { createWatch } from "./create-watch";
+import { pluginsParallel, pluginsSequential } from "./plugins";
+import { log } from "../utils/log";
+import { createMarks } from "../utils/mark";
 
-export function createBuild(actions: ActionsBuild, config: ConfigBuild): Build {
-    const files: Files = {};
-    const getSrc = createNormalizeSrc(files);
+interface CyclesTask {
+    [index: number]: Promise<void>[];
+}
 
-    const getFile: Build["getFile"] = (src: string) => files[getSrc(src)];
+export async function createBuild(opts: OptionsBuild, plugins: Plugin[]) {
+    const mark = createMarks();
 
-    const hasFile: Build["hasFile"] = (src: string): boolean =>
-        !!files[getSrc(src)];
+    log({
+        message: "[time] [bold $][bold.green $]",
+        params: ["loading", "..."],
+    });
 
-    const addFile: Build["addFile"] = (
-        src: string,
+    mark("build");
+
+    const cyclesTask: CyclesTask = {};
+    let cyclesTaskCount = 0;
+
+    const options = await loadOptions(opts);
+
+    const listSrc = await glob(options.glob);
+
+    /**
+     * Load loads files into plugins for manipulation
+     */
+    const load: Load = async (file) => {
+        if (file.assigned || !file.load) return;
+        /**
+         * Clean the errors to check if they have been corrected
+         */
+        file.errors = [];
+        /**
+         * Avoid reassignments to plugins from the file
+         */
+        file.assigned = true;
+        /**
+         * Plugins that manipulate types run sequentially
+         */
+        const pipe = plugins.filter((plugin) =>
+            plugin.filter ? plugin.filter(file) : false
+        );
+        if (pipe.length) {
+            await pipe.reduce(
+                (promise, plugin) =>
+                    promise.then(() => {
+                        plugin.loads++;
+                        return plugin.load(file, build);
+                    }),
+                Promise.resolve()
+            );
+        }
+    };
+
+    /**
+     * The cycles are parallel processes sent from the build,
+     * the cyclos communicate to the plugin the status of the build
+     * @param src
+     */
+    const rebuild = async (src: string[] = []) => {
+        const cycleTaskId = ++cyclesTaskCount;
+        const closeMark = mark("build");
+        console.log("");
+        log({
+            message: `[time] [bold $][bold.green $]`,
+            params: ["Build start", "..."],
+        });
+
+        plugins.forEach((plugin) => (plugin.loads = 0));
+        await pluginsSequential("buildStart", plugins, build);
+        await pluginsParallel("beforeLoad", plugins, build);
+        // Create a subtask of unresolved processes in the main load
+        cyclesTask[cycleTaskId] = [];
+        await Promise.all(
+            src.map(async (src) => {
+                const file = build.addFile(src, {
+                    root: true,
+                });
+
+                return load(file);
+            })
+        );
+        // Wait for the subtasks to finish to run correctly the plugin cylco
+        await Promise.all(cyclesTask[cycleTaskId]);
+        // Clean up tasks
+        cyclesTask[cycleTaskId] = [];
+        await pluginsParallel("afterLoad", plugins, build);
+        // Wait for the subtasks to finish to run correctly the plugin cylco
+        await Promise.all(cyclesTask[cycleTaskId]);
+        // Clean up tasks
+        delete cyclesTask[cycleTaskId];
+        await pluginsSequential("buildEnd", plugins, build);
+
+        let errors = 0;
+        let files = 0;
+        for (let src in build.files) {
+            files++;
+            const file = build.files[src];
+            if (file.errors.length) {
+                if (!errors) console.log("");
+                errors += file.errors.length;
+                log({
+                    items: [
+                        {
+                            message: file.src,
+                            items: file.errors.map((message) => ({
+                                message,
+                            })),
+                        },
+                    ],
+                });
+            }
+        }
+
+        if (errors) console.log("");
+
+        log({
+            message: `[time] [bold.green $], Files with errors ${
+                errors ? "[bold.red $]" : "[bold.blue $]"
+            }${options.watch ? ", waiting for changes..." : "."}`,
+            params: [`Build files in ${closeMark()}`, errors + "/" + files],
+        });
+
+        if (options.mode == "build" && errors) {
+            throw "";
+        }
+    };
+
+    const build = createBuildContext(
+        /**
+         * Actions are functions that allow you to
+         * communicate from the build events object.
+         * This object allows isolating the cyclo and
+         * watch processes from the build
+         */
         {
-            // Indica should be added to the watcher.
-            watch = true,
-            // Indicates that the file must be written to disk in build mode.
-            write = true,
-            // Indicates that the file can be uploaded by plugins.
-            load = true,
-            // indicates whether to generate a hash path for writing.
-            hash = false,
-            // Indicates that the file is sent from the build
-            root = false,
-            // Indicates if the file is an asset
-            asset = false,
-        }: FileConfig = {}
-    ): File => {
-        if (hasFile(src)) return getFile(src);
-        src = getSrc(src);
-        const meta = path.parse(src);
-        const type = meta.ext.slice(1);
-        const file: File = {
-            src,
-            root,
-            hash,
-            asset,
-            watch,
-            write,
-            meta,
-            load: load ? () => actions.load(file) : null,
-            errors: [],
-            type: config.types[type] || type,
-            importers: {},
-        };
+            load: async (file) => {
+                if (!file.assigned && cyclesTask[cyclesTaskCount]) {
+                    const task = load(file);
+                    cyclesTask[cyclesTaskCount].push(task);
+                    return task;
+                }
+            },
+            watch: (file) => {
+                if (watcher) watcher.add(file.src);
+            },
+        },
+        /**
+         * Config
+         */
+        {
+            href: options.site.href,
+            assets: options.site.assets,
+            /**
+             * Lets associate file extensions for write transformations
+             */
+            types: options.types,
+        }
+    );
 
-        setLink(file, src);
+    build.options = options;
+    build.rebuild = rebuild;
 
-        files[src] = file;
+    const watcher = options.watch ? createWatch(build) : null;
 
-        if (watch) actions.watch(file);
+    await pluginsParallel("mounted", plugins, build);
+    await rebuild(listSrc);
 
-        return file;
-    };
-
-    const resolveFromFile: Build["resolveFromFile"] = (
-        file: File,
-        src: string
-    ) => path.join(file.meta.dir, src);
-
-    const addImporter: Build["addImporter"] = (
-        file: File,
-        fileImporter: File,
-        { rewrite = true }: WatchConfig = {}
-    ) => {
-        file.importers[fileImporter.src] = { rewrite };
-    };
-
-    const readFile: Build["readFile"] = async (file: File): Promise<string> => {
-        if (file.content) return file.content;
-        return fs.readFile(file.src, "utf8");
-    };
-
-    const setLink: Build["setLink"] = (file: File, link: string) => {
-        const folder = file.hash || file.asset ? config.assets : "";
-        const base =
-            file.src == link
-                ? (file.hash ? getHash(file.src) : file.meta.name) +
-                  "." +
-                  file.type
-                : link;
-        const dest = normalizePath(folder + base);
-        file.base = normalizePath(base);
-        file.dest = dest;
-        file.link = normalizePath("/" + config.href + "/" + dest)
-            .replace(/\/(index\.html)$/, "/")
-            .replace(/\.html$/, "");
-    };
-
-    const addError: Build["addError"] = (file: File, error: string) => {
-        if (!file.errors.includes(error)) file.errors.push(error);
-    };
-
-    const removeFile: Build["removeFile"] = (src: string) => {
-        delete files[getSrc(src)];
-    };
-
-    return {
-        files,
-        hasFile,
-        addFile,
-        getFile,
-        setLink,
-        addError,
-        readFile,
-        removeFile,
-        addImporter,
-        resolveFromFile,
-    };
+    return build;
 }

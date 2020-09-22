@@ -1,0 +1,129 @@
+:root {
+    --doc_fontBody: "Kumbh Sans", sans-serif;
+    --doc_bodyColor: #b3fafd;
+    --doc_bgColor: #072526;
+    --doc_iconColor: #072526;
+    --doc_contentColor: #072526;
+    --doc_contentBgColor: #e5f1ef;
+    --doc_codeColor: #b3fafd;
+    --doc_codeInlineColor: deeppink;
+    --doc_linkColor: #4216f1;
+    --doc_codeBgColor: #072526;
+    --doc_codeRadio: 3px;
+    --doc_boxPadding: 3.125rem;
+    --doc_boxRadio: 0.31rem;
+    --doc_asideLinkActive: white;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+html {
+    font-size: 16px;
+}
+
+a {
+    color: unset;
+    text-decoration: none;
+}
+
+ul.reset {
+    padding: 0px;
+}
+li.reset {
+    display: block;
+}
+
+.body {
+    --aside-width: 18.125rem;
+    font-family: var(--doc_fontBody);
+    background: var(--doc_bgColor);
+    color: var(--doc_bodyColor);
+    margin: 0px;
+}
+
+.body_row {
+    height: 100%;
+    display: flex;
+}
+.body_content {
+    width: calc(100% - var(--aside-width));
+    height: 100%;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+.body_aside {
+    display: flex;
+    width: var(--aside-width);
+}
+.body_contentMask {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: var(--doc_boxRadio);
+    background: var(--doc_contentBgColor);
+    color: var(--doc_contentColor);
+}
+.body_contentScroll {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.body_contentPadding {
+    padding: 5rem 8.15rem;
+    box-sizing: border-box;
+}
+
+.body_contentHeader {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 2rem;
+}
+
+.body_langs {
+    text-transform: uppercase;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.body_langsIcon {
+    margin-right: 0.5em;
+}
+
+.body_langItem {
+    padding: 0px 0.25em;
+}
+.body_langItem-active {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+@media (max-width: 980px) {
+    .body_contentPadding {
+        padding: 5rem;
+    }
+    .body {
+        --aside-width: 15rem;
+    }
+}
+
+@media (max-width: 720px) {
+    .body {
+        --aside-width: 100%;
+    }
+    .body_contentPadding {
+        padding: 5rem 1rem;
+    }
+    .body_content {
+        width: 100%;
+        position: absolute;
+        left: 0px;
+        top: 0px;
+    }
+}

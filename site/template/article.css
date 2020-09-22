@@ -1,0 +1,140 @@
+.article {
+    width: 100%;
+    margin: auto;
+}
+.article_header {
+    box-sizing: border-box;
+}
+.article_title {
+    font-size: 2.25rem;
+    margin: 0px;
+}
+
+.article_description {
+    font-size: 1.35rem;
+    margin: 0.5rem 0px 0px;
+    opacity: 0.75;
+}
+
+.article_content {
+    box-sizing: border-box;
+    margin: calc(var(--doc_boxPadding) / 2) 0px;
+    line-height: 1.5em;
+    border-radius: 0.5rem;
+}
+
+.article_content pre {
+    overflow-x: auto;
+    font-size: 0.9em;
+    color: var(--doc_codeColor);
+    background: var(--doc_codeBgColor);
+    border-radius: var(--doc_codeRadio);
+}
+.article_content a {
+    color: var(--doc_linkColor);
+    font-weight: bold;
+    text-decoration: underline;
+}
+.article_content pre .token.property,
+.article_content pre .token.function {
+    color: var(--doc_codeColor);
+}
+
+.article_content pre .token.comment {
+    color: darkgoldenrod;
+}
+
+.article_content code {
+    color: var(--doc_codeInlineColor);
+    font-weight: bold;
+}
+
+.article_content code:before,
+.article_content code:after {
+    content: "`";
+}
+
+.article_content pre code {
+    background: transparent;
+    line-height: 1.5em;
+    display: inline-block;
+    padding: 1rem;
+    font-weight: unset;
+    color: unset;
+}
+
+.article_content pre code:before,
+.article_content pre code:after {
+    content: "";
+}
+
+.article_content doc-tabs {
+    --docTabs_bgColor: var(--doc_bgColor);
+}
+
+.article_content .table {
+    width: 100%;
+    overflow-x: auto;
+    text-align: left;
+}
+.article_content .table table {
+    width: 100%;
+    border-spacing: 0px;
+}
+
+.article_content .table table tr td,
+.article_content .table table tr th {
+    padding: 0.2em 0.5em;
+}
+
+.article_content .table table tr td {
+    font-size: 0.9em;
+}
+.article_content .table table tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.article_related {
+    display: flex;
+    flex-flow: row wrap;
+    padding: 5px;
+}
+
+.article_relatedItemFill {
+    min-width: 200px;
+    flex: 0%;
+}
+
+.article_relatedItem {
+    min-width: 200px;
+    flex: 0%;
+    padding: var(--doc_boxPadding);
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    background: white;
+    margin: 5px;
+    border-radius: var(--doc_boxRadio);
+}
+
+.article_relatedItemDescription {
+    width: 100%;
+    margin: 0px;
+}
+
+.article_relatedItemTitle {
+    width: 100%;
+    margin: 0px 0px 0.5rem;
+}
+
+.article_relatedTag {
+    font-size: 12px;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.article_content > * + h1,
+.article_content > * + h2,
+.article_content > * + h3 {
+    margin-top: 2em;
+}

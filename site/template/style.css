@@ -1,0 +1,5 @@
+@import "https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;700&display=swap";
+@import "https://raw.githubusercontent.com/PrismJS/prism-themes/master/themes/prism-nord.css";
+@import "./base.css";
+@import "./article.css";
+@import "./aside.css";
