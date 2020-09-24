@@ -26,6 +26,7 @@
         "estack": "./cli.js"
     },
     "dependencies": {
+        "@types/csso": "^3.5.1",
         "chokidar": "^3.4.2",
         "postcss": "^8.0.6",
         "rollup": "^2.27.1",
@@ -77,6 +78,7 @@
         "builtin-modules": "^3.1.0",
         "chai": "^4.2.0",
         "colors": "^1.4.0",
+        "csso": "^4.0.3",
         "easy-tag-for-liquidjs": "^1.0.1",
         "esm": "^3.2.25",
         "fast-glob": "^3.2.4",

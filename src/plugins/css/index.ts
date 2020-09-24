@@ -1,7 +1,7 @@
 import { Plugin } from "estack";
 import postcss from "postcss";
 import pluginImport from "@uppercod/postcss-import";
-import { isCss } from "../../utils/types";
+import csso from "csso";
 
 export function pluginCss(): Plugin {
     return {
@@ -45,7 +45,13 @@ export function pluginCss(): Plugin {
                     fileMap.content = JSON.stringify(result.map);
                 }
 
-                file.content = result.css;
+                let { css } = result;
+
+                if (!build.options.sourcemap && build.options.mode == "build") {
+                    css = csso.minify(css).css;
+                }
+
+                file.content = css;
             } catch (e) {
                 build.addError(file, e + "");
             }
