@@ -13,33 +13,20 @@ export function pluginJs(): Plugin {
         async buildEnd(build) {
             if (!this.loads) return;
             const { files } = build;
-            const filesJs: Files = {};
             const chunksJs: Files = {};
             const aliasJs: Files = {};
             for (const src in files) {
                 const file = files[src];
                 if (isJs(src) && file.load) {
-                    // if (file.hash) {
                     chunksJs[src] = file;
-                    // } else {
-                    //     filesJs[src] = file;
-                    // }
                 }
             }
             const extensions = build.options.js.extensions.map(
                 (type) => "." + type
             );
 
-            // if (!onlyRoot) {
-            //     for (const src in filesJs) {
-            //         filesJs[src].write = false;
-            //         chunksJs[src] = filesJs[src];
-            //         delete filesJs[src];
-            //     }
-            // }
-
             const bundle = await rollup({
-                input: [], //Object.keys(filesJs),
+                input: [],
                 external: build.options.external,
                 plugins: [
                     //importUrl(),

@@ -18,11 +18,6 @@ sade("estack <mode> <src> [dest]")
         "define an index to use the package for importing plugins",
         ""
     )
-    .option(
-        "--minify",
-        "Minify the code only if the flag --watch is not used",
-        false
-    )
     .example("dev src/index.html")
     .action((mode, src, dest, options) => {
         build({
