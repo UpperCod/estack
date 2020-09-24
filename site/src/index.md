@@ -8,6 +8,14 @@ category: aside
 
 EStack brings together in a single observer a series of recurring tools for scalable modern development:
 
+<doc-tabs tabs="t1, t2">
+
+# hola 1
+
+# hola 2
+
+</doc-tabs>
+
 <doc-row col="1fr 1fr 1fr, 1fr 1fr 520w" gap="2rem">
 
 <div>

@@ -143,9 +143,10 @@ export async function createBuild(opts: OptionsBuild, plugins: Plugin[]) {
          */
         {
             load: async (file) => {
-                if (!file.assigned && cyclesTask[cyclesTaskCount]) {
+                if (!file.assigned) {
                     const task = load(file);
-                    cyclesTask[cyclesTaskCount].push(task);
+                    if (cyclesTask[cyclesTaskCount])
+                        cyclesTask[cyclesTaskCount].push(task);
                     return task;
                 }
             },

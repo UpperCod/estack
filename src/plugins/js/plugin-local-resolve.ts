@@ -31,10 +31,12 @@ export const pluginLocalResolve = (
                     if (!err) {
                         if (file) {
                             const childFile = build.addFile(id, {
-                                load: false,
+                                load: true,
                                 write: false,
                             });
-                            //childFile.write = false;
+
+                            if (childFile.type != "css") delete childFile.load;
+
                             build.addImporter(childFile, file);
                         }
                     }
