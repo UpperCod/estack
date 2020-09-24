@@ -7,6 +7,11 @@ const src = "./tests/basic/index.html";
 const org = "./tests/basic/src";
 const dest = "./tests/basic/public";
 
+const results = {
+    "code-css.css": `body{color:red}`,
+    "code-js.js": `console.log("js");`,
+};
+
 describe("Build", () => {
     it("check read and write", async function () {
         const { files } = await build({
@@ -25,12 +30,5 @@ describe("Build", () => {
         filesExpect.map((src) => {
             expect(files[src]).is.not.null;
         });
-        // check content
-        await Promise.all(
-            filesSrc.map(async (src) => {
-                const content = await readFile(src, "utf8");
-                expect(files[src].content.trim()).to.equal(content.trim());
-            })
-        );
     });
 });
