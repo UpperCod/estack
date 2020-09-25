@@ -71,7 +71,7 @@
         "@uppercod/get-prop": "^1.0.1",
         "@uppercod/hash": "^1.0.0",
         "@uppercod/map-object": "^1.1.2",
-        "@uppercod/postcss-import": "^1.6.0",
+        "@uppercod/postcss-import": "^1.7.2",
         "@uppercod/request": "^1.1.2",
         "@uppercod/str-fragment": "^1.2.1",
         "atomico": "^1.2.1",

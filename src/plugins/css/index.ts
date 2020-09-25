@@ -1,6 +1,6 @@
 import { Plugin } from "estack";
 import postcss from "postcss";
-import pluginImport from "@uppercod/postcss-import";
+import { pluginImport } from "@uppercod/postcss-import";
 import csso from "csso";
 
 export function pluginCss(): Plugin {
@@ -16,7 +16,10 @@ export function pluginCss(): Plugin {
                 const fileNameMap = file.base + ".map";
 
                 const result = await postcss([
-                    pluginImport({ imports, process: this.cache }),
+                    pluginImport({
+                        imports,
+                        process: this.cache,
+                    }),
                     ...build.options.css.plugins,
                 ]).process(await build.readFile(file), {
                     from: file.src,
