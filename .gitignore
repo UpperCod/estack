@@ -1,5 +1,6 @@
 node_modules
 public
+/bug
 /cli.js
 /cli.js.map
 /demo

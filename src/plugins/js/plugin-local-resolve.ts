@@ -19,7 +19,7 @@ export const pluginLocalResolve = (
 ): Plugin => ({
     name: "plugin-estack-js",
     resolveId(id, importer) {
-        if (id.startsWith("./") && importer && build.hasFile(importer)) {
+        if (id.startsWith(".") && importer && build.hasFile(importer)) {
             const file = build.getFile(importer);
             resolve(
                 id,
