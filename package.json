@@ -9,7 +9,7 @@
         "test": "npm run clear && mocha -r  ts-node/register {tests,src}/**/*.test.ts",
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "build:bug:rollup": "node cli.js dev bug/rollup/*.html",
+        "build:bug:rollup": "node cli.js build bug/rollup/*.html bug/build/rollup",
         "dev:site": "node cli.js dev site/**/*.{html,md};site/src/*.yaml --js estack.js",
         "build:site": "node cli.js build site/**/*.{html,md};site/src/*.yaml docs --href /estack/ --js estack.js",
         "prepare": "npm run build && npm run build:site && npm run test"

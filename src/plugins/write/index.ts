@@ -20,7 +20,10 @@ export function pluginWrite(dest: string): Plugin {
                     // since it is synchronized with rollup for the construction of modules
                     if (minify) {
                         if (file.type == "js") {
-                            const result = await minifyJs(content);
+                            const result = await minifyJs(content, {
+                                ecma: 2018,
+                                module: true,
+                            });
                             content = result.code;
                         }
                         if (file.type == "html") {
