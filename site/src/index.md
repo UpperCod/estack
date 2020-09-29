@@ -6,6 +6,8 @@ linkTitle: Introducción
 category: aside
 ---
 
+<script type="module" src="{{'b.js'|asset}}"></script>
+
 EStack brings together in a single observer a series of recurring tools for scalable modern development:
 
 <doc-tabs tabs="t1, t2">

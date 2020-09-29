@@ -28,6 +28,8 @@ export function pluginJs(): Plugin {
             const bundle = await rollup({
                 input: [],
                 external: build.options.external,
+                treeshake: build.options.mode == "build",
+                cache: this.cache,
                 plugins: [
                     //importUrl(),
                     pluginLocalResolve(build, chunksJs, aliasJs, extensions),
@@ -36,6 +38,8 @@ export function pluginJs(): Plugin {
                     ...build.options.js.plugins,
                 ],
             });
+
+            this.cache = bundle.cache;
 
             const { output } = await bundle.generate({
                 dir: "", //build.options.dest,
