@@ -142,6 +142,9 @@ declare module "estack" {
     export interface Build {
         files: { [src: string]: File };
         hasFile(src: string): boolean;
+
+        getSrc(src: string): string;
+
         getFile(src: string): File;
         /**
          * Add a file

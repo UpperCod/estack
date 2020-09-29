@@ -109,6 +109,7 @@ export function createBuildContext(
 
     return {
         files,
+        getSrc,
         hasFile,
         addFile,
         getFile,
