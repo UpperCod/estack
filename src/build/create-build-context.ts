@@ -6,6 +6,9 @@ import { ActionsBuild, ConfigBuild } from "./types";
 import { createNormalizeSrc } from "./create-normalize-src";
 import { normalizePath } from "../utils/utils";
 
+/**
+ * @todo add method createFile, for testing
+ */
 export function createBuildContext(
     actions: ActionsBuild,
     config: ConfigBuild
