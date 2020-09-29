@@ -1,5 +1,5 @@
 import { Files, Plugin } from "estack";
-import { rollup, OutputChunk } from "rollup";
+import { rollup, OutputChunk, RollupCache } from "rollup";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { isJs } from "../../utils/types";
 import { pluginLocalResolve } from "./plugin-local-resolve";
@@ -9,7 +9,9 @@ export function pluginJs(): Plugin {
     return {
         name: "plugin-js",
         filter: ({ type }) => type == "js",
-        load() {},
+        load(file) {
+            file.data = file.content;
+        },
         async buildEnd(build) {
             if (!this.loads) return;
             const { files } = build;
@@ -24,6 +26,17 @@ export function pluginJs(): Plugin {
             const extensions = build.options.js.extensions.map(
                 (type) => "." + type
             );
+
+            if (this.cache) {
+                const { modules } = this.cache as RollupCache;
+                modules.forEach((cache) => {
+                    const src = build.getSrc(cache.id);
+                    const file = files[src];
+                    if (file && file.data != cache.originalCode) {
+                        cache.originalCode = null;
+                    }
+                });
+            }
 
             const bundle = await rollup({
                 input: [],
