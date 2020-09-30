@@ -1,6 +1,4 @@
 import { Plugin } from "rollup";
-import postcss from "postcss";
-import pluginImport, { Imports, Process } from "@uppercod/postcss-import";
 import { Build } from "estack";
 
 export function pluginImportCss(build: Build): Plugin {

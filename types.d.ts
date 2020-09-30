@@ -50,6 +50,10 @@ declare module "estack" {
          * `root=false` : Indicates that the file is sent from the build
          */
         root?: boolean;
+        /**
+         * create the file with a content
+         */
+        content?: string;
     }
 
     export interface Importers {
@@ -68,7 +72,7 @@ declare module "estack" {
         /**
          *  Declare if the file should be loaded by a plugin
          */
-        load?: () => Promise<void>;
+        load: boolean;
 
         autoload?: boolean;
         /**
@@ -169,6 +173,7 @@ declare module "estack" {
         readFile(file: File): Promise<string>;
         addError(file: File, error: string): void;
         rebuild?: (src?: string[]) => Promise<void>;
+        load?: (file: File) => Promise<void>;
         options?: Options;
     }
 
