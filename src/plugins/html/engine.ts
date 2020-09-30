@@ -35,7 +35,7 @@ export function createEngine(build: Build): Engine {
 
             build.addImporter(childFile, context.file, { rewrite: false });
 
-            if (childFile.load) childFile.load();
+            build.load(childFile);
 
             return childFile.link;
         }

@@ -36,6 +36,8 @@ export function createBuildContext(
             root = false,
             // Indicates if the file is an asset
             asset = false,
+            // Create the file with a content
+            content,
         }: FileConfig = {}
     ): File => {
         if (hasFile(src)) return getFile(src);
@@ -50,8 +52,9 @@ export function createBuildContext(
             watch,
             write,
             meta,
-            load: load ? () => actions.load(file) : null,
+            load,
             errors: [],
+            content,
             type: config.types[type] || type,
             importers: {},
         };

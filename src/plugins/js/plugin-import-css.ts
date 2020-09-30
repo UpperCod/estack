@@ -4,21 +4,17 @@ import pluginImport, { Imports, Process } from "@uppercod/postcss-import";
 import { Build } from "estack";
 
 export function pluginImportCss(build: Build): Plugin {
-    let process: Process = {};
     return {
         name: "plugin-import-css",
-
-        buildStart() {
-            process = {};
-        },
         async transform(code, id) {
             if (id.endsWith(".css")) {
                 try {
                     const file = build.addFile(id, {
                         write: false,
+                        content: code,
                     });
 
-                    await file.load();
+                    await build.load(file);
 
                     return {
                         code: `export default ${JSON.stringify(file.content)};`,

@@ -51,7 +51,7 @@ export async function loadData(
                         });
 
                         // preload it but don't expect it
-                        childFile.load();
+                        build.load(childFile);
                         // If the file is of type html, a proxy is generated for the extraction of the link
                         if (childFile.type == "html") {
                             return {

@@ -34,6 +34,7 @@ export async function createBuild(opts: OptionsBuild, plugins: Plugin[]) {
      */
     const load: Load = async (file) => {
         if (file.assigned || !file.load) return;
+
         /**
          * Clean the errors to check if they have been corrected
          */
@@ -142,14 +143,6 @@ export async function createBuild(opts: OptionsBuild, plugins: Plugin[]) {
          * watch processes from the build
          */
         {
-            load: async (file) => {
-                if (!file.assigned) {
-                    const task = load(file);
-                    if (cyclesTask[cyclesTaskCount])
-                        cyclesTask[cyclesTaskCount].push(task);
-                    return task;
-                }
-            },
             watch: (file) => {
                 if (watcher) watcher.add(file.src);
             },
@@ -169,6 +162,14 @@ export async function createBuild(opts: OptionsBuild, plugins: Plugin[]) {
 
     build.options = options;
     build.rebuild = rebuild;
+    build.load = (file) => {
+        if (!file.assigned && file.load) {
+            const task = load(file);
+            if (cyclesTask[cyclesTaskCount])
+                cyclesTask[cyclesTaskCount].push(task);
+            return task;
+        }
+    };
 
     const watcher = options.watch ? createWatch(build) : null;
 

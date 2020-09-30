@@ -5,7 +5,6 @@ import { createBuildContext } from "../create-build-context";
 const build = createBuildContext(
     {
         // actions must dispatch in order, first watch and then load
-        async load(file) {},
         watch(file) {},
     },
     {
@@ -46,9 +45,6 @@ describe("createBuildContext", function () {
         const build = createBuildContext(
             {
                 // actions must dispatch in order, first watch and then load
-                async load(file) {
-                    addTask("load", file);
-                },
                 watch(file) {
                     addTask("watch", file);
                 },
@@ -63,7 +59,7 @@ describe("createBuildContext", function () {
         );
         const src = "file.ts";
         const file = build.addFile(src);
-        file.load();
+        build.load(file);
     });
     /**
      * file properties
